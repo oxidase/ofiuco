@@ -7,8 +7,12 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    name: Test rules_poetry on ${{ matrix.os }} with ${{ matrix.compiler }}.
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 40
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]  # TODO: windows-latest
 
     steps:
       - name: Checkout Code
@@ -21,10 +25,10 @@ jobs:
         uses: actions/cache@v3
         with:
           path: "~/.cache/bazel"
-          key: bazel-${{ github.sha }}
-          restore-keys: bazel-
+          key: bazel-${{ matrix.os }}-${{ github.sha }}
+          restore-keys: bazel-${{ matrix.os }}-
 
-      - name: Run tests with coverage reports
+      - name: Run tests
         id: tests
-        run: |
-          bazel test //...
+        run: bazel test ...
+        shell: bash

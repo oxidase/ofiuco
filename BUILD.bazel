@@ -1,0 +1,12 @@
+filegroup(
+    name = "distribution",
+    srcs = [
+        "BUILD.bazel",
+        "MODULE.bazel",
+        "WORKSPACE",
+        "//python:distribution",
+    ],
+    visibility = [
+        "//examples:__pkg__",
+    ],
+)
