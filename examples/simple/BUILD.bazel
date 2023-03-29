@@ -1,0 +1,9 @@
+py_test(
+    name = "test",
+    srcs = ["test.py"],
+    data = ["poetry.lock"],
+    deps = [
+        "@poetry//:boto3",
+        "@poetry//:pytest",
+    ],
+)
