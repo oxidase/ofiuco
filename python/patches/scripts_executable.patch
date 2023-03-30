@@ -1,0 +1,23 @@
+--- pip/_vendor/distlib/scripts.py
++++ pip/_vendor/distlib/scripts.py
+@@ -75,4 +75,4 @@
+     """
+     script_template = SCRIPT_TEMPLATE
+
+-    executable = None  # for shebangs
++    executable = "#!/usr/bin/env python4"  # for shebangs
+
+     def __init__(self, source_dir, target_dir, add_launchers=True,
+                  dry_run=False, fileop=None):
+--- pip/_internal/operations/install/wheel.py
++++ pip/_internal/operations/install/wheel.py
+@@ -102,8 +102,7 @@
+         firstline = script.readline()
+         if not firstline.startswith(b"#!python"):
+             return False
+-        exename = sys.executable.encode(sys.getfilesystemencoding())
+-        firstline = b"#!" + exename + os.linesep.encode("ascii")
++        firstline = b"#!/usr/bin/env python3"
+         rest = script.read()
+     with open(path, "wb") as script:
+         script.write(firstline)
