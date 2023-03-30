@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from pip._internal.commands import create_command
+from pip._internal.models.direct_url import DIRECT_URL_METADATA_NAME
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Download and install a Poetry package")
@@ -94,4 +95,14 @@ if __name__ == "__main__":
     if retcode := install.main(install_args + platform_args):
         logging.error(f"pip install returned {retcode}")
         # TODO: proper handling of CC toolchains, split download and install steps
-        sys.exit(0)
+
+    # Clean-up some metadata files which may contain non-hermetic data
+    for direct_url_path in output_pkg.glob(f"*.dist-info/{DIRECT_URL_METADATA_NAME}"):
+        direct_url_path.unlink()
+        record_path = direct_url_path.parent / "RECORD"
+        if record_path.exists():
+            direct_url_line = f"{direct_url_path.relative_to(output_pkg)},"
+            with open(record_path) as record_file:
+                records = record_file.readlines()
+            with open(record_path, "wt") as record_file:
+                record_file.writelines(record for record in records if not record.startswith(direct_url_line))
