@@ -13,32 +13,32 @@ BEGIN { RS="\\[\\[package\\]\\]"; FS="\n" }
             }
         } else {
             if (section == "package") {
-                if ($i ~ /^name[[:space:]]*=[[:space:]]*"[^"]+"/) {
+                if ($i ~ /^name[ \t]*=[ \t]*"[^"]+"/) {
                     name = sprintf("\n  %s,", $i)
-                } else if ($i ~ /^version[[:space:]]*=[[:space:]]*"[^"]+"/) {
+                } else if ($i ~ /^version[ \t]*=[ \t]*"[^"]+"/) {
                     version = sprintf("\n  %s,", $i)
-                } else if ($i ~ /^description[[:space:]]*=[[:space:]]*"[^"]+"/) {
+                } else if ($i ~ /^description[ \t]*=[ \t]*"[^"]+"/) {
                     description = sprintf("\n  %s,", $i)
-                } else if ($i ~ /{[[:space:]]*file[[:space:]]*=[[:space:]]*"[^"]+", hash[[:space:]]*=[[:space:]]*"[^"]+"[[:space:]]*}/) {
+                } else if ($i ~ /{[ \t]*file[ \t]*=[ \t]*"[^"]+", hash[ \t]*=[ \t]*"[^"]+"[ \t]*}/) {
                     file = $i
-                    gsub(/{[[:space:]]*file[[:space:]]*=[[:space:]]*/, "", file)
-                    gsub(/, hash[[:space:]]*=[[:space:]]*/, ": ", file)
-                    gsub(/[[:space:]]*}.*/, ",\n", file)
+                    gsub(/{[ \t]*file[ \t]*=[ \t]*/, "", file)
+                    gsub(/, hash[ \t]*=[ \t]*/, ": ", file)
+                    gsub(/[ \t]*}.*/, ",\n", file)
                     files = files file
                 }
             } else if (section == "dependencies") {
-                if ($i ~ /^[^[:space:]]+[[:space:]]*=/) {
+                if ($i ~ /^[^ \t]+[ \t]*=/) {
                     dep = $i
-                    gsub(/[[:space:]]*=.*/, "", dep)
+                    gsub(/[ \t]*=.*/, "", dep)
                     gsub(/[-_.]+/, "-", dep)
                     gsub(/"/, "", dep)
                     deps = deps sprintf("\":%s\", ", tolower(dep))
 
                     marker = $i
-                    if (gsub(/.*markers[[:space:]]*=[[:space:]]*"/, "", marker) == 1)
+                    if (gsub(/.*markers[ \t]*=[ \t]*"/, "", marker) == 1)
                     {
                         marker = substr(marker, 1, match(marker, /[^\\]"/))
-                        gsub(/\\"/, "\\\\\"", marker)
+                        gsub(/\\"/, "\\\\\\\"", marker)
                         marker = sprintf("\"%s\":\"%s\"", dep, marker)
                         (markers == "") ? markers = marker : markers = markers "," marker
                     }
