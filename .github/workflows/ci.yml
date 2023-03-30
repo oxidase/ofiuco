@@ -5,6 +5,8 @@ on:
     branches:
       - "*"
 
+  workflow_dispatch:
+
 jobs:
   test:
     name: Test rules_poetry on ${{ matrix.os }} with ${{ matrix.compiler }}.
@@ -12,7 +14,11 @@ jobs:
     timeout-minutes: 40
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]  # TODO: windows-latest
+        include: # TODO: windows-latest
+          - os: ubuntu-latest
+            cache: ~/.cache/bazel
+          - os: macos-latest
+            cache: /private/var/tmp/_bazel_runner
 
     steps:
       - name: Checkout Code
@@ -21,12 +27,17 @@ jobs:
       - name: Setup bazelisk
         uses: bazelbuild/setup-bazelisk@v2
 
+      - name: Show info
+        id: info
+        run: bazel info
+        shell: bash
+
       - name: Mount bazel cache
-        uses: actions/cache@v3
+        uses: actions/cache@v3.3.1
         with:
-          path: "~/.cache/bazel"
+          path: ${{ matrix.cache }}
           key: bazel-${{ matrix.os }}-${{ github.sha }}
-          restore-keys: bazel-${{ matrix.os }}-
+          restore-keys: bazel-${{ matrix.os }}
 
       - name: Run tests
         id: tests
