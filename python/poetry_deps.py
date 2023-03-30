@@ -42,6 +42,7 @@ if __name__ == "__main__":
     download_args = [
         f"{args.name}=={args.version}",
         f"--destination-directory={os.fspath(output_whl)}",
+        "--no-cache-dir",
         "--no-dependencies",
         # "--only-binary=:all:", # TODO: in some cases CC compiler is needed
         "--disable-pip-version-check",
@@ -82,6 +83,8 @@ if __name__ == "__main__":
     install_args = [
         os.fspath(downloaded_file),
         f"--target={output_pkg.resolve()}",
+        "--no-cache-dir",
+        "--no-compile",
         "--no-dependencies",
         "--disable-pip-version-check",
         "--use-pep517",
