@@ -1,5 +1,7 @@
+load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest")
-load("//python:markers.bzl", "parse", "evaluate", "binary_operations")
+load("//python:markers.bzl", "parse", "evaluate")
+load("//python:private/markers.bzl", "binary_operations")
 
 
 def _markers_test_impl(ctx):
@@ -103,5 +105,10 @@ markers_test = unittest.make(_markers_test_impl)
 binary_operations_test = unittest.make(_binary_operations_test_impl)
 extras_test = unittest.make(_extras_test_impl)
 
-def markers_test_suite(name):
-    unittest.suite(name, markers_test, binary_operations_test, extras_test)
+def markers_test_suite():
+    unittest.suite(
+        "markers_tests",
+        partial.make(markers_test, timeout = "short"),
+        partial.make(binary_operations_test, timeout = "short"),
+        partial.make(extras_test, timeout = "short"),
+    )
