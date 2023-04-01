@@ -39,19 +39,24 @@ def _include_dep(dep, markers, environment):
 
 def _package_impl(ctx):
     """
-    Rule to generate a Poetry package.
+    Rule to install a Python package.
 
     Arguments:
         ctx: The rule context.
 
     Attributes:
-        target label: The target label to be checked with MYPY.
+        version: string The package version.
+        description: string The package description.
+        deps: label_list The package dependencies list.
+        files: string_dict The dictionary of resolved file names with corresponding checksum.
+        markers: string The JSON string with markers accordingly to PEP 508 – Dependency specification for Python Software Packages.
+        constraints: label_list The list of platform constraints (currently unused).
 
     Private attributes:
         _poetry_deps:
 
     Returns:
-        The providers lsit or a tuple with a Poetry package.
+        The providers list or a tuple with a Poetry package.
 
     Required toolchains:
          @bazel_tools//tools/python:toolchain_type
@@ -80,8 +85,8 @@ def _package_impl(ctx):
     ]
     ctx.actions.run(
         outputs = [output],
-        mnemonic = "PoetryGet",
-        progress_message = "Downloading Python package {} for Python {} {}".format(ctx.label.name, python_version, platform_tag),
+        mnemonic = "InstallWheel",
+        progress_message = "Installing Python package {} for Python {} {}".format(ctx.label.name, python_version, platform_tag),
         arguments = arguments,
         use_default_shell_env = True,
         executable = ctx.executable._poetry_deps,
@@ -101,11 +106,11 @@ package = rule(
     implementation = _package_impl,
     provides = [PyInfo],
     attrs = {
-        "version": attr.string(mandatory = True),
-        "description": attr.string(),
-        "deps": attr.label_list(doc = ""),
-        "files": attr.string_dict(doc = ""),
-        "markers": attr.string(doc = "markers of some dependencies"),
+        "version": attr.string(mandatory = True, doc="The package exact version string"),
+        "description": attr.string(doc="The package description"),
+        "deps": attr.label_list(doc = "The package dependencies list"),
+        "files": attr.string_dict(doc = "The package resolved files"),
+        "markers": attr.string(doc = "The JSON string with a dictionary of dependency markers accordingly to PEP 508"),
         "constraints": attr.label_list(
             default = [
                 '@platforms//os:macos',

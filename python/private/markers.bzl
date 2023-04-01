@@ -34,7 +34,6 @@ _tokens = {
     "implementation_name": "VARIABLE",
     "implementation_version": "VARIABLE",
     "extra": "VARIABLE",
-    "@": "AT",
 }
 
 _op_precedences = {
@@ -59,12 +58,12 @@ def read_token(text, pos):
 
     Ref: https://peps.python.org/pep-0508/#complete-grammar
 
-    Args:
+    Arguments:
         text: str The marker text string to be tokenized.
-        pos: starting position of a next token.
+        pos: int Starting position of a next token.
 
     Returns:
-        A tuple with token type, token value and a srting position of a next token.
+        A tuple with token type, token value and a string position of a next token.
     """
 
     if pos >= len(text):
@@ -99,12 +98,12 @@ def read_token(text, pos):
 
 
 def parse(text, environment):
-    """Shunting yard algorithm parser to convert markers infix notation to a postfix notation.
+    """Shunting yard algorithm parser to convert markers infix notation to a post-fix notation.
 
-    Args:
+    Arguments:
         text: str The marker text string to be parsed.
         environment: dict[str, str] The dictionary with variables to be substituted.
-            If a value is ont in a dictionarry then the value name will be used.
+            If a value is ont in a dictionary then the value name will be used.
 
     Returns:
         The parsed tokens in a reversed Polish notation.
@@ -117,7 +116,9 @@ def parse(text, environment):
         if token == "END":
             break
         elif token == "VARIABLE":
-            output_queue.append(environment[value] if value in environment else value)
+            if value not in environment:
+                fail("missing key '{}' in environment {}".format(value, environment))
+            output_queue.append(environment[value])
         elif token == "QUOTED_STRING":
             output_queue.append(value[1:-1])
         elif token.startswith("OP_"):
@@ -132,7 +133,7 @@ def parse(text, environment):
             operator_stack.append(token)
         elif token == "RIGHT_PARENTHESIS":
             if not operator_stack:
-                fail("unbalanced right parenthesis at {} in {}".format(pos, text))
+                fail("unbalanced right parenthesis at {} in '{}'".format(pos, text))
             index = 0
             for index in range(len(operator_stack)-1, -1, -1):
                 if operator_stack[index] == "LEFT_PARENTHESIS":
@@ -143,7 +144,7 @@ def parse(text, environment):
 
     for index in range(len(operator_stack)-1, -1, -1):
         if operator_stack[index] == "LEFT_PARENTHESIS":
-            fail("unbalanced left parenthesis in {}".format(text))
+            fail("unbalanced left parenthesis in '{}'".format(text))
         output_queue.append(operator_stack[index])
 
     return output_queue
@@ -191,8 +192,9 @@ binary_operations = {
 }
 
 def evaluate(rpn_queue):
-    """Evaluator.
-    Args:
+    """Evaluator for a parsed text in the reverse Polish notation.
+
+    Arguments:
         rpn_queue: A list of tokens in a reverse Polish notation to be evaluated.
 
     Returns:

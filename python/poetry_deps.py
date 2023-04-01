@@ -16,7 +16,7 @@ if __name__ == "__main__":
     parser.add_argument("--output", type=Path, default=Path(), help="package output directory")
     parser.add_argument("--python-version", type=str, default=None, help="python version")
     parser.add_argument("--platform", type=Path, default=None, help="platform")
-    parser.add_argument("--files", type=str, default="{}", help="files: sha  dictionary")
+    parser.add_argument("--files", type=str, default="{}", help="files:hash  dictionary")
 
     args = parser.parse_args()
 
