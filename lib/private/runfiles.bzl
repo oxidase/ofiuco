@@ -1,7 +1,6 @@
 load("//lib:globstar.bzl", _globstar = "globstar")
 
 def matches(text, patterns, path_separator = "/"):
-
     for pattern in patterns:
         if pattern == "**" or _globstar(pattern, text, path_separator):
             return True

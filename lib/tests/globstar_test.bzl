@@ -174,7 +174,6 @@ def _mixed_wrapping_globstar(ctx):
 
 mixed_wrapper_globstar_test = unittest.make(_mixed_wrapping_globstar)
 
-
 def _empty_string_globstar(ctx):
     return _globstar_test(
         ctx,
@@ -184,7 +183,6 @@ def _empty_string_globstar(ctx):
     )
 
 empty_string_globstar_test = unittest.make(_empty_string_globstar)
-
 
 def globstar_test_suite():
     unittest.suite(

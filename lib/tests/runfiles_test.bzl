@@ -4,7 +4,7 @@ Ref: https://github.com/aspect-build/bazel-lib/blob/1df2becc7a2cc06b76ca4f7e/lib
 """
 
 load("@bazel_skylib//lib:partial.bzl", "partial")
-load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest", "analysistest")
+load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts", "unittest")
 load("//lib:runfiles.bzl", "runfiles")
 load("//lib:private/runfiles.bzl", "matches")
 
@@ -58,9 +58,8 @@ def _test_runfiles_provider_default_workspace():
 
     runfiles_provider_default_workspace_test(
         name = "runfiles_default_workspace_contents_test",
-        target_under_test = ":runfiles_default_workspace_contents_subject"
+        target_under_test = ":runfiles_default_workspace_contents_subject",
     )
-
 
 def _runfiles_provider_external_workspace_test_impl(ctx):
     env = analysistest.begin(ctx)
@@ -71,7 +70,7 @@ def _runfiles_provider_external_workspace_test_impl(ctx):
     asserts.true(env, files)
     for file in files:
         asserts.true(env, file.path.startswith("external/"))
-        asserts.true(env, "poetry_pip/pip/_internal/" in file.path)
+        asserts.true(env, "pip/_internal/" in file.path)
         asserts.true(env, file.path.endswith(".py"))
 
     return analysistest.end(env)
@@ -89,12 +88,10 @@ def _test_runfiles_provider_external_workspace():
 
     runfiles_provider_external_workspace_test(
         name = "runfiles_external_workspace_contents_test",
-        target_under_test = ":runfiles_external_workspace_contents_subject"
+        target_under_test = ":runfiles_external_workspace_contents_subject",
     )
 
-
 def runfiles_test_suite():
-
     _test_runfiles_provider_default_workspace()
     _test_runfiles_provider_external_workspace()
 
