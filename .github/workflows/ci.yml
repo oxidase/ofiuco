@@ -9,7 +9,7 @@ on:
 
 jobs:
   test:
-    name: Test rules_poetry on ${{ matrix.os }} with ${{ matrix.compiler }}.
+    name: Test rules_poetry
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
     strategy:
