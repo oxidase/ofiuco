@@ -8,4 +8,4 @@ bazel_dep(name = "platforms", version = "0.0.6")
 
 internal_deps = use_extension("@rules_poetry//python:extensions.bzl", "internal_deps")
 internal_deps.install()
-use_repo(internal_deps, "rules_poetry_pip")
+use_repo(internal_deps, "rules_poetry_deps", "rules_poetry_pip")

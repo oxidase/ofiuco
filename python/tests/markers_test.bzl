@@ -1,8 +1,7 @@
 load("@bazel_skylib//lib:partial.bzl", "partial")
-load("@bazel_skylib//lib:unittest.bzl", "asserts", "analysistest", "unittest")
-load("//python:markers.bzl", "parse", "evaluate")
+load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts", "unittest")
+load("//python:markers.bzl", "evaluate", "parse")
 load("//python:private/markers.bzl", "binary_operations")
-
 
 def _binary_operations_test_impl(ctx):
     env = unittest.begin(ctx)
@@ -36,15 +35,13 @@ def _binary_operations_test_impl(ctx):
 
 binary_operations_test = unittest.make(_binary_operations_test_impl)
 
-
 def _markers_test_impl(ctx):
-
     # Tests for markers adopted from https://peps.python.org/pep-0508/#complete-grammar
     tests = [
         ["platform_system == \"Windows\"", ["platform_system", "Windows", "OP_EQUAL"], [True, False, False]],
         ["sys_platform === 'win32'", ["sys_platform", "win32", "OP_ARBITRARY"], [True, False, False]],
         ["python_version~='2.7'", ["python_version", "2.7", "OP_COMPATIBLE"], [True, True, False]],
-        ["python_version<'2.7' and platform_version=='2'", ['python_version', '2.7', 'OP_LESS_THAN', 'platform_version', '2', 'OP_EQUAL', 'OP_LOGICAL_AND'], [False, False, True]],
+        ["python_version<'2.7' and platform_version=='2'", ["python_version", "2.7", "OP_LESS_THAN", "platform_version", "2", "OP_EQUAL", "OP_LOGICAL_AND"], [False, False, True]],
         ["os_name=='a' or os_name=='b'", ["os_name", "a", "OP_EQUAL", "os_name", "b", "OP_EQUAL", "OP_LOGICAL_OR"], [False, True, True]],
         # Should parse as (a and b) or c
         ["os_name=='a' and  os_name=='b' or os_name=='c' ", ["os_name", "a", "OP_EQUAL", "os_name", "b", "OP_EQUAL", "OP_LOGICAL_AND", "os_name", "c", "OP_EQUAL", "OP_LOGICAL_OR"], [True, False, False]],
@@ -86,13 +83,12 @@ def _markers_test_impl(ctx):
 
     env = unittest.begin(ctx)
     for test, parsed, result in tests:
-        asserts.equals(env, parsed, parse(test, {key: key for key in  test_environments[0]}))
+        asserts.equals(env, parsed, parse(test, {key: key for key in test_environments[0]}))
         for env_index in range(len(test_environments)):
             asserts.equals(env, result[env_index], evaluate(parse(test, test_environments[env_index])))
     return unittest.end(env)
 
 markers_test = unittest.make(_markers_test_impl)
-
 
 def _extras_test_impl(ctx):
     env = unittest.begin(ctx)
@@ -106,22 +102,20 @@ def _extras_test_impl(ctx):
 
 extras_test = unittest.make(_extras_test_impl)
 
-
 def _parsing_failure_rule_impl(ctx):
-    print (parse(ctx.attr.text, ctx.attr.env))
     evaluate(parse(ctx.attr.text, ctx.attr.env))
 
 parsing_failure_rule = rule(
     implementation = _parsing_failure_rule_impl,
-    attrs = {"text": attr.string(), "env": attr.string_dict()}
+    attrs = {"text": attr.string(), "env": attr.string_dict()},
 )
 
 def _parsing_failure_test_impl(ctx):
-  env = analysistest.begin(ctx)
-  target = analysistest.target_under_test(env)
-  (expected, ) = ctx.attr.args
-  asserts.expect_failure(env, expected)
-  return analysistest.end(env)
+    env = analysistest.begin(ctx)
+    target = analysistest.target_under_test(env)
+    (expected,) = ctx.attr.args
+    asserts.expect_failure(env, expected)
+    return analysistest.end(env)
 
 parsing_failure_test = analysistest.make(_parsing_failure_test_impl, expect_failure = True)
 
@@ -137,11 +131,10 @@ def parsing_failure_tests():
 
     for name, data in tests.items():
         text, env, expected = data
-        parsing_failure_rule(name=name, text=text, env=env, tags=["manual"])
-        parsing_failure_test(name=name + "_test", target_under_test = ":" + name, args=[expected])
+        parsing_failure_rule(name = name, text = text, env = env, tags = ["manual"])
+        parsing_failure_test(name = name + "_test", target_under_test = ":" + name, args = [expected])
 
     return [":{}_test".format(name) for name in tests]
-
 
 def markers_test_suite():
     unittest.suite(

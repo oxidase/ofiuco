@@ -1,7 +1,6 @@
 load("@rules_poetry//python:repositories.bzl", "install_dependencies")
 load("@rules_poetry//python:poetry_venv.bzl", "poetry_venv")
 
-
 def _poetry_impl(module_ctx):
     for mod in module_ctx.modules:
         for attr in mod.tags.parse:
@@ -22,13 +21,12 @@ poetry = module_extension(
     },
 )
 
-
 def _internal_deps_impl(module_ctx):
     install_dependencies()
 
 internal_deps = module_extension(
     implementation = _internal_deps_impl,
     tag_classes = {
-        "install": tag_class(attrs = dict()),
+        "install": tag_class(dict()),
     },
 )

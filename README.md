@@ -9,6 +9,8 @@ This allows to use platform information of resolved Python toolchains and build 
 
 ## Getting started
 
+### Import `rules_poetry` as a module
+
 To import `rules_poetry` in your project, you first need to add it to your `MODULE.bazel` file
 
 ```python
@@ -49,3 +51,26 @@ py_library(
     ]
 )
 ```
+
+
+### Update lock files
+
+A lock file in the workspace can be updated using a host Python interpreter as
+```
+python3 -m pip install poetry
+
+poetry update
+```
+
+or using a pre-defined target
+```
+load("@rules_poetry//python:poetry.bzl", "poetry_update")
+
+poetry_update(
+    name = "update_lock",
+    toml = "pyproject.toml",
+    lock = "poetry.lock",
+)
+```
+
+In both cases the host interpreter is used in the latter case poetry package with dependencies is installed as an external repository.

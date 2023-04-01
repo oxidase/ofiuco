@@ -1,9 +1,8 @@
-
 def _poetry_venv_impl(rctx):
-
     result = rctx.execute([
         "awk",
-        "-f", rctx.attr._venv,
+        "-f",
+        rctx.attr._venv,
         rctx.attr.lock,
     ])
     if result.return_code != 0:
@@ -11,10 +10,9 @@ def _poetry_venv_impl(rctx):
 
     rules_repository = str(rctx.path(rctx.attr._venv)).split("/")[-3]
     rules_repository = ("@@" if "~" in rules_repository else "@") + rules_repository
-    prefix = '''load("{name}//python:poetry_deps.bzl", "package")\n'''.format(name=rules_repository)
-    rctx.file("BUILD",  prefix + result.stdout)
+    prefix = '''load("{name}//python:poetry_deps.bzl", "package")\n'''.format(name = rules_repository)
+    rctx.file("BUILD", prefix + result.stdout)
     rctx.file("WORKSPACE")
-
 
 poetry_venv = repository_rule(
     attrs = {

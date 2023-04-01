@@ -67,7 +67,7 @@ def read_token(text, pos):
     """
 
     if pos >= len(text):
-        return ('END', pos)
+        return ("END", pos)
 
     text = text[pos:]
     size = len(text)
@@ -79,23 +79,22 @@ def read_token(text, pos):
         if text[0] == quote:
             endpos = text.find(quote, 1)
             if endpos > 0:
-                return ('QUOTED_STRING', pos + endpos + 1)
+                return ("QUOTED_STRING", pos + endpos + 1)
 
     if text[0] in _WS:
         endpos = 1
         for endpos in range(1, size):
             if text[endpos] not in _WS:
                 break
-        return ('WS', pos + endpos)
+        return ("WS", pos + endpos)
 
     if text[0].isalnum():
         for endpos in range(1, size):
             if not (text[endpos].isalnum() or text[endpos] in "-_."):
                 break
-        return ('IDENTIFIER', pos + endpos)
+        return ("IDENTIFIER", pos + endpos)
 
-    return ('UNKNOWN', pos + size)
-
+    return ("UNKNOWN", pos + size)
 
 def parse(text, environment):
     """Shunting yard algorithm parser to convert markers infix notation to a post-fix notation.
@@ -124,7 +123,7 @@ def parse(text, environment):
         elif token.startswith("OP_"):
             op_precedence = _op_precedences[token]
             index = 0
-            for index in range(len(operator_stack)-1, -1, -1):
+            for index in range(len(operator_stack) - 1, -1, -1):
                 if not (_op_precedences[operator_stack[-1]] >= op_precedence):
                     break
                 output_queue.append(operator_stack.pop())
@@ -135,14 +134,14 @@ def parse(text, environment):
             if not operator_stack:
                 fail("unbalanced right parenthesis at {} in '{}'".format(pos, text))
             index = 0
-            for index in range(len(operator_stack)-1, -1, -1):
+            for index in range(len(operator_stack) - 1, -1, -1):
                 if operator_stack[index] == "LEFT_PARENTHESIS":
                     break
                 output_queue.append(operator_stack.pop())
             operator_stack = operator_stack[:index]
         pos = nextpos
 
-    for index in range(len(operator_stack)-1, -1, -1):
+    for index in range(len(operator_stack) - 1, -1, -1):
         if operator_stack[index] == "LEFT_PARENTHESIS":
             fail("unbalanced left parenthesis in '{}'".format(text))
         output_queue.append(operator_stack[index])
@@ -150,7 +149,7 @@ def parse(text, environment):
     return output_queue
 
 def parse_version(version):
-    parts = [int(part) if part.isdigit() else part for part in version.split('.')]
+    parts = [int(part) if part.isdigit() else part for part in version.split(".")]
     if "*" in parts:
         return parts[:parts.index("*")]
     return parts
@@ -202,14 +201,14 @@ def evaluate(rpn_queue):
     """
     stack, varpos = [], 0
     for token in rpn_queue:
-        if token == 'OP_IN':
+        if token == "OP_IN":
             stack, varargs = stack[:varpos], stack[varpos:]
             stack.append(varargs[0] in varargs[1:])
             varpos = len(stack)
-        elif token == 'OP_LOGICAL_NOT':
+        elif token == "OP_LOGICAL_NOT":
             stack.append(not stack.pop())
             varpos = len(stack)
-        elif token.startswith('OP_'):
+        elif token.startswith("OP_"):
             rhs = stack.pop()
             lhs = stack.pop()
             stack.append(binary_operations[token](lhs, rhs))

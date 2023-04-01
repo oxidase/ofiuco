@@ -1,6 +1,6 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//lib:versions.bzl", "versions")
-load("//python:markers.bzl", "parse", "evaluate")
+load("//python:markers.bzl", "evaluate", "parse")
 
 _PLATFORM_MAPPING = {
     "aarch64-apple-darwin": {"platform_system": "Darwin", "platform_tag": "macosx_11_0_arm64", "sys_platform": "darwin"},
@@ -10,11 +10,10 @@ _PLATFORM_MAPPING = {
     "x86_64-unknown-linux-gnu": {"platform_system": "Linux", "platform_tag": "manylinux_2_17_x86_64", "sys_platform": "linux"},
 }
 
-
 def _derive_tags(interpreter, constraints):
     tags = {"extra": "*"}
-    parts = interpreter.split('_')
-    for index in range(len(parts)-1):
+    parts = interpreter.split("_")
+    for index in range(len(parts) - 1):
         if parts[index].endswith("python3") and parts[index + 1].isdigit():
             tags["python_version"] = "3.{}".format(parts[index + 1])
             break
@@ -25,7 +24,6 @@ def _derive_tags(interpreter, constraints):
             break
 
     return tags
-
 
 def _include_dep(dep, markers, environment):
     if not markers:
@@ -78,10 +76,14 @@ def _package_impl(ctx):
     arguments = [
         ctx.attr.name,
         ctx.attr.version,
-        "--python-version", python_version,
-        "--platform", platform_tag,
-        "--output", output.path,
-        "--files", json.encode(ctx.attr.files),
+        "--python-version",
+        python_version,
+        "--platform",
+        platform_tag,
+        "--output",
+        output.path,
+        "--files",
+        json.encode(ctx.attr.files),
     ]
     ctx.actions.run(
         outputs = [output],
@@ -96,29 +98,30 @@ def _package_impl(ctx):
     transitive_imports = [dep[PyInfo].imports for dep in deps]
     transitive_depsets = [dep[PyInfo].transitive_sources for dep in deps]
     runfiles = [output] + [item for dep in transitive_depsets for item in dep.to_list()]
-    files = depset([output], transitive=transitive_depsets)
+    files = depset([output], transitive = transitive_depsets)
     return [
-        DefaultInfo(files=files, runfiles=ctx.runfiles(files = runfiles)),
-        PyInfo(transitive_sources=files, imports=depset([output.short_path.replace("../", "")], transitive=transitive_imports))
+        DefaultInfo(files = files, runfiles = ctx.runfiles(files = runfiles)),
+        PyInfo(transitive_sources = files, imports = depset([output.short_path.replace("../", "")], transitive = transitive_imports)),
     ]
 
 package = rule(
     implementation = _package_impl,
     provides = [PyInfo],
     attrs = {
-        "version": attr.string(mandatory = True, doc="The package exact version string"),
-        "description": attr.string(doc="The package description"),
+        "version": attr.string(mandatory = True, doc = "The package exact version string"),
+        "description": attr.string(doc = "The package description"),
         "deps": attr.label_list(doc = "The package dependencies list"),
         "files": attr.string_dict(doc = "The package resolved files"),
         "markers": attr.string(doc = "The JSON string with a dictionary of dependency markers accordingly to PEP 508"),
         "constraints": attr.label_list(
             default = [
-                '@platforms//os:macos',
-                '@platforms//os:linux',
-                '@platforms//os:windows',
-                '@platforms//cpu:x86_64',
-                '@platforms//cpu:aarch64',
-            ]),
+                "@platforms//os:macos",
+                "@platforms//os:linux",
+                "@platforms//os:windows",
+                "@platforms//cpu:x86_64",
+                "@platforms//cpu:aarch64",
+            ],
+        ),
         "_poetry_deps": attr.label(default = ":poetry_deps", cfg = "exec", executable = True),
     },
     toolchains = [
