@@ -5,6 +5,7 @@ filegroup(
         "MODULE.bazel",
         "WORKSPACE",
         "//python:distribution",
+        "//python/private:distribution",
     ],
     visibility = [
         "//examples:__pkg__",
