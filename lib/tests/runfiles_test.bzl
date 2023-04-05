@@ -1,7 +1,4 @@
-"""unit tests for globstar match algorithm
-
-Ref: https://github.com/aspect-build/bazel-lib/blob/1df2becc7a2cc06b76ca4f7e/lib/tests/glob_match_test.bzl
-"""
+"""unit tests for runfiles rule"""
 
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts", "unittest")
