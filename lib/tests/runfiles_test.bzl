@@ -6,7 +6,7 @@ Ref: https://github.com/aspect-build/bazel-lib/blob/1df2becc7a2cc06b76ca4f7e/lib
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts", "unittest")
 load("//lib:runfiles.bzl", "runfiles")
-load("//lib:private/runfiles.bzl", "matches")
+load("//lib/private:runfiles.bzl", "matches")
 
 def _matches_test(ctx):
     env = unittest.begin(ctx)

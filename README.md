@@ -25,13 +25,7 @@ use_repo(python, "python3_11_toolchains")
 
 register_toolchains("@python3_9_toolchains//:all")
 
-bazel_dep(name = "rules_poetry", version = "0.0.0")
-git_override(
-    module_name = "rules_poetry",
-    commit = "89e1d3382c293f9f0bd6bc5ca03b9172081976d2",
-    remote = "https://github.com/oxidase/rules_poetry.git",
-)
-
+bazel_dep(name = "rules_poetry", version = "0.1.0")
 poetry = use_extension("@rules_poetry//python:extensions.bzl", "poetry")
 poetry.parse(
     name = "poetry",
