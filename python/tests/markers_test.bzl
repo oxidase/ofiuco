@@ -1,7 +1,7 @@
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts", "unittest")
 load("//python:markers.bzl", "evaluate", "parse")
-load("//python:private/markers.bzl", "binary_operations")
+load("//python/private:markers.bzl", "binary_operations")
 
 def _binary_operations_test_impl(ctx):
     env = unittest.begin(ctx)

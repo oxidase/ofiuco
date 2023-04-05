@@ -2,7 +2,7 @@
 
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts", "unittest")
-load("//python:private/poetry_venv.bzl", "parse_lock_file")
+load("//python/private:poetry_venv.bzl", "parse_lock_file")
 
 def _parse_lock_file_test_impl(ctx):
     env = unittest.begin(ctx)
