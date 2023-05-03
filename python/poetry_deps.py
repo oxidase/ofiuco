@@ -17,6 +17,7 @@ if __name__ == "__main__":
     parser.add_argument("--python-version", type=str, default=None, help="python version")
     parser.add_argument("--platform", type=Path, default=None, help="platform")
     parser.add_argument("--files", type=str, default="{}", help="files:hash  dictionary")
+    parser.add_argument("--source-url", type=str, default="", help="source file URL")
 
     args = parser.parse_args()
 
@@ -41,7 +42,7 @@ if __name__ == "__main__":
     download = create_command("download")
 
     download_args = [
-        f"{args.name}=={args.version}",
+        args.source_url if args.source_url else f"{args.name}=={args.version}",
         f"--destination-directory={os.fspath(output_whl)}",
         "--no-cache-dir",
         "--no-dependencies",

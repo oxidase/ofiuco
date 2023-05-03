@@ -1,14 +1,17 @@
 def parse_lock_file(data):
     _MARKERS = "markers = "
+    _SOURCE_URL = "url = "
     result = ""
     for package_lines in data.split("[[package]]"):
-        section, name, version, description, files, deps, markers = "package", "", "", "", "", [], {}
+        section, name, version, description, files, deps, markers, source_url = "package", "", "", "", "", [], {}, ""
         for line in package_lines.split("\n"):
             line = line.strip()
             if line == "[package.dependencies]":
                 section = "dependencies"
+            elif line == "[package.source]":
+                section = "source"
             elif line.startswith("["):
-                section = "unlnown"
+                section = "unknown"
             elif section == "package" and line.startswith("name = "):
                 name = line
             elif section == "package" and line.startswith("version = "):
@@ -27,6 +30,8 @@ def parse_lock_file(data):
                         if dep_marker[index - 1] != "\\" and dep_marker[index] == '"':
                             markers[dep_name] = dep_marker[1:index]
                             break
+            elif section == "source" and line.startswith(_SOURCE_URL):
+                source_url = line[len(_SOURCE_URL):]
 
         if name:
             result += """
@@ -34,7 +39,7 @@ package(
   {name},
   {version},{description}
   files = {{{files}
-  }},{deps}{markers}
+  }},{deps}{markers}{source_url}
   visibility = [\"//visibility:public\"],
 )
 """.format(
@@ -43,7 +48,8 @@ package(
                 description = "\n  " + description + "," if description else "",
                 files = files,
                 deps = "\n  deps = [{}],".format(", ".join(deps)) if deps else "",
-                markers = "\n  markers ='''{}''',".format(json.encode(markers)) if markers else "",
+                markers = "\n  markers = '''{}''',".format(json.encode(markers)) if markers else "",
+                source_url = "\n  source_url = {},".format(source_url) if source_url else "",
             )
 
     return result
