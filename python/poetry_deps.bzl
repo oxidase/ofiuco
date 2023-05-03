@@ -2,16 +2,21 @@ load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//lib:versions.bzl", "versions")
 load("//python:markers.bzl", "evaluate", "parse")
 
+# Environment Markers https://peps.python.org/pep-0508/#environment-markers
 _PLATFORM_MAPPING = {
-    "aarch64-apple-darwin": {"platform_system": "Darwin", "platform_tag": "macosx_11_0_arm64", "sys_platform": "darwin"},
-    "aarch64-unknown-linux-gnu": {"platform_system": "Linux", "platform_tag": "manylinux_2_17_arm64", "sys_platform": "linux"},
-    "x86_64-apple-darwin": {"platform_system": "Darwin", "platform_tag": "macosx_10_15_x86_64", "sys_platform": "darwin"},
-    "x86_64-pc-windows-msvc": {"platform_system": "Windows", "platform_tag": "win_amd64", "sys_platform": "win32"},
-    "x86_64-unknown-linux-gnu": {"platform_system": "Linux", "platform_tag": "manylinux_2_17_x86_64", "sys_platform": "linux"},
+    "aarch64-apple-darwin": {"platform_system": "Darwin", "platform_tag": "macosx_11_0_arm64", "sys_platform": "darwin", "os_name": "posix"},
+    "aarch64-unknown-linux-gnu": {"platform_system": "Linux", "platform_tag": "manylinux_2_17_arm64", "sys_platform": "linux", "os_name": "posix"},
+    "x86_64-apple-darwin": {"platform_system": "Darwin", "platform_tag": "macosx_10_15_x86_64", "sys_platform": "darwin", "os_name": "posix"},
+    "x86_64-pc-windows-msvc": {"platform_system": "Windows", "platform_tag": "win_amd64", "sys_platform": "win32", "os_name": "nt"},
+    "x86_64-unknown-linux-gnu": {"platform_system": "Linux", "platform_tag": "manylinux_2_17_x86_64", "sys_platform": "linux", "os_name": "posix"},
 }
 
 def _derive_tags(interpreter, constraints):
-    tags = {"extra": "*"}
+    tags = {
+        "extra": "*",
+        "implementation_name": "cpython",
+        "platform_python_implementation": "CPython",
+    }
     parts = interpreter.split("_")
     for index in range(len(parts) - 1):
         if parts[index].endswith("python3") and parts[index + 1].isdigit():
@@ -85,6 +90,13 @@ def _package_impl(ctx):
         "--files",
         json.encode(ctx.attr.files),
     ]
+
+    if ctx.attr.source_url:
+        arguments += [
+            "--source-url",
+            ctx.attr.source_url,
+        ]
+
     ctx.actions.run(
         outputs = [output],
         mnemonic = "InstallWheel",
@@ -113,6 +125,7 @@ package = rule(
         "deps": attr.label_list(doc = "The package dependencies list"),
         "files": attr.string_dict(doc = "The package resolved files"),
         "markers": attr.string(doc = "The JSON string with a dictionary of dependency markers accordingly to PEP 508"),
+        "source_url": attr.string(doc = "The source file URL"),
         "constraints": attr.label_list(
             default = [
                 "@platforms//os:macos",
