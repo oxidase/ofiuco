@@ -3,15 +3,15 @@ load("@bazel_skylib//lib:versions.bzl", "versions")
 load("//python:markers.bzl", "evaluate", "parse")
 
 # Environment Markers https://peps.python.org/pep-0508/#environment-markers
-_PLATFORM_MAPPING = {
-    "aarch64-apple-darwin": {"platform_system": "Darwin", "platform_tag": "macosx_11_0_arm64", "sys_platform": "darwin", "os_name": "posix"},
-    "aarch64-unknown-linux-gnu": {"platform_system": "Linux", "platform_tag": "manylinux_2_17_arm64", "sys_platform": "linux", "os_name": "posix"},
-    "x86_64-apple-darwin": {"platform_system": "Darwin", "platform_tag": "macosx_10_15_x86_64", "sys_platform": "darwin", "os_name": "posix"},
-    "x86_64-pc-windows-msvc": {"platform_system": "Windows", "platform_tag": "win_amd64", "sys_platform": "win32", "os_name": "nt"},
-    "x86_64-unknown-linux-gnu": {"platform_system": "Linux", "platform_tag": "manylinux_2_17_x86_64", "sys_platform": "linux", "os_name": "posix"},
+_INTERPRETER_MARKERS = {
+    "aarch64-apple-darwin": """{"platform_system": "Darwin", "platform_tag": ["macosx_11_0_arm64", "macosx_12_0_arm64"], "sys_platform": "darwin", "os_name": "posix"}""",
+    "aarch64-unknown-linux-gnu": """{"platform_system": "Linux", "platform_tag": "manylinux_2_17_arm64", "sys_platform": "linux", "os_name": "posix"}""",
+    "x86_64-apple-darwin": """{"platform_system": "Darwin", "platform_tag": "macosx_10_15_x86_64", "sys_platform": "darwin", "os_name": "posix"}""",
+    "x86_64-pc-windows-msvc": """{"platform_system": "Windows", "platform_tag": "win_amd64", "sys_platform": "win32", "os_name": "nt"}""",
+    "x86_64-unknown-linux-gnu": """{"platform_system": "Linux", "platform_tag": "manylinux_2_17_x86_64", "sys_platform": "linux", "os_name": "posix"}""",
 }
 
-def _derive_tags(interpreter, constraints):
+def _derive_environment_markers(interpreter, interpreter_markers):
     tags = {
         "extra": "*",
         "implementation_name": "cpython",
@@ -23,12 +23,12 @@ def _derive_tags(interpreter, constraints):
             tags["python_version"] = "3.{}".format(parts[index + 1])
             break
 
-    for fr, to in _PLATFORM_MAPPING.items():
+    for fr, to in interpreter_markers.items():
         if fr in interpreter:
-            tags.update(**to)
-            break
+            tags.update(**json.decode(to))
+            return fr, tags
 
-    return tags
+    return None, tags
 
 def _include_dep(dep, markers, environment):
     if not markers:
@@ -67,29 +67,29 @@ def _package_impl(ctx):
 
     toolchain = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"]
     runtime_info = toolchain.py3_runtime
-    target_platforms_constraints = {}
-    for constraint in ctx.attr.constraints:
-        constraint_info = constraint[platform_common.ConstraintValueInfo]
-        if ctx.target_platform_has_constraint(constraint_info) and constraint.label.workspace_name == "platforms":
-            target_platforms_constraints[constraint.label.package] = constraint.label.name
-
-    tags = _derive_tags(runtime_info.interpreter.path, target_platforms_constraints)
+    runtime_tag, tags = _derive_environment_markers(runtime_info.interpreter.path, ctx.attr.interpreter_markers)
     python_version = tags["python_version"]
     platform_tag = tags["platform_tag"]
 
-    output = ctx.actions.declare_directory("{}/{}/{}".format(python_version, platform_tag, ctx.label.name))
+    output = ctx.actions.declare_directory("{}/{}/{}".format(python_version, runtime_tag, ctx.label.name))
     arguments = [
         ctx.attr.name,
         ctx.attr.version,
         "--python-version",
         python_version,
-        "--platform",
-        platform_tag,
         "--output",
         output.path,
         "--files",
         json.encode(ctx.attr.files),
     ]
+
+    if type(platform_tag) == "string":
+        arguments += ["--platform", platform_tag]
+    elif type(platform_tag) == "list":
+        for platform in tags["platform_tag"]:
+            arguments += ["--platform", platform]
+    else:
+        fail("platform_tag must be either a string o a list of strings")
 
     if ctx.attr.source_url:
         arguments += [
@@ -100,7 +100,7 @@ def _package_impl(ctx):
     ctx.actions.run(
         outputs = [output],
         mnemonic = "InstallWheel",
-        progress_message = "Installing Python package {} for Python {} {}".format(ctx.label.name, python_version, platform_tag),
+        progress_message = "Installing Python package {} for Python {} {}".format(ctx.label.name, python_version, runtime_tag),
         arguments = arguments,
         use_default_shell_env = True,
         executable = ctx.executable._poetry_deps,
@@ -126,14 +126,11 @@ package = rule(
         "files": attr.string_dict(doc = "The package resolved files"),
         "markers": attr.string(doc = "The JSON string with a dictionary of dependency markers accordingly to PEP 508"),
         "source_url": attr.string(doc = "The source file URL"),
-        "constraints": attr.label_list(
-            default = [
-                "@platforms//os:macos",
-                "@platforms//os:linux",
-                "@platforms//os:windows",
-                "@platforms//cpu:x86_64",
-                "@platforms//cpu:aarch64",
-            ],
+        "interpreter_markers": attr.string_dict(
+            default = _INTERPRETER_MARKERS,
+            doc = "The mapping of an interpter substring mapping to environment markers as a JSON string. " +
+                  "Default value corresponds to platforms defined at " +
+                  "https://github.com/bazelbuild/rules_python/blob/23cf6b66/python/versions.bzl#L231-L277",
         ),
         "_poetry_deps": attr.label(default = ":poetry_deps", cfg = "exec", executable = True),
     },
