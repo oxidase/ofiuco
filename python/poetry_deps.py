@@ -15,7 +15,7 @@ if __name__ == "__main__":
     parser.add_argument("version", type=str, help="Python package constraint")
     parser.add_argument("--output", type=Path, default=Path(), help="package output directory")
     parser.add_argument("--python-version", type=str, default=None, help="python version")
-    parser.add_argument("--platform", type=Path, default=None, help="platform")
+    parser.add_argument("--platform", type=Path, nargs="*", help="platform")
     parser.add_argument("--files", type=str, default="{}", help="files:hash  dictionary")
     parser.add_argument("--source-url", type=str, default="", help="source file URL")
 
@@ -28,11 +28,9 @@ if __name__ == "__main__":
             (output_pkg / item.name).symlink_to(item)
         sys.exit(0)
 
-    platform_args = []
+    platform_args = [f"--platform={platform}" for platform in args.platform]
     if args.python_version:
         platform_args.append(f"--python-version={args.python_version}")
-    if args.platform:
-        platform_args.append(f"--platform={args.platform}")
 
     # Pre-process
     output_whl = output_pkg.parent / (output_pkg.name + "_whl")
@@ -46,7 +44,7 @@ if __name__ == "__main__":
         f"--destination-directory={os.fspath(output_whl)}",
         "--no-cache-dir",
         "--no-dependencies",
-        # "--only-binary=:all:", # TODO: in some cases CC compiler is needed
+        "--only-binary=:all:",  # TODO: in some cases CC compiler is needed
         "--disable-pip-version-check",
         "--quiet",
     ]
