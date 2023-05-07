@@ -1,9 +1,9 @@
-def parse_lock_file(data):
+def parse_lock_file(data, platforms = None):
     _MARKERS = "markers = "
-    _SOURCE_URL = "url = "
+    _URL = "url = "
     result = ""
     for package_lines in data.split("[[package]]"):
-        section, name, version, description, files, deps, markers, source_url = "package", "", "", "", "", [], {}, ""
+        section, name, version, description, files, deps, markers, url = "package", "", "", "", "", [], {}, ""
         for line in package_lines.split("\n"):
             line = line.strip()
             if line == "[package.dependencies]":
@@ -13,9 +13,9 @@ def parse_lock_file(data):
             elif line.startswith("["):
                 section = "unknown"
             elif section == "package" and line.startswith("name = "):
-                name = line
+                name = line.replace("name = ", "").strip('",')
             elif section == "package" and line.startswith("version = "):
-                version = line
+                version = line.replace("version = ", "").strip('",')
             elif section == "package" and line.startswith("description = "):
                 description = line
             elif section == "package" and line.startswith("{file = ") and ", hash = " in line:
@@ -30,16 +30,22 @@ def parse_lock_file(data):
                         if dep_marker[index - 1] != "\\" and dep_marker[index] == '"':
                             markers[dep_name] = dep_marker[1:index]
                             break
-            elif section == "source" and line.startswith(_SOURCE_URL):
-                source_url = line[len(_SOURCE_URL):]
+            elif section == "source" and line.startswith(_URL):
+                url = line[len(_URL):]
 
         if name:
             result += """
-package(
-  {name},
-  {version},{description}
+package_wheel(
+  name = "{name}_wheel",
+  constraint = "{name}=={version}",{description}
   files = {{{files}
-  }},{deps}{markers}{source_url}
+  }},{platforms}
+  visibility = [\"//visibility:public\"],
+)
+
+package(
+  name = "{name}",
+  wheel = ":{name}_wheel",{deps}{markers}{url}{platforms}
   visibility = [\"//visibility:public\"],
 )
 """.format(
@@ -49,7 +55,8 @@ package(
                 files = files,
                 deps = "\n  deps = [{}],".format(", ".join(deps)) if deps else "",
                 markers = "\n  markers = '''{}''',".format(json.encode(markers)) if markers else "",
-                source_url = "\n  source_url = {},".format(source_url) if source_url else "",
+                url = "\n  url = {},".format(url) if url else "",
+                platforms = "\n  platforms = {},".format(platforms) if platforms else "",
             )
 
     return result
@@ -57,8 +64,8 @@ package(
 def _poetry_venv_impl(rctx):
     rules_repository = str(rctx.path(rctx.attr._self)).split("/")[-4]
     rules_repository = ("@@" if "~" in rules_repository else "@") + rules_repository
-    prefix = '''load("{name}//python:poetry_deps.bzl", "package")\n'''.format(name = rules_repository)
-    rctx.file("BUILD", prefix + parse_lock_file(rctx.read(rctx.attr.lock)))
+    prefix = '''load("{name}//python:poetry_deps.bzl", "package", "package_wheel")\n'''.format(name = rules_repository)
+    rctx.file("BUILD", prefix + parse_lock_file(rctx.read(rctx.attr.lock), rctx.attr.platforms))
     rctx.file("WORKSPACE")
 
 poetry_venv = repository_rule(
@@ -66,6 +73,9 @@ poetry_venv = repository_rule(
         "lock": attr.label(
             allow_single_file = True,
             doc = "Poetry lock file",
+        ),
+        "platforms": attr.string_list_dict(
+            doc = "The mapping of interpter substrings to Python platform tags and environment markers as a JSON string",
         ),
         "_self": attr.label(
             allow_single_file = True,

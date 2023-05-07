@@ -7,6 +7,7 @@ def _poetry_impl(module_ctx):
             poetry_venv(
                 name = attr.name,
                 lock = attr.lock,
+                platforms = attr.platforms,
             )
 
 poetry = module_extension(
@@ -16,6 +17,7 @@ poetry = module_extension(
             attrs = {
                 "name": attr.string(mandatory = True),
                 "lock": attr.label(mandatory = True),
+                "platforms": attr.string_dict(),
             },
         ),
     },
