@@ -20,7 +20,7 @@ def parse_lock_file(data, platforms = None):
                 description = line
             elif section == "package" and line.startswith("{file = ") and ", hash = " in line:
                 files += "\n    " + line.replace("{file = ", "").replace(", hash = ", ": ").replace("},", ",")
-            elif section == "dependencies" and line:
+            elif section == "dependencies" and line and line[0].isalnum():
                 dep_name, dep_version = line.split("=", 1)
                 dep_name = dep_name.strip().strip('"').strip("'").replace("_", "-").replace(".", "-").lower()
                 deps.append('":{}"'.format(dep_name))
