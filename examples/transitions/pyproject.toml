@@ -6,7 +6,8 @@ authors = []
 
 [tool.poetry.dependencies]
 python = "^3.11"
-boto3 = "^1.26.99"
+numpy = "^1.24.3"
+pyelftools = "^0.29"
 
 [tool.poetry.group.dev.dependencies]
 pytest = {version = "^7.2", "python" = ">=3.7"}

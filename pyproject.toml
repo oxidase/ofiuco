@@ -12,6 +12,7 @@ include_trailing_comma = true
 known_first_party = []
 known_third_party = [
   "boto3",
+  "elftools",
   "pip",
   "pytest",
 ]

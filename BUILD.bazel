@@ -4,6 +4,8 @@ filegroup(
         "BUILD.bazel",
         "MODULE.bazel",
         "WORKSPACE",
+        "//lib:distribution",
+        "//lib/private:distribution",
         "//python:distribution",
         "//python/private:distribution",
     ],
