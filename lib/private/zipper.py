@@ -3,9 +3,10 @@ import logging
 import sys
 import zipfile
 from pathlib import Path
+from typing import List
 
 
-def compress(options: str, dir_path: Path, output_path: Path, file_paths: list[str]) -> None:
+def compress(options: str, dir_path: Path, output_path: Path, file_paths: List[str]) -> None:
     """Create a zip archive.
 
     Args:
