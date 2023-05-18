@@ -24,7 +24,7 @@ use_repo(python, "python3_11_toolchains")
 
 register_toolchains("@python3_11_toolchains//:all")
 
-bazel_dep(name = "rules_poetry", version = "0.2.0")
+bazel_dep(name = "rules_poetry", version = "0.2.1")
 poetry = use_extension("@rules_poetry//python:extensions.bzl", "poetry")
 poetry.parse(
     name = "poetry",
