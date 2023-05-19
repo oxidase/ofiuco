@@ -11,30 +11,21 @@ on:
 jobs:
   create-release:
     runs-on: ubuntu-latest
+    permissions: write-all
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-
-      - name: Create Tag
-        uses: actions/github-script@v6
-        with:
-          script: |
-            github.rest.git.createRef({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                ref: `refs/tags/v${tag}`,
-                sha: context.sha
-            })
 
       - name: Create Release
         run: |
           set -euo pipefail
 
-          git config user.name "Automatic version bump"
-          git config user.email "noreply@github.com"
+          git config user.name "${{ github.triggering_actor }}"
+          git config user.email "${{ github.triggering_actor }}@users.noreply.github.com"
 
-          git archive --format=tar --prefix="${NAME}-${TAG}/" "v${TAG}" | gzip > "${NAME}-${TAG}.tar.gz"
-          #gh release create "$TAG" --title "$TAG" --target "v$TAG" "${NAME}-${TAG}.tar.gz"
+          sha=$(git rev-parse HEAD)
+          git archive --format=tar --prefix="${NAME}-${TAG}/" $sha | gzip > "${NAME}-${TAG}.tar.gz"
+          gh release create "v$TAG" --title "$TAG" --target $sha --generate-notes "${NAME}-${TAG}.tar.gz"
         env:
           NAME: "rules_poetry"
           TAG: ${{ inputs.tag }}
