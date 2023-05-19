@@ -1,0 +1,41 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'The new version to tag, ex: 1.0.5'
+        required: true
+        type: string
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Create Tag
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.git.createRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `refs/tags/v${tag}`,
+                sha: context.sha
+            })
+
+      - name: Create Release
+        run: |
+          set -euo pipefail
+
+          git config user.name "Automatic version bump"
+          git config user.email "noreply@github.com"
+
+          git archive --format=tar --prefix="${NAME}-${TAG}/" "v${TAG}" | gzip > "${NAME}-${TAG}.tar.gz"
+          #gh release create "$TAG" --title "$TAG" --target "v$TAG" "${NAME}-${TAG}.tar.gz"
+        env:
+          NAME: "rules_poetry"
+          TAG: ${{ inputs.tag }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
