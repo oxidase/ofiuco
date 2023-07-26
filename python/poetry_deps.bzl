@@ -12,11 +12,23 @@ _DEFAULT_PLATFORMS = {
     "x86_64-unknown-linux-gnu": """{"os_name": "posix", "platform_machine": "x86_64", "platform_system": "Linux", "platform_tags": ["manylinux_2_12_x86_64", "manylinux_2_17_x86_64"], "sys_platform": "linux"}""",
 }
 
+def _collect_version(parts):
+    version = []
+    for index in range(len(parts)):
+        if not parts[index].isdigit():
+            break
+
+        version.append(parts[index])
+
+    return ".".join(version)
+
 def _get_python_version(interpreter):
     parts = interpreter.split("_")
-    for index in range(len(parts) - 1):
-        if parts[index].endswith("python3") and parts[index + 1].isdigit():
-            return "3.{}".format(parts[index + 1])
+    for index in range(len(parts)):
+        if parts[index].endswith("python3"):
+            return "3." + _collect_version(parts[index + 1:])
+        elif parts[index].endswith("python"):
+            return _collect_version(parts[index + 1:])
 
     return "3"
 
