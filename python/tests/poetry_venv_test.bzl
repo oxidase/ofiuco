@@ -2,7 +2,7 @@
 
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts", "unittest")
-load("//python/private:poetry_venv.bzl", "parse_lock_file")
+load("//python/private:poetry_venv.bzl", "dfs_cycles", "parse_lock_file")
 
 def _parse_lock_file_test_impl(ctx):
     env = unittest.begin(ctx)
@@ -118,8 +118,29 @@ tomli = {version = ">=1.0.0", markers = "python_version < \\"3.11\\""}
 
 parse_lock_file_test = unittest.make(_parse_lock_file_test_impl)
 
+def _dfs_cycles_test_impl(ctx):
+    env = unittest.begin(ctx)
+
+    graph = {
+        "a": ["b", "c"],
+        "b": ["d", "x"],
+        "c": ["e"],
+        "d": [],
+        "e": ["d", "f"],
+        "f": ["c"],
+    }
+
+    edges = dfs_cycles(graph)
+    asserts.false(env, "x" in edges)
+    asserts.true(env, "c" in edges["f"])
+    asserts.true(env, all([not edges[u] for u in ["a", "b", "c", "d", "e"]]))
+    return unittest.end(env)
+
+dfs_cycles_test = unittest.make(_dfs_cycles_test_impl)
+
 def poetry_venv_test_suite():
     unittest.suite(
         "poetry_venv_test",
         partial.make(parse_lock_file_test),
+        partial.make(dfs_cycles_test),
     )
