@@ -19,3 +19,11 @@ filegroup(
         "runfiles_test.bzl",
     ],
 )
+
+platform(
+    name = "lambda",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:arm64",
+    ],
+)
