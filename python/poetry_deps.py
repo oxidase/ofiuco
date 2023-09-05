@@ -36,10 +36,12 @@ def download(args):
     # Download wheel
     download_command = create_command("download")
 
+    possible_cache = Path(__file__).resolve().parent / "__cache__"
+
     download_args = [
         args.constraint,
         f"--destination-directory={os.fspath(args.output)}",
-        "--no-cache-dir",
+        f"--cache-dir={possible_cache}" if os.access(possible_cache, os.W_OK) else "--no-cache-dir",
         "--no-dependencies",
         "--prefer-binary",
         "--disable-pip-version-check",
