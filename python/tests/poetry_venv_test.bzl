@@ -108,8 +108,7 @@ tomli = {version = ">=1.0.0", markers = "python_version < \\"3.11\\""}
 """
 
     build_content = parse_lock_file(lock)
-    asserts.true(env, """package_wheel(\n  name = "click_wheel",\n  constraint = "click==8.1.3",\n  description = "Composable command line interface toolkit",""" in build_content)
-    asserts.true(env, """package(\n  name = "click",\n  wheel = ":click_wheel",""" in build_content)
+    asserts.true(env, """package(\n  name = "click",\n  constraint = "click==8.1.3",\n  description = "Composable command line interface toolkit",""" in build_content)
     asserts.true(env, """"moto-4.1.6.tar.gz": "sha256:fdcc2731212ca050a28b2bc83e87628294bcbd55cb4f4c4692f972023fb1e7e6",""" in build_content)
     asserts.true(env, """deps = [":click", ":importlib-metadata", ":itsdangerous", ":jinja2", ":werkzeug", ":colorama", ":exceptiongroup", ":tomli"],""" in build_content)
     asserts.true(env, """markers = '''{"colorama":"platform_system == \\\\\\"Windows\\\\\\"","pywin32":"sys_platform == \\\\\\"win32\\\\\\""}''',""" in build_content)

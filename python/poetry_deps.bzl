@@ -58,83 +58,6 @@ def _include_dep(dep, markers, environment):
     marker = markers[dep.label.name]
     return evaluate(parse(marker, environment))
 
-def _package_wheel_impl(ctx):
-    """
-    Rule to download a Python package.
-
-    Arguments:
-        ctx: The rule context.
-
-    Attributes:
-        version: string The package version.
-        description: string The package description.
-        deps: label_list The package dependencies list.
-        files: string_dict The dictionary of resolved file names with corresponding checksum.
-        markers: string The JSON string with markers accordingly to PEP 508 – Dependency specification for Python Software Packages.
-
-    Private attributes:
-        _poetry_deps:
-
-    Returns:
-        The providers list or a tuple with a Poetry package.
-
-    Required toolchains:
-         @bazel_tools//tools/python:toolchain_type
-    """
-
-    toolchain = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"]
-    runtime_info = toolchain.py3_runtime
-    runtime_tag, tags = _derive_environment_markers(runtime_info.interpreter.path, ctx.attr.platforms)
-    python_version = tags["python_version"]
-    platform_tags = tags["platform_tags"]
-
-    output = ctx.actions.declare_directory("{}/{}/{}".format(python_version, runtime_tag, ctx.label.name))
-    arguments = [
-        "download",
-        ctx.attr.constraint,
-        "--python-version",
-        python_version,
-        "--output",
-        output.path,
-        "--files",
-        json.encode(ctx.attr.files),
-    ]
-
-    for platform in platform_tags:
-        arguments += ["--platform", platform]
-
-    ctx.actions.run(
-        outputs = [output],
-        mnemonic = "DownloadWheel",
-        progress_message = "Downloading package {} for Python {} {}".format(ctx.attr.constraint, python_version, runtime_tag),
-        arguments = arguments,
-        use_default_shell_env = True,
-        executable = ctx.executable._poetry_deps,
-    )
-
-    return [
-        DefaultInfo(files = depset([output])),
-    ]
-
-package_wheel = rule(
-    implementation = _package_wheel_impl,
-    attrs = {
-        "constraint": attr.string(mandatory = True, doc = "The package version constraint string"),
-        "description": attr.string(doc = "The package description"),
-        "files": attr.string_dict(doc = "The package resolved files"),
-        "platforms": attr.string_dict(
-            default = _DEFAULT_PLATFORMS,
-            doc = "The mapping of an interpter substring mapping to environment markers and platform tags as a JSON string. " +
-                  "Default value corresponds to platforms defined at " +
-                  "https://github.com/bazelbuild/rules_python/blob/23cf6b66/python/versions.bzl#L231-L277",
-        ),
-        "_poetry_deps": attr.label(default = ":poetry_deps", cfg = "exec", executable = True),
-    },
-    toolchains = [
-        "@bazel_tools//tools/python:toolchain_type",
-    ],
-)
-
 def _package_impl(ctx):
     """
     Rule to install a Python package.
@@ -163,12 +86,14 @@ def _package_impl(ctx):
     platform_tags = tags["platform_tags"]
 
     output = ctx.actions.declare_directory("{}/{}/{}".format(python_version, runtime_tag, ctx.label.name))
-    wheel_file = ctx.attr.wheel.files.to_list().pop()
+
+    #wheel_file = ctx.attr.wheel.files.to_list().pop()
     arguments = [
         "install",
-        "url" if ctx.attr.url else "wheel",
-        ctx.attr.url if ctx.attr.url else wheel_file.path,
+        ctx.attr.url if ctx.attr.url else ctx.attr.constraint,
         output.path,
+        "--files",
+        json.encode(ctx.attr.files),
         "--python-version",
         python_version,
     ]
@@ -178,7 +103,7 @@ def _package_impl(ctx):
 
     ctx.actions.run(
         outputs = [output],
-        inputs = [] if ctx.attr.url else [wheel_file],
+        inputs = [],  # if ctx.attr.url else [wheel_file],
         mnemonic = "InstallWheel",
         progress_message = "Installing package {} for Python {} {}".format(ctx.label.name, python_version, runtime_tag),
         arguments = arguments,
@@ -200,8 +125,10 @@ package = rule(
     implementation = _package_impl,
     provides = [PyInfo],
     attrs = {
+        "constraint": attr.string(mandatory = True, doc = "The package version constraint string"),
         "deps": attr.label_list(doc = "The package dependencies list"),
-        "wheel": attr.label(doc = "The package_wheel target"),
+        "description": attr.string(doc = "The package description"),
+        "files": attr.string_dict(doc = "The package resolved files"),
         "url": attr.string(doc = "The source file URL"),
         "markers": attr.string(doc = "The JSON string with a dictionary of dependency markers accordingly to PEP 508"),
         "platforms": attr.string_dict(

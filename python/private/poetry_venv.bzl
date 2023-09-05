@@ -70,17 +70,11 @@ def parse_lock_file(data, platforms = None):
     for name, version, description, files, deps, markers, url in packages:
         deps = ['":{}"'.format(u) for u in deps if u not in exclude_edges[name]]
         result += """
-package_wheel(
-  name = "{name}_wheel",
-  constraint = "{name}=={version}",{description}
-  files = {{{files}
-  }},{platforms}
-  visibility = [\"//visibility:public\"],
-)
-
 package(
   name = "{name}",
-  wheel = ":{name}_wheel",{deps}{markers}{url}{platforms}
+  constraint = "{name}=={version}",{description}
+  files = {{{files}
+   }},{deps}{markers}{url}{platforms}
   visibility = [\"//visibility:public\"],
 )
 """.format(
@@ -99,7 +93,7 @@ package(
 def _poetry_venv_impl(rctx):
     rules_repository = str(rctx.path(rctx.attr._self)).split("/")[-4]
     rules_repository = ("@@" if "~" in rules_repository else "@") + rules_repository
-    prefix = '''load("{name}//python:poetry_deps.bzl", "package", "package_wheel")\n'''.format(name = rules_repository)
+    prefix = '''load("{name}//python:poetry_deps.bzl", "package")\n'''.format(name = rules_repository)
     rctx.file("BUILD", prefix + parse_lock_file(rctx.read(rctx.attr.lock), rctx.attr.platforms))
     rctx.file("WORKSPACE")
 
