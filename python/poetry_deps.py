@@ -48,7 +48,6 @@ def install(args):
             args.input,
         ]
     else:
-        possible_cache = Path(__file__).resolve().parent / "__cache__"
         package_files = json.loads(args.files) if args.files else {}
         requirements_file = output_path / "requirements.txt"
         with requirements_file.open("wt") as requirements_fileobj:
@@ -58,8 +57,14 @@ def install(args):
         install_args = [
             "-r",
             os.fspath(requirements_file),
-            f"--cache-dir={possible_cache}" if os.access(possible_cache, os.W_OK) else "--no-cache-dir",
         ]
+
+        try:
+            possible_cache = Path(__file__).resolve().parent / "__cache__"
+            possible_cache.mkdir(exist_ok=True)
+            install_args.append(f"--cache-dir={possible_cache}")
+        except (PermissionError, OSError):
+            install_args.append("--no-cache-dir")
 
     install_args += [
         f"--target={output_path}",
