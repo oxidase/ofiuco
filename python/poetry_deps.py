@@ -10,9 +10,9 @@ with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from pip._internal.commands import create_command
     from pip._internal.models.direct_url import DIRECT_URL_METADATA_NAME
+    from pip._internal.locations import USER_CACHE_DIR
 
 _SHA256_PREFIX = "sha256:"
-
 
 def get_platform_args(args):
     """Format Python platform tags and version arguments.
@@ -60,9 +60,8 @@ def install(args):
         ]
 
         try:
-            possible_cache = Path(__file__).resolve().parent / "__cache__"
+            possible_cache = Path(USER_CACHE_DIR).expanduser()
             possible_cache.mkdir(exist_ok=True)
-            install_args.append(f"--cache-dir={possible_cache}")
         except (PermissionError, OSError):
             install_args.append("--no-cache-dir")
 
