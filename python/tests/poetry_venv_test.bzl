@@ -46,7 +46,7 @@ url = "/tmp/moto-4.1.6.tar.gz"
 
 [[package]]
 name = "click"
-version = "8.1.3"
+version = "8.1.3+local"
 description = "Composable command line interface toolkit"
 category = "main"
 optional = false
@@ -105,6 +105,37 @@ exceptiongroup = {version = ">=1.0.0rc8", markers = "python_version < \\"3.11\\"
 tomli = {version = ">=1.0.0", markers = "python_version < \\"3.11\\""}
 
 
+
+[[package]]
+name = "torch"
+version = "2.0.1+cu118"
+description = "Tensors and Dynamic neural networks in Python with strong GPU acceleration"
+optional = false
+python-versions = ">=3.8.0"
+files = [
+    {file = "torch-2.0.1+cu118-cp310-cp310-linux_x86_64.whl", hash = "sha256:a7a49d459bf4862f64f7bc1a68beccf8881c2fa9f3e0569608e16ba6f85ebf7b"},
+    {file = "torch-2.0.1+cu118-cp310-cp310-win_amd64.whl", hash = "sha256:f58d75619bc96e4322343c030b893613701caa2d6db8017155da226c14171335"},
+    {file = "torch-2.0.1+cu118-cp311-cp311-linux_x86_64.whl", hash = "sha256:143b6c658c17d43376e2dfbaa2c106d35639d615e5e8dec4429cf1e510dd8d61"},
+    {file = "torch-2.0.1+cu118-cp311-cp311-win_amd64.whl", hash = "sha256:b663a4ee744d574095dbd612644de345944247c0605692309fd9f6c7ccdea022"},
+    {file = "torch-2.0.1+cu118-cp38-cp38-linux_x86_64.whl", hash = "sha256:2ce38a6e4ea7c4b7f5baa51e65243a5f687f6e19ab7915ba5b2a431105f50bbe"},
+    {file = "torch-2.0.1+cu118-cp38-cp38-win_amd64.whl", hash = "sha256:e58d26a11bd57ac19761c018c3151c15bc71d068afc8ec409bfd9b4cfcc63a52"},
+    {file = "torch-2.0.1+cu118-cp39-cp39-linux_x86_64.whl", hash = "sha256:eb55f29db5744eda8a96f5594e637daed0d52278273005de759970e67cfa6a5a"},
+    {file = "torch-2.0.1+cu118-cp39-cp39-win_amd64.whl", hash = "sha256:fa225b6f941ee0e78978ac85ed7744d3c19fff462473821f8060c14faa60043e"},
+]
+
+[package.dependencies]
+filelock = "*"
+jinja2 = "*"
+networkx = "*"
+sympy = "*"
+triton = {version = "2.0.0", markers = "platform_system == \\"Linux\\" and platform_machine == \\"x86_64\\""}
+typing-extensions = "*"
+
+[package.source]
+type = "legacy"
+url = "https://download.pytorch.org/whl/cu118"
+reference = "pytorch"
+
 """
 
     build_content = parse_lock_file(lock)
@@ -113,6 +144,9 @@ tomli = {version = ">=1.0.0", markers = "python_version < \\"3.11\\""}
     asserts.true(env, """deps = [":click", ":importlib-metadata", ":itsdangerous", ":jinja2", ":werkzeug", ":colorama", ":exceptiongroup", ":tomli"],""" in build_content)
     asserts.true(env, """markers = '''{"colorama":"platform_system == \\\\\\"Windows\\\\\\"","pywin32":"sys_platform == \\\\\\"win32\\\\\\""}''',""" in build_content)
     asserts.true(env, """url = "/tmp/moto-4.1.6.tar.gz",""" in build_content)
+    asserts.true(env, """extra_index_urls = ["https://download.pytorch.org/whl/cu118"],""" in build_content)
+    asserts.true(env, """markers = '''{"triton":"platform_system == \\\\\\"Linux\\\\\\" and platform_machine == \\\\\\"x86_64\\\\\\""}''',""" in build_content)
+
     return unittest.end(env)
 
 parse_lock_file_test = unittest.make(_parse_lock_file_test_impl)
