@@ -26,6 +26,7 @@ class InstallArgs:
         """{"six-1.16.0-py2.py3-none-any.whl": """
         + """"sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"}"""
     )
+    index = []
 
 
 class TestInstallSubcommand(unittest.TestCase):
@@ -92,6 +93,21 @@ class TestInstallSubcommand(unittest.TestCase):
     def test_no_download_with_source_url(self):
         args = InstallArgs()
         args.input = "/x"
+        with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output:
+            retcode = main.install(args)
+            self.assertEqual(retcode, 1)
+
+    def test_extra_index_url(self):
+        args = InstallArgs()
+        args.input = "torchaudio==2.0.0"
+        args.platform = ["linux_x86_64"]
+        args.index = ["https://download.pytorch.org/whl/cu118"]
+        args.python_version = "3.11"
+        args.files = (
+            """{"torchaudio-2.0.0_cu118-cp311-cp311-linux_x86_64.whl": """
+            + """"e700907139ae40ad8de4623e54b22c6f910d5ae51a5257c024d6a654ab83baea"}"""
+        )
+
         with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output:
             retcode = main.install(args)
             self.assertEqual(retcode, 1)

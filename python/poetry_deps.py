@@ -9,10 +9,11 @@ from pathlib import Path
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     from pip._internal.commands import create_command
-    from pip._internal.models.direct_url import DIRECT_URL_METADATA_NAME
     from pip._internal.locations import USER_CACHE_DIR
+    from pip._internal.models.direct_url import DIRECT_URL_METADATA_NAME
 
 _SHA256_PREFIX = "sha256:"
+
 
 def get_platform_args(args):
     """Format Python platform tags and version arguments.
@@ -51,7 +52,12 @@ def install(args):
         package_files = json.loads(args.files) if args.files else {}
         requirements_file = output_path / "requirements.txt"
         with requirements_file.open("wt") as requirements_fileobj:
-            requirements_lines = [args.input] + [f" --hash={value}" for value in package_files.values()]
+            if args.index:
+                requirements_fileobj.write("".join([f"--extra-index-url={index}\n" for index in args.index]))
+
+            requirements_lines = []
+            requirements_lines += [args.input]
+            requirements_lines += [f" --hash={value}" for value in package_files.values()]
             requirements_fileobj.write(" \\\n".join(requirements_lines))
 
         install_args = [
@@ -104,6 +110,7 @@ if __name__ == "__main__":
     parser_install.add_argument("--files", type=str, default="{}", help="files:hash  dictionary")
     parser_install.add_argument("--python-version", type=str, default=None, help="python version")
     parser_install.add_argument("--platform", type=str, nargs="*", action="extend", help="platform tag")
+    parser_install.add_argument("--index", type=str, nargs="*", action="extend", help="index URL")
 
     args = parser.parse_args()
     sys.exit(args.func(args))

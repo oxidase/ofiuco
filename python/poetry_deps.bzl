@@ -3,13 +3,20 @@ load("@bazel_skylib//lib:versions.bzl", "versions")
 load("//python:markers.bzl", "evaluate", "parse")
 
 # Environment Markers https://peps.python.org/pep-0508/#environment-markers
+#
 # Platform tags https://packaging.python.org/en/latest/specifications/platform-compatibility-tags/#platform-tag
+#
+# Order of platform tags is used to resolve ambiguity in pip as valid tags order defined in
+# [TargetPython.get_sorted_tags](https://github.com/pypa/pip/blob/0827d76b/src/pip/_internal/models/target_python.py#L104-L110)
+# is used as a priority map for found packages in a
+# [CandidateEvaluator._sort_key](https://github.com/pypa/pip/blob/0827d76b/src/pip/_internal/index/package_finder.py#L529-L533)
+# of CandidateEvaluator.compute_best_candidate.
 _DEFAULT_PLATFORMS = {
-    "aarch64-apple-darwin": """{"os_name": "posix", "platform_machine": "arm64", "platform_system": "Darwin", "platform_tags": ["macosx_11_0_arm64", "macosx_12_0_arm64"], "sys_platform": "darwin"}""",
+    "aarch64-apple-darwin": """{"os_name": "posix", "platform_machine": "arm64", "platform_system": "Darwin", "platform_tags": ["macosx_11_0_arm64", "macosx_12_0_arm64", "macosx_13_0_arm64"], "sys_platform": "darwin"}""",
     "aarch64-unknown-linux-gnu": """{"os_name": "posix", "platform_machine": "arm64", "platform_system": "Linux", "platform_tags": ["manylinux_2_17_arm64", "manylinux_2_17_aarch64"], "sys_platform": "linux"}""",
     "x86_64-apple-darwin": """{"os_name": "posix", "platform_machine": "x86_64", "platform_system": "Darwin", "platform_tags": ["macosx_10_15_x86_64"], "sys_platform": "darwin"}""",
     "x86_64-pc-windows-msvc": """{"os_name": "nt", "platform_machine": "x86_64", "platform_system": "Windows", "platform_tags": ["win_amd64"], "sys_platform": "win32"}""",
-    "x86_64-unknown-linux-gnu": """{"os_name": "posix", "platform_machine": "x86_64", "platform_system": "Linux", "platform_tags": ["manylinux_2_12_x86_64", "manylinux_2_17_x86_64"], "sys_platform": "linux"}""",
+    "x86_64-unknown-linux-gnu": """{"os_name": "posix", "platform_machine": "x86_64", "platform_system": "Linux", "platform_tags": ["linux_x86_64", "manylinux_2_12_x86_64", "manylinux_2_17_x86_64"], "sys_platform": "linux"}""",
 }
 
 def _collect_version(parts):
@@ -87,16 +94,16 @@ def _package_impl(ctx):
 
     output = ctx.actions.declare_directory("{}/{}/{}".format(python_version, runtime_tag, ctx.label.name))
 
-    #wheel_file = ctx.attr.wheel.files.to_list().pop()
     arguments = [
         "install",
-        ctx.attr.url if ctx.attr.url else ctx.attr.constraint,
+        ctx.attr.source_url if ctx.attr.source_url else ctx.attr.constraint,
         output.path,
         "--files",
         json.encode(ctx.attr.files),
         "--python-version",
         python_version,
     ]
+    arguments += ["--index={}".format(url) for url in ctx.attr.extra_index_urls]
 
     for platform in platform_tags:
         arguments += ["--platform", platform]
@@ -129,7 +136,8 @@ package = rule(
         "deps": attr.label_list(doc = "The package dependencies list"),
         "description": attr.string(doc = "The package description"),
         "files": attr.string_dict(doc = "The package resolved files"),
-        "url": attr.string(doc = "The source file URL"),
+        "source_url": attr.string(doc = "The source file URL or repository index"),
+        "extra_index_urls": attr.string_list(doc = "The source file URL or repository index"),
         "markers": attr.string(doc = "The JSON string with a dictionary of dependency markers accordingly to PEP 508"),
         "platforms": attr.string_dict(
             default = _DEFAULT_PLATFORMS,
