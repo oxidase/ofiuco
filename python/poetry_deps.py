@@ -67,10 +67,11 @@ def install(args):
 
         try:
             possible_cache = Path(USER_CACHE_DIR)
-            possible_cache.mkdir(exist_ok=True)
-            install_args.append(f"--cache-dir={possible_cache}")
+            use_cache = os.access(possible_cache, os.W_OK)
         except (PermissionError, OSError):
-            install_args.append("--no-cache-dir")
+            use_cache = False
+
+        install_args.append(f"--cache-dir={possible_cache}" if use_cache else "--no-cache-dir")
 
     install_args += [
         f"--target={output_path}",
