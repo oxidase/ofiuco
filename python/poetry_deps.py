@@ -66,8 +66,9 @@ def install(args):
         ]
 
         try:
-            possible_cache = Path(USER_CACHE_DIR).expanduser()
+            possible_cache = Path(USER_CACHE_DIR)
             possible_cache.mkdir(exist_ok=True)
+            install_args.append(f"--cache-dir={possible_cache}")
         except (PermissionError, OSError):
             install_args.append("--no-cache-dir")
 
