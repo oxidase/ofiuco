@@ -143,7 +143,7 @@ reference = "pytorch"
     asserts.true(env, """"moto-4.1.6.tar.gz": "sha256:fdcc2731212ca050a28b2bc83e87628294bcbd55cb4f4c4692f972023fb1e7e6",""" in build_content)
     asserts.true(env, """deps = [":click", ":importlib-metadata", ":itsdangerous", ":jinja2", ":werkzeug", ":colorama", ":exceptiongroup", ":tomli"],""" in build_content)
     asserts.true(env, """markers = '''{"colorama":"platform_system == \\\\\\"Windows\\\\\\"","pywin32":"sys_platform == \\\\\\"win32\\\\\\""}''',""" in build_content)
-    asserts.true(env, """url = "/tmp/moto-4.1.6.tar.gz",""" in build_content)
+    asserts.true(env, """"/tmp/moto-4.1.6.tar.gz",""" in build_content)
     asserts.true(env, """extra_index_urls = ["https://download.pytorch.org/whl/cu118"],""" in build_content)
     asserts.true(env, """markers = '''{"triton":"platform_system == \\\\\\"Linux\\\\\\" and platform_machine == \\\\\\"x86_64\\\\\\""}''',""" in build_content)
 
