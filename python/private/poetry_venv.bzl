@@ -67,7 +67,7 @@ def parse_lock_file(data, platforms = None):
             continue
 
         extra_index_urls = [source_url] if source_type == "legacy" else []
-        source_urls = [source_url] if source_type == "file" else []
+        source_urls = [source_url] if source_type == "file" or source_type == "url" else []
 
         if name in packages:
             version_, description_, files_, deps_, markers_, source_urls_, extra_index_urls_ = packages[name]
@@ -88,16 +88,13 @@ def parse_lock_file(data, platforms = None):
     # Generate BUILD file content
     result = ""
     for name, (version, description, files, deps, markers, source_urls, extra_index_urls) in packages.items():
-        if len(source_urls) >= 2:
-            fail("Too many source URLs [{}] in package {}. The installation script must be updated".format(", ".join(source_urls), name))
-
         deps = ['":{}"'.format(u) for u in deps if u not in exclude_edges[name]]
         result += """
 package(
   name = "{name}",
   constraint = "{name}=={version}",{description}
   files = {{{files}
-   }},{deps}{markers}{source_url}{extra_index_urls}{platforms}
+   }},{deps}{markers}{source_urls}{extra_index_urls}{platforms}
   visibility = [\"//visibility:public\"],
 )
 """.format(
@@ -107,8 +104,8 @@ package(
             files = files,
             deps = "\n  deps = [{}],".format(", ".join(deps)) if deps else "",
             markers = "\n  markers = '''{}''',".format(json.encode(markers)) if markers else "",
-            source_url = "\n  source_url = {},".format(source_urls[0]) if source_urls else "",
-            extra_index_urls = "\n  extra_index_urls = [{}],".format(", ".join(extra_index_urls)),
+            source_urls = "\n  source_urls = [\n{}\n  ],".format("\n".join(["    " + url + "," for url in source_urls])) if source_urls else "",
+            extra_index_urls = "\n  extra_index_urls = [{}],".format(", ".join(extra_index_urls)) if extra_index_urls else "",
             platforms = "\n  platforms = {},".format(platforms) if platforms else "",
         )
 

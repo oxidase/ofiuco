@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from platform import python_version_tuple
+from unittest.mock import patch
 
 import python.poetry_deps as main
 
@@ -27,6 +28,7 @@ class InstallArgs:
         + """"sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"}"""
     )
     index = []
+    source_url = []
 
 
 class TestInstallSubcommand(unittest.TestCase):
@@ -47,8 +49,9 @@ class TestInstallSubcommand(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as output_dir:
             args.output = Path(output_dir)
 
-            with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.input:
-                shutil.copyfile(input_file, f"{args.input}/{Path(input_file).name}")
+            with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as tmp_input:
+                shutil.copyfile(input_file, f"{tmp_input}/{Path(input_file).name}")
+                args.source_url = [tmp_input]
                 retcode = main.install(args)
                 self.assertEqual(retcode, 0)
 
@@ -111,6 +114,34 @@ class TestInstallSubcommand(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output:
             retcode = main.install(args)
             self.assertEqual(retcode, 1)
+
+    def test_source_urls(self):
+        args = InstallArgs()
+        args.input = "torch==2.1.0.dev20230902"
+        args.platform = ["linux_x86_64"]
+        args.index = ["https://download.pytorch.org/whl/cu118"]
+        args.python_version = "3.11"
+        args.source_url = [
+            "https://download.pytorch.org/whl/nightly/cpu/torch-2.1.0.dev20230902-cp311-none-macosx_11_0_arm64.whl",
+            "https://download.pytorch.org/whl/nightly/cu121/torch-2.1.0.dev20230902%2Bcu121-cp311-cp311-linux_x86_64.whl",
+        ]
+
+        class InstallCommand:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def main(self, args):
+                requirements_file = args[args.index("-r") + 1]
+                with open(requirements_file) as requirements_obj:
+                    requirements = requirements_obj.read()
+                assert "torch-2.1.0.dev20230902%2Bcu121-cp311-cp311-linux_x86_64" in requirements
+                assert "macosx_11_0_arm64" not in requirements
+                assert "whl/cu118" in requirements
+
+        with patch("pip._internal.commands.install.InstallCommand", InstallCommand):
+            with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output:
+                retcode = main.install(args)
+                self.assertEqual(retcode, 0)
 
 
 if __name__ == "__main__":
