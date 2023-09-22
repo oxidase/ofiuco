@@ -20,7 +20,7 @@ if __name__ == "__main__":
         if poetry_lock.exists():
             poetry_lock.unlink()
         poetry_lock.symlink_to(lock.resolve())
-    sys.argv = [sys.argv[0], "update", f"--directory={{dir}}"]
+    sys.argv = [sys.argv[0], "lock", "--no-update", f"--directory={{dir}}"]
     runpy.run_module("poetry", run_name="__main__", alter_sys=True)
 """.format(
         python = _python,
