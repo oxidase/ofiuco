@@ -5,7 +5,7 @@
      script_template = SCRIPT_TEMPLATE
 
 -    executable = None  # for shebangs
-+    executable = "#!/usr/bin/env python4"  # for shebangs
++    executable = "#!/usr/bin/env python3"  # for shebangs
 
      def __init__(self, source_dir, target_dir, add_launchers=True,
                   dry_run=False, fileop=None):

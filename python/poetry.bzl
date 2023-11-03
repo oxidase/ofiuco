@@ -10,7 +10,6 @@ from pathlib import Path
 _LOCK_FILE_NAME = "poetry.lock"
 
 if __name__ == "__main__":
-    import os
     sys.path = {deps} + sys.path
     dir = Path('{toml}').parent
     lock = Path('{lock}')
@@ -20,13 +19,14 @@ if __name__ == "__main__":
         if poetry_lock.exists():
             poetry_lock.unlink()
         poetry_lock.symlink_to(lock.resolve())
-    sys.argv = [sys.argv[0], "lock", "--no-update", f"--directory={{dir}}"]
+    sys.argv = [sys.argv[0], "lock", f"--directory={{dir}}"{update}]
     runpy.run_module("poetry", run_name="__main__", alter_sys=True)
 """.format(
         python = _python,
         deps = repr(["../{}".format(path) for path in ctx.attr._poetry_deps[PyInfo].imports.to_list()]),
         toml = ctx.attr.toml.files.to_list().pop().short_path,
         lock = ctx.attr.lock.files.to_list().pop().short_path,
+        update = "" if ctx.attr.update else ', "--no-update"',
     )
 
     output = ctx.actions.declare_file(ctx.label.name + ".update")
@@ -44,6 +44,7 @@ poetry_update = rule(
     attrs = {
         "toml": attr.label(allow_single_file = [".toml"]),
         "lock": attr.label(allow_single_file = [".lock"]),
+        "update": attr.bool(default = True),
         "_poetry_deps": attr.label(default = "@rules_poetry_deps//:pkg"),
     },
 )
