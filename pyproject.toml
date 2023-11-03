@@ -37,7 +37,7 @@ packages = [{include = "rules_poetry"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-poetry = "1.4.1"
+poetry = "1.6.1"
 
 [build-system]
 requires = ["poetry-core"]
