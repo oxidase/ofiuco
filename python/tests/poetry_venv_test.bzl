@@ -80,7 +80,7 @@ colorama = {version = "*", markers = "platform_system == \\"Windows\\""}
 dev = ["py-make (>=0.1.0)", "twine", "wheel"]
 notebook = ["ipywidgets (>=6)"]
 slack = ["slack-sdk"]
-telegram = ["requests"]
+telegram = ["tqdm", "requests"]
 
 [[package]]
 name = "flask"
@@ -146,6 +146,8 @@ reference = "pytorch"
     asserts.true(env, """"/tmp/moto-4.1.6.tar.gz",""" in build_content)
     asserts.true(env, """extra_index_urls = ["https://download.pytorch.org/whl/cu118"],""" in build_content)
     asserts.true(env, """markers = '''{"triton":"platform_system == \\\\\\"Linux\\\\\\" and platform_machine == \\\\\\"x86_64\\\\\\""}''',""" in build_content)
+    asserts.true(env, """name = "tqdm[telegram]",""" in build_content and """name = "tqdm[slack]",""" in build_content)
+    asserts.true(env, """deps = [":tqdm", ":requests"],""" in build_content and """deps = [":tqdm", ":slack-sdk"],""" in build_content)
 
     return unittest.end(env)
 

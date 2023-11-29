@@ -21,20 +21,27 @@ def dfs_cycles(graph):
                                 stack.append([v, path + [v]])
     return excluded_edges
 
-def parse_lock_file(data, platforms = None):
+def normalize_dep_name(dep_name):
+    return dep_name.strip().strip('"').strip("'").replace("_", "-").replace(".", "-").lower()
+
+def parse_lock_file(data, platforms = None, generate_extras = True):
     _MARKERS = "markers = "
     _SOURCE_URL = "url = "
     _SOURCE_TYPE = "type = "
 
+    visibility = ["//visibility:public"]
+
     # Parse toml file
     packages = {}
     for package_lines in data.split("[[package]]"):
-        section, name, version, description, files, deps, markers = "package", "", "", "", "", [], {}
+        section, name, version, description, files, deps, markers, extras = "package", "", "", "", "", [], {}, {}
         source_type = ""
         for line in package_lines.split("\n"):
             line = line.strip()
             if line == "[package.dependencies]":
                 section = "dependencies"
+            elif line == "[package.extras]":
+                section = "extras"
             elif line == "[package.source]":
                 section = "source"
             elif line.startswith("["):
@@ -47,9 +54,10 @@ def parse_lock_file(data, platforms = None):
                 description = line
             elif section == "package" and line.startswith("{file = ") and ", hash = " in line:
                 files += "\n    " + line.replace("{file = ", "").replace(", hash = ", ": ").replace("},", ",")
+
             elif section == "dependencies" and line and line[0].isalnum():
                 dep_name, dep_version = line.split("=", 1)
-                dep_name = dep_name.strip().strip('"').strip("'").replace("_", "-").replace(".", "-").lower()
+                dep_name = normalize_dep_name(dep_name)
                 deps.append(dep_name)
                 if _MARKERS in dep_version:
                     dep_marker = dep_version[dep_version.find(_MARKERS) + len(_MARKERS):]
@@ -63,6 +71,15 @@ def parse_lock_file(data, platforms = None):
             elif section == "source" and line.startswith(_SOURCE_URL):
                 source_url = line[len(_SOURCE_URL):]
 
+            elif generate_extras and section == "extras" and "=" in line:
+                extra_name, extras_list = line.split("=", 1)
+                extras_list = [
+                    normalize_dep_name(dep.strip(' "').split(" ")[0])
+                    for dep in extras_list.strip(" []").split('"')
+                    if dep and dep[0].isalpha()
+                ]
+                extras[extra_name.strip()] = {x: True for x in [name] + extras_list}.keys()
+
         if not name:
             continue
 
@@ -70,24 +87,25 @@ def parse_lock_file(data, platforms = None):
         source_urls = [source_url] if source_type == "file" or source_type == "url" else []
 
         if name in packages:
-            version_, description_, files_, deps_, markers_, source_urls_, extra_index_urls_ = packages[name]
+            version_, description_, files_, deps_, markers_, source_urls_, extra_index_urls_, extras_ = packages[name]
             if version != version_:
                 fail("{} package requires two different versions {} and {}".format(name, version_, version))
 
+            files = files_ + files
             deps = {x: True for x in deps_ + deps}.keys()
             markers.update(markers_)
             source_urls = {x: True for x in source_urls_ + source_urls}.keys()
             extra_index_urls = {x: True for x in extra_index_urls_ + extra_index_urls}.keys()
-            packages[name] = [version, description, files_ + files, deps, markers, source_urls, extra_index_urls]
-        else:
-            packages[name] = [version, description, files, deps, markers, source_urls, extra_index_urls]
+            extras = extras_ | extras
+
+        packages[name] = [version, description, files, deps, markers, source_urls, extra_index_urls, extras]
 
     # Find dependencies to be excluded to prevent cycles
-    exclude_edges = dfs_cycles({name: deps for name, (_, _, _, deps, _, _, _) in packages.items()})
+    exclude_edges = dfs_cycles({name: deps for name, (_, _, _, deps, _, _, _, _) in packages.items()})
 
     # Generate BUILD file content
     result = ""
-    for name, (version, description, files, deps, markers, source_urls, extra_index_urls) in packages.items():
+    for name, (version, description, files, deps, markers, source_urls, extra_index_urls, extras) in packages.items():
         deps = ['":{}"'.format(u) for u in deps if u not in exclude_edges[name]]
         result += """
 package(
@@ -95,7 +113,7 @@ package(
   constraint = "{name}=={version}",{description}
   files = {{{files}
    }},{deps}{markers}{source_urls}{extra_index_urls}{platforms}
-  visibility = [\"//visibility:public\"],
+  visibility = [{visibility}],
 )
 """.format(
             name = name,
@@ -107,7 +125,21 @@ package(
             source_urls = "\n  source_urls = [\n{}\n  ],".format("\n".join(["    " + url + "," for url in source_urls])) if source_urls else "",
             extra_index_urls = "\n  extra_index_urls = [{}],".format(", ".join(extra_index_urls)) if extra_index_urls else "",
             platforms = "\n  platforms = {},".format(platforms) if platforms else "",
+            visibility = ", ".join(['"{}"'.format(vis) for vis in visibility]),
         )
+
+        for extra_name, extra_deps in extras.items():
+            result += """py_library(
+  name = "{name}[{extra}]",
+  deps = [{deps}],
+  visibility = [{visibility}],
+)
+""".format(
+                name = name,
+                extra = extra_name,
+                deps = ", ".join(['":{}"'.format(dep) for dep in extra_deps]),
+                visibility = ", ".join(['"{}"'.format(vis) for vis in visibility]),
+            )
 
     return result
 
@@ -115,7 +147,7 @@ def _poetry_venv_impl(rctx):
     rules_repository = str(rctx.path(rctx.attr._self)).split("/")[-4]
     rules_repository = ("@@" if "~" in rules_repository else "@") + rules_repository
     prefix = '''load("{name}//python:poetry_deps.bzl", "package")\n'''.format(name = rules_repository)
-    rctx.file("BUILD", prefix + parse_lock_file(rctx.read(rctx.attr.lock), rctx.attr.platforms))
+    rctx.file("BUILD", prefix + parse_lock_file(rctx.read(rctx.attr.lock), rctx.attr.platforms, rctx.attr.generate_extras))
     rctx.file("WORKSPACE")
 
 poetry_venv = repository_rule(
@@ -123,6 +155,10 @@ poetry_venv = repository_rule(
         "lock": attr.label(
             allow_single_file = True,
             doc = "Poetry lock file",
+        ),
+        "generate_extras": attr.bool(
+            default = True,
+            doc = "Generate packages with extra dependencies",
         ),
         "platforms": attr.string_list_dict(
             doc = "The mapping of interpter substrings to Python platform tags and environment markers as a JSON string",
