@@ -7,8 +7,8 @@ _PACKAGES_ENDPOINT = "https://files.pythonhosted.org/packages/"
 _POETRY_INTERNAL_DEPS = [
     (
         "pip",
-        _PACKAGES_ENDPOINT + "47/6a/453160888fab7c6a432a6e25f8afe6256d0d9f2cbd25971021da6491d899/pip-23.3.1-py3-none-any.whl",
-        "55eb67bb6171d37447e82213be585b75fe2b12b359e993773aca4de9247a052b",
+        _PACKAGES_ENDPOINT + "8a/6a/19e9fe04fca059ccf770861c7d5721ab4c2aebc539889e97c7977528a53b/pip-24.0-py3-none-any.whl",
+        "ba0d021a166865d2265246961bec0152ff124de910c5cc39f1156ce3fa7c69dc",
         [":patches/scripts_executable.patch"],
     ),
 ]
