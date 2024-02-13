@@ -46,7 +46,7 @@ def install(args):
             # Add symbolic links to the local directory
             for item in local_package_path.iterdir():
                 (output_path / item.name).symlink_to(item)
-                return 0
+            return 0
 
         # Otherwise it is a list of files or URLs
         # Filter by supported platforms
