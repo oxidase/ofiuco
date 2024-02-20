@@ -3,9 +3,7 @@ sh_test(
     size = "medium",
     srcs = ["integration_test.sh"],
     args = ["simple"],
-    data = glob(["simple/**/*"]) + [
-        "//:distribution",
-    ],
+    data = glob(["simple/**/*"]) + ["//:MODULE.bazel"],
 )
 
 sh_test(
@@ -13,7 +11,5 @@ sh_test(
     size = "medium",
     srcs = ["integration_test.sh"],
     args = ["transitions"],
-    data = glob(["transitions/**/*"]) + [
-        "//:distribution",
-    ],
+    data = glob(["transitions/**/*"]) + ["//:MODULE.bazel"],
 )
