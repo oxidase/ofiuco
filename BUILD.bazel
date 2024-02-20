@@ -1,15 +1,1 @@
-filegroup(
-    name = "distribution",
-    srcs = [
-        "BUILD.bazel",
-        "MODULE.bazel",
-        "WORKSPACE",
-        "//lib:distribution",
-        "//lib/private:distribution",
-        "//python:distribution",
-        "//python/private:distribution",
-    ],
-    visibility = [
-        "//examples:__pkg__",
-    ],
-)
+exports_files(["MODULE.bazel"])
