@@ -1,4 +1,6 @@
 import argparse
+import filecmp
+import warnings
 from pathlib import Path
 
 SKIP_SET = {Path("requirements.txt")}
@@ -22,7 +24,17 @@ if __name__ == "__main__":
             relative_directory = directory_path.relative_to(target_directory, walk_up=True)
 
             for file_name in file_names:
-                if in_package_directory / file_name not in SKIP_SET:
-                    symlink_path = target_directory / file_name
-                    target_path = relative_directory / file_name
-                    symlink_path.symlink_to(target_path)
+                if in_package_directory / file_name in SKIP_SET:
+                    continue
+
+                symlink_path = target_directory / file_name
+                target_path = relative_directory / file_name
+                if symlink_path.exists():
+                    if not filecmp.cmp(symlink_path, directory_path / file_name, shallow=False):
+                        warnings.warn(
+                            f"{symlink_path} already exists and points to {symlink_path.readlink()}\n"
+                            + f"Skip {target_path} which seems to have different contents"
+                        )
+                    continue
+
+                symlink_path.symlink_to(target_path)
