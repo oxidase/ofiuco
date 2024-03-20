@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     for python_path in args.path:
         if not python_path.exists() or not python_path.is_dir():
-            raise RuntimeError(f"Required Python package directory {path} does not exist")
+            raise RuntimeError(f"Required Python package directory {python_path} does not exist")
 
         for directory_path, _, file_names in python_path.walk():
             in_package_directory = directory_path.relative_to(python_path)

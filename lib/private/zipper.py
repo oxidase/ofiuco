@@ -1,9 +1,16 @@
 import argparse
 import logging
+import stat
 import sys
 import zipfile
 from pathlib import Path
 from typing import List
+
+
+def get_external_attr(path: Path) -> int:
+    """Get zip file external attributes for a path."""
+    st = path.stat()
+    return (stat.S_IRUSR | stat.S_IWUSR | (st.st_mode & stat.S_IXUSR)) << 16
 
 
 def compress(options: str, dir_path: Path, output_path: Path, file_paths: List[str]) -> None:
@@ -37,11 +44,13 @@ def compress(options: str, dir_path: Path, output_path: Path, file_paths: List[s
                     relative_path = zip_path + str(globbed_file).removeprefix(str(mayby_file_path))
                     file_data = open(globbed_file, "rb").read()
                     file_info = zipfile.ZipInfo(relative_path)
+                    file_info.external_attr = get_external_attr(globbed_file)
                     zipf.writestr(file_info, file_data, compression)
             else:
                 zip_path = Path(zip_path).name if flatten else zip_path
                 file_data = open(mayby_file_path, "rb").read() if file_path else b""
                 file_info = zipfile.ZipInfo(zip_path)
+                file_info.external_attr = get_external_attr(mayby_file_path)
                 zipf.writestr(file_info, file_data, compression)
 
 
