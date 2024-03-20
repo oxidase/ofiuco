@@ -1,8 +1,16 @@
 load("@rules_poetry//lib:py_zip.bzl", "py_zip")
-load(":transitions.bzl", "py_binary_arm64", "py_binary_win", "py_binary_x86_64")
+load(":transitions.bzl", "py_binary_darwin_arm64", "py_binary_linux_arm64", "py_binary_linux_x86_64", "py_binary_win32_x86_64")
 
 platform(
-    name = "arm64",
+    name = "darwin_arm64",
+    constraint_values = [
+        "@platforms//os:macos",
+        "@platforms//cpu:arm64",
+    ],
+)
+
+platform(
+    name = "linux_arm64",
     constraint_values = [
         "@platforms//os:linux",
         "@platforms//cpu:arm64",
@@ -10,7 +18,7 @@ platform(
 )
 
 platform(
-    name = "x86_64",
+    name = "linux_x86_64",
     constraint_values = [
         "@platforms//os:linux",
         "@platforms//cpu:x86_64",
@@ -18,7 +26,7 @@ platform(
 )
 
 platform(
-    name = "win",
+    name = "win32_x86_64",
     constraint_values = [
         "@platforms//os:windows",
         "@platforms//cpu:x86_64",
@@ -33,43 +41,54 @@ py_binary(
     ],
 )
 
-py_binary_arm64(
-    name = "app_arm64",
+py_binary_darwin_arm64(
+    name = "app_darwin_arm64",
     binary = ":app",
 )
 
 py_zip(
-    name = "deploy_arm64",
-    target = ":app_arm64",
+    name = "deploy_darwin_arm64",
+    target = ":app_darwin_arm64",
 )
 
-py_binary_win(
-    name = "app_win",
+py_binary_linux_arm64(
+    name = "app_linux_arm64",
     binary = ":app",
 )
 
 py_zip(
-    name = "deploy_win",
-    target = ":app_win",
+    name = "deploy_linux_arm64",
+    target = ":app_linux_arm64",
 )
 
-py_binary_x86_64(
-    name = "app_x86_64",
+py_binary_win32_x86_64(
+    name = "app_win32_x86_64",
     binary = ":app",
 )
 
 py_zip(
-    name = "deploy_x86_64",
-    target = ":app_x86_64",
+    name = "deploy_win32_x86_64",
+    target = ":app_win32_x86_64",
+)
+
+py_binary_linux_x86_64(
+    name = "app_linux_x86_64",
+    binary = ":app",
+)
+
+py_zip(
+    name = "deploy_linux_x86_64",
+    target = ":app_linux_x86_64",
 )
 
 py_test(
     name = "test",
     srcs = ["test.py"],
     data = [
-        ":deploy_arm64",
-        ":deploy_win",
-        ":deploy_x86_64",
+        ":deploy_darwin_arm64",
+        ":deploy_linux_arm64",
+        ":deploy_linux_x86_64",
+        ":deploy_win32_x86_64",
     ],
     deps = [
         "@poetry//:pyelftools",

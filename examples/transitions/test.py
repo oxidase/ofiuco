@@ -1,8 +1,10 @@
 import json
 import os
 import pathlib
+import platform
 import re
 import struct
+import subprocess
 import sys
 import zipfile
 
@@ -10,7 +12,7 @@ import pytest
 from elftools.elf.elffile import ELFFile
 
 
-@pytest.mark.parametrize("zip_name, arch", [("deploy_arm64.zip", "AArch64"), ("deploy_x86_64.zip", "x64")])
+@pytest.mark.parametrize("zip_name, arch", [("deploy_linux_arm64.zip", "AArch64"), ("deploy_linux_x86_64.zip", "x64")])
 def test_elf_dynamic_libraries_in_deployment_zip(zip_name, arch):
     dynamic_libraries_re = re.compile(".*\\.so$")
     dynamic_libraries = []
@@ -28,7 +30,7 @@ def test_elf_dynamic_libraries_in_deployment_zip(zip_name, arch):
 
 def test_pe_files_in_deployment_zip():
     files_re, files = re.compile(".*\\.(dll|exe|pyd)$"), []
-    with zipfile.ZipFile("deploy_win.zip") as zip_file:
+    with zipfile.ZipFile("deploy_win32_x86_64.zip") as zip_file:
         for file_name in [name for name in zip_file.namelist() if files_re.match(name)]:
             with zip_file.open(file_name) as zipped_file:
                 data = zipped_file.read()
@@ -43,8 +45,8 @@ def test_pe_files_in_deployment_zip():
         assert any([name for name in files if name_part in name])
 
 
-@pytest.mark.parametrize("name, arch", [("deploy_arm64", "AArch64"), ("deploy_x86_64", "x64")])
-def test_python_path(name, arch):
+@pytest.mark.parametrize("name", ["deploy_linux_arm64", "deploy_linux_x86_64"])
+def test_python_path(name):
     with zipfile.ZipFile(name + ".zip") as zip_file:
         zipped_names = zip_file.namelist()
 
@@ -57,6 +59,19 @@ def test_python_path(name, arch):
 
     for path in python_paths:
         assert any(name for name in zipped_names if path in name)
+
+    assert "__main__.py" in zipped_names
+
+
+def test_python_zip():
+    zip_name = pathlib.Path(f"deploy_{sys.platform}_{platform.machine()}.zip")
+    if zip_name.exists():
+        result = subprocess.run([sys.executable, os.fspath(zip_name.resolve())], stdout=subprocess.PIPE)
+        assert result.returncode == 0
+
+        stdout = result.stdout.decode()
+        assert "module 'numpy'" in stdout
+        assert "/bin/python3" in stdout
 
 
 if __name__ == "__main__":
