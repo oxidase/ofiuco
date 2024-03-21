@@ -27,3 +27,8 @@ platform(
         "@platforms//cpu:arm64",
     ],
 )
+
+py_binary(
+    name = "test_binary",
+    srcs = ["test_binary.py"],
+)

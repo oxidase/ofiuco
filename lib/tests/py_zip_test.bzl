@@ -2,18 +2,9 @@
 
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
-load("//lib:py_zip.bzl", "py_zip", "py_zip_with_transition")
+load("//lib:py_zip.bzl", "py_zip")
 
-def _lambda_platforms_impl(settings, attr):
-    return {"//command_line_option:platforms": [":lambda"]}
-
-lambda_transition = transition(
-    implementation = _lambda_platforms_impl,
-    inputs = [],
-    outputs = ["//command_line_option:platforms"],
-)
-
-py_zip_lambda = py_zip_with_transition(lambda_transition)
+EXCLUDE = ["**/*.dist-info/*", "**__*__???", "**_vendor**", "**.typed", "**poetry_pip/*"]
 
 def _py_zip_test_impl(ctx):
     env = analysistest.begin(ctx)
@@ -33,17 +24,31 @@ def _test_py_zip():
     py_zip(
         name = "test_py_zip_contents_subject",
         target = "@rules_poetry_pip//:pkg",
-        exclude = ["**/*.dist-info/*", "**__*__???", "**_vendor**", "**.typed", "**poetry_pip/*"],
+        exclude = EXCLUDE,
     )
 
-    py_zip_lambda(
+    py_zip(
         name = "test_py_zip_transition_subject",
         target = "@rules_poetry_pip//:pkg",
-        exclude = ["**/*.dist-info/*", "**__*__???", "**_vendor**", "**.typed", "**poetry_pip/*"],
+        platform = ":lambda",
+        exclude = EXCLUDE,
+    )
+
+    py_zip(
+        name = "test_py_zip_with_main_subject",
+        target = ":test_binary",
+    )
+
+    py_zip(
+        name = "test_py_zip_without_main_subject",
+        target = ":test_binary",
+        exclude = ["__main__.py"],
     )
 
     py_zip_test(name = "py_zip_contents_test", target_under_test = ":test_py_zip_contents_subject")
     py_zip_test(name = "py_zip_transition_test", target_under_test = ":test_py_zip_transition_subject")
+    py_zip_test(name = "py_zip_with_main_test", target_under_test = ":test_py_zip_with_main_subject")
+    py_zip_test(name = "py_zip_without_main_test", target_under_test = ":test_py_zip_without_main_subject")
 
     native.sh_test(
         name = "py_zip_validate",
@@ -52,7 +57,29 @@ def _test_py_zip():
         data = [":test_py_zip_contents_subject"],
     )
 
-    return [":py_zip_contents_test", ":py_zip_transition_test", ":py_zip_validate"]
+    native.sh_test(
+        name = "py_zip_has_main",
+        srcs = ["py_zip_grep.sh"],
+        args = ["$(locations :test_py_zip_with_main_subject) -qce ' __main__.py'"],
+        data = [":test_py_zip_with_main_subject"],
+    )
+
+    native.sh_test(
+        name = "py_zip_has_no_main",
+        srcs = ["py_zip_grep.sh"],
+        args = ["$(locations :test_py_zip_without_main_subject) -vqce ' __main__.py'"],
+        data = [":test_py_zip_without_main_subject"],
+    )
+
+    return [
+        ":py_zip_contents_test",
+        ":py_zip_transition_test",
+        ":py_zip_validate",
+        ":py_zip_with_main_test",
+        ":py_zip_without_main_test",
+        ":py_zip_has_main",
+        "py_zip_has_no_main",
+    ]
 
 def py_zip_test_suite():
     py_zip_tests = _test_py_zip()

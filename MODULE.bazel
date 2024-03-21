@@ -1,6 +1,6 @@
 module(
     name = "rules_poetry",
-    version = "0.3.2",
+    version = "0.3.1",
     compatibility_level = 1,
 )
 
