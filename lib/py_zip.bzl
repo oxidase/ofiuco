@@ -1,4 +1,3 @@
-load("//lib/private:py_zip.bzl", _with_transition = "with_transition")
+load("//lib/private:py_zip.bzl", _py_zip = "py_zip")
 
-py_zip = _with_transition("target")
-py_zip_with_transition = _with_transition
+py_zip = _py_zip

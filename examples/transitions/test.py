@@ -63,10 +63,11 @@ def test_python_path(name):
     assert "__main__.py" in zipped_names
 
 
-def test_python_zip():
-    zip_name = pathlib.Path(f"deploy_{sys.platform}_{platform.machine()}.zip")
-    if zip_name.exists():
-        result = subprocess.run([sys.executable, os.fspath(zip_name.resolve())], stdout=subprocess.PIPE)
+@pytest.mark.parametrize("zip_name", ["default.zip", "host.zip", f"deploy_{sys.platform}_{platform.machine()}.zip"])
+def test_python_zip(zip_name):
+    zip_path = pathlib.Path(zip_name)
+    if not zip_name.startswith("deploy_") or zip_path.exists():
+        result = subprocess.run([sys.executable, os.fspath(zip_path.resolve())], stdout=subprocess.PIPE)
         assert result.returncode == 0
 
         stdout = result.stdout.decode()
