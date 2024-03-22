@@ -14,7 +14,7 @@ _POETRY_INTERNAL_DEPS = [
 ]
 
 def _poetry_deps_repo_impl(ctx):
-    poetry_version = "1.6.1"
+    poetry_version = "1.8.2"
 
     # Intentionally use a host default interpreter as the repository only used in host tooling targets
     # This may lead to inconsistency if the repository will be used with a different toolchain
