@@ -1,0 +1,5 @@
+{
+    "url": "https://github.com/oxidase/rules_poetry/releases/download/v{TAG}/rules_poetry-{TAG}.tar.gz",
+    "integrity": "",
+    "strip_prefix": "rules_poetry-{TAG}"
+}
