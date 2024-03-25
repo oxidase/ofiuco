@@ -17,3 +17,5 @@ poetry.parse(
     lock = "//:poetry.lock",
 )
 use_repo(poetry, "poetry")
+
+register_toolchains("//:empty_cc_toolchain")

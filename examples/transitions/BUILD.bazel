@@ -1,3 +1,4 @@
+load("@bazel_tools//tools/cpp:empty_cc_toolchain_config.bzl", "cc_toolchain_config")
 load("@rules_poetry//lib:py_zip.bzl", "py_zip")
 load(":transitions.bzl", "py_binary_linux_x86_64")
 
@@ -31,6 +32,37 @@ platform(
         "@platforms//os:windows",
         "@platforms//cpu:x86_64",
     ],
+)
+
+filegroup(
+    name = "empty",
+    srcs = [],
+)
+
+cc_toolchain_config(
+    name = "empty_config",
+)
+
+cc_toolchain(
+    name = "cc-compiler-empty",
+    all_files = ":empty",
+    ar_files = ":empty",
+    as_files = ":empty",
+    compiler_files = ":empty",
+    dwp_files = ":empty",
+    linker_files = ":empty",
+    objcopy_files = ":empty",
+    strip_files = ":empty",
+    supports_param_files = 0,
+    toolchain_config = ":empty_config",
+)
+
+toolchain(
+    name = "empty_cc_toolchain",
+    target_compatible_with = [
+    ],
+    toolchain = ":cc-compiler-empty",
+    toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
 )
 
 py_binary(
