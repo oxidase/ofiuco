@@ -41,5 +41,5 @@ jobs:
 
       - name: Run tests
         id: tests
-        run: bazel test ... --spawn_strategy=standalone
+        run: bazel test ... --spawn_strategy=standalone --verbose_failures
         shell: bash

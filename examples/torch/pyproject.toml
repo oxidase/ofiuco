@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "torch with CUDA example"
+version = "0.0.0"
+description = ""
+readme = "README.md"
+authors = []
+
+[tool.poetry.dependencies]
+numpy = "^1.26.0"
+python = ">=3.12"
+torch = [
+  {platform = "darwin", version = "2.2.1", source="pypi"},
+  {platform = "linux", url = "https://download.pytorch.org/whl/cu121/torch-2.2.1%2Bcu121-cp312-cp312-linux_x86_64.whl"},
+]
+
+[tool.poetry.group.dev.dependencies]
+pytest = {version = "^7.2", "python" = ">=3.7"}
