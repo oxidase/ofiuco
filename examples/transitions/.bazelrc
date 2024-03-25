@@ -1,2 +1,0 @@
-common --enable_bzlmod
-common --incompatible_enable_cc_toolchain_resolution=no
