@@ -1,0 +1,28 @@
+load("@rules_poetry//python:poetry.bzl", "poetry_update")
+load("@rules_poetry//python:py_venv.bzl", "py_venv")
+
+py_venv(
+    name = "torch_venv",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@poetry//:torch",
+    ],
+)
+
+py_test(
+    name = "test",
+    size = "small",
+    srcs = ["test.py"],
+    data = ["poetry.lock"],
+    deps = [
+        ":torch_venv",
+        "@poetry//:numpy",
+        "@poetry//:pytest",
+    ],
+)
+
+poetry_update(
+    name = "update_lock",
+    lock = "poetry.lock",
+    toml = "pyproject.toml",
+)

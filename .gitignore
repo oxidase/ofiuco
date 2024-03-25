@@ -1,1 +1,2 @@
 bazel-*
+examples/*/MODULE.bazel.lock

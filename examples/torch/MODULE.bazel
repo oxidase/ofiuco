@@ -1,0 +1,18 @@
+bazel_dep(name = "rules_python", version = "0.31.0")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(python_version = "3.12")
+use_repo(python, "python_3_12")
+
+bazel_dep(name = "rules_poetry", version = "0.0.0")
+local_path_override(
+    module_name = "rules_poetry",
+    path = "../..",
+)
+
+poetry = use_extension("@rules_poetry//python:extensions.bzl", "poetry")
+poetry.parse(
+    name = "poetry",
+    lock = "//:poetry.lock",
+)
+use_repo(poetry, "poetry")
