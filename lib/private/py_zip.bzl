@@ -61,6 +61,10 @@ def _py_zip_impl(ctx):
         args.append(main_short_path + "=" + zip_main_entry.path)
         filtered_deps.append(zip_main_entry)
 
+    ## Generate zip manifest file
+    manifest_file = ctx.actions.declare_file(basename + ".manifest")
+    ctx.actions.write(manifest_file, "\n".join(args))
+
     ## Genrate a JSON files with enviroment variables for downstream consumers
     python_paths = [workspace_dir] + [path for path in target[PyInfo].imports.to_list()]
     json_file = ctx.actions.declare_file(basename + ".json")
@@ -70,10 +74,10 @@ def _py_zip_impl(ctx):
     output_file = ctx.actions.declare_file(basename + ".zip")
     ctx.actions.run(
         outputs = [output_file],
-        inputs = filtered_deps,
+        inputs = [manifest_file] + filtered_deps,
         executable = ctx.executable._zipper,
-        arguments = ["cC", output_file.path] + args,
-        progress_message = "Creating archive...",
+        arguments = ["cC", output_file.path, "-m", manifest_file.path],
+        progress_message = "Creating archive {}".format(output_file.short_path),
         mnemonic = "archiver",
         env = {
             "LANG": "C.UTF-8",

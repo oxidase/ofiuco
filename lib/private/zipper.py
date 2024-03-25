@@ -59,9 +59,15 @@ if __name__ == "__main__":
     parser.add_argument("command", type=str, help="command 'vxc[fC]'")
     parser.add_argument("zip", type=str, help="zip file name'")
     parser.add_argument("-d", dest="dir", default=".", help="output directory")
-    parser.add_argument("files", type=str, nargs="+")
+    parser.add_argument("-m", dest="manifest", type=Path, help="manifest file")
+    parser.add_argument("files", type=str, nargs="*")
 
     args = parser.parse_args()
+
+    files = args.files
+    if args.manifest is not None:
+        manifest_lines = [line.strip("\n") for line in args.manifest.open().readlines()]
+        files.extend([line for line in manifest_lines if line])
 
     if args.command.startswith("c"):
         compress(args.command, Path(args.dir), args.zip, args.files)

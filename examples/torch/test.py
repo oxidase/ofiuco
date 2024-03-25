@@ -6,8 +6,6 @@ import pytest
 
 import torch
 
-print(sys.platform)
-
 
 def test_torch_version():
     dependencies = tomllib.load(open("poetry.lock", "rb"))
