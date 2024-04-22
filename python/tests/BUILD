@@ -17,3 +17,16 @@ py_test(
         "//python:poetry_deps",
     ],
 )
+
+py_test(
+    name = "py_venv_test",
+    srcs = [
+        "py_venv_test.py",
+    ],
+    data = [
+        "resources/six-1.16.0-py2.py3-none-any.whl",
+    ],
+    deps = [
+        "//python:py_venv",
+    ],
+)
