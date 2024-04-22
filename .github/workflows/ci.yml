@@ -17,19 +17,28 @@ jobs:
         include: # TODO: windows-latest
           - os: ubuntu-latest
             cache: ~/.cache/bazel
+            python: '3.8'
           - os: macos-latest
             cache: /private/var/tmp/_bazel_runner
+            python: '3.12'
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
 
       - name: Setup bazelisk
         uses: bazelbuild/setup-bazelisk@v2
 
       - name: Show info
         id: info
-        run: bazel info
+        run: |
+          python3 -V
+          bazel info
         shell: bash
 
       - name: Mount bazel cache
