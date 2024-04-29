@@ -5,6 +5,7 @@
     args = [name],
     data = glob(["{}/**/*".format(name)]) + ["//:MODULE.bazel"],
 ) for name in [
+    "markers",
     "simple",
     "torch",
     "transitions",

@@ -46,6 +46,7 @@ def _derive_environment_markers(interpreter, interpreter_markers):
         "platform_python_implementation": "CPython",
         "platform_tags": [],
         "python_version": _get_python_version(interpreter),
+        "interpreter": interpreter,
     }
 
     for fr, to in interpreter_markers.items():

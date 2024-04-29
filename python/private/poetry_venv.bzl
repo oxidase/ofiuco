@@ -160,7 +160,7 @@ poetry_venv = repository_rule(
             default = True,
             doc = "Generate packages with extra dependencies",
         ),
-        "platforms": attr.string_list_dict(
+        "platforms": attr.string_dict(
             doc = "The mapping of interpter substrings to Python platform tags and environment markers as a JSON string",
         ),
         "_self": attr.label(
