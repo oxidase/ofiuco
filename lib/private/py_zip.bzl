@@ -3,6 +3,7 @@ Support for serverless deployments.
 """
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
+load("//python:poetry_deps.bzl", _get_imports = "get_imports")
 load(":runfiles.bzl", _matches = "matches")
 
 DEFAULT_STUB_SHEBANG = "#!/usr/bin/env python3"
@@ -66,7 +67,7 @@ def _py_zip_impl(ctx):
     ctx.actions.write(manifest_file, "\n".join(args))
 
     ## Genrate a JSON files with enviroment variables for downstream consumers
-    python_paths = [workspace_dir] + [path for path in target[PyInfo].imports.to_list()]
+    python_paths = [workspace_dir] + _get_imports(target).to_list()
     json_file = ctx.actions.declare_file(basename + ".json")
     ctx.actions.write(json_file, json.encode({"environment": {"PYTHONPATH": ":".join(python_paths)}}))
 

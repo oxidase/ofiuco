@@ -14,7 +14,7 @@ This allows to use platform information of resolved Python toolchains and build 
 To import `rules_poetry` in your project, you first need to add it to your `MODULE.bazel` file
 
 ```python
-bazel_dep(name = "rules_python", version = "0.31.0")
+bazel_dep(name = "rules_python", version = "0.32.2")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.12")

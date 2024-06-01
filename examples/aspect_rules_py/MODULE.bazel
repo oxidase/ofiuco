@@ -1,0 +1,27 @@
+module(
+    name = "poetry_demo",
+    version = "0.1.0",
+)
+
+bazel_dep(name = "aspect_rules_py", version = "0.7.3")
+bazel_dep(name = "rules_python", version = "0.32.2")
+
+# Register a hermetic Python toolchain rather than rely on a locally-installed
+# interpreter.
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    configure_coverage_tool = True,
+    is_default = True,
+    python_version = "3.11",
+)
+use_repo(python, "python_3_11")
+
+# https://registry.bazel.build/modules/rules_poetry
+bazel_dep(name = "rules_poetry", version = "0.3.4")
+
+poetry = use_extension("@rules_poetry//python:extensions.bzl", "poetry")
+poetry.parse(
+    name = "poetry",
+    lock = "//:poetry.lock",
+)
+use_repo(poetry, "poetry")

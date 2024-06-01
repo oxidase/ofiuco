@@ -1,4 +1,5 @@
 load("@rules_poetry_deps//:defs.bzl", _python = "python")
+load("//python:poetry_deps.bzl", _get_imports = "get_imports")
 
 def _poetry_update_impl(ctx):
     script = """#!{python}
@@ -23,7 +24,7 @@ if __name__ == "__main__":
     runpy.run_module("poetry", run_name="__main__", alter_sys=True)
 """.format(
         python = _python,
-        deps = repr(["../{}".format(path) for path in ctx.attr._poetry_deps[PyInfo].imports.to_list()]),
+        deps = repr(["../{}".format(path) for path in _get_imports(ctx.attr._poetry_deps).to_list()]),
         toml = ctx.attr.toml.files.to_list().pop().short_path,
         lock = ctx.attr.lock.files.to_list().pop().short_path,
         update = "" if ctx.attr.update else ', "--no-update"',

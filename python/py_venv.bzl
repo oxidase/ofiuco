@@ -1,3 +1,6 @@
+load("@rules_python//python:defs.bzl", StarPyInfo = "PyInfo")
+load("//python:poetry_deps.bzl", _get_imports = "get_imports", _get_transitive_sources = "get_transitive_sources")
+
 def _py_venv_impl(ctx):
     """
     Rule to link Python package into a virtual environment.
@@ -17,7 +20,8 @@ def _py_venv_impl(ctx):
 
     deps = ctx.attr.deps
     output = ctx.actions.declare_directory("venv/{}".format(ctx.label.name))
-    import_paths = ["{}/external/{}".format(ctx.bin_dir.path, path) for dep in deps for path in dep[PyInfo].imports.to_list()]
+    import_depsets = depset(transitive = [_get_imports(dep) for dep in deps])
+    import_paths = ["{}/external/{}".format(ctx.bin_dir.path, path) for path in import_depsets.to_list()]
 
     ctx.actions.run(
         outputs = [output],
@@ -29,18 +33,20 @@ def _py_venv_impl(ctx):
         executable = ctx.executable._py_venv,
     )
 
-    transitive_depsets = [dep[PyInfo].transitive_sources for dep in deps]
+    transitive_depsets = [_get_transitive_sources(dep) for dep in deps]
     runfiles = [output] + [item for dep in transitive_depsets for item in dep.to_list()]
     files = depset([output], transitive = transitive_depsets)
+    imports = depset(["_main/" + output.short_path])
 
     return [
         DefaultInfo(files = files, runfiles = ctx.runfiles(files = runfiles)),
-        PyInfo(transitive_sources = files, imports = depset(["_main/" + output.short_path])),
+        PyInfo(transitive_sources = files, imports = imports),
+        StarPyInfo(transitive_sources = files, imports = imports),
     ]
 
 py_venv = rule(
     implementation = _py_venv_impl,
-    provides = [PyInfo],
+    provides = [PyInfo, StarPyInfo],
     attrs = {
         "deps": attr.label_list(doc = "The package dependencies list"),
         "_py_venv": attr.label(default = ":py_venv", cfg = "exec", executable = True),

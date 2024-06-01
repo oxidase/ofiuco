@@ -1,0 +1,9 @@
+load("@aspect_rules_py//py:defs.bzl", "py_binary")
+
+py_test(
+    name = "test",
+    srcs = ["test.py"],
+    deps = [
+        "@poetry//:absl-py",
+    ],
+)
