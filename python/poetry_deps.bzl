@@ -114,10 +114,11 @@ def _package_impl(ctx):
         outputs = [output],
         inputs = [],
         mnemonic = "InstallWheel",
-        progress_message = "Installing package {} for Python {} {}".format(ctx.label.name, python_version, runtime_tag),
+        progress_message = "Installing package {} ({}) for Python {} {}".format(ctx.label.name, ctx.attr.constraint, python_version, runtime_tag),
         arguments = arguments,
         use_default_shell_env = True,
         executable = ctx.executable._poetry_deps,
+        execution_requirements = {"requires-network": ""},
     )
 
     deps = [dep for dep in ctx.attr.deps if _include_dep(dep, ctx.attr.markers, tags)]
