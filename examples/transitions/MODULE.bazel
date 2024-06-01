@@ -1,4 +1,4 @@
-bazel_dep(name = "rules_python", version = "0.31.0")
+bazel_dep(name = "rules_python", version = "0.32.2")
 bazel_dep(name = "platforms", version = "0.0.8")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")

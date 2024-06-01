@@ -1,5 +1,6 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//lib:versions.bzl", "versions")
+load("@rules_python//python:defs.bzl", StarPyInfo = "PyInfo")
 load("//python:markers.bzl", "evaluate", "parse")
 
 # Environment Markers https://peps.python.org/pep-0508/#environment-markers
@@ -122,18 +123,20 @@ def _package_impl(ctx):
     )
 
     deps = [dep for dep in ctx.attr.deps if _include_dep(dep, ctx.attr.markers, tags)]
-    transitive_imports = [dep[PyInfo].imports for dep in deps]
-    transitive_depsets = [dep[PyInfo].transitive_sources for dep in deps]
+    transitive_imports = [get_imports(dep) for dep in deps]
+    transitive_depsets = [get_transitive_sources(dep) for dep in deps]
     runfiles = [output] + [item for dep in transitive_depsets for item in dep.to_list()]
     files = depset([output], transitive = transitive_depsets)
+    imports = depset([output.short_path.replace("../", "")], transitive = transitive_imports)
     return [
         DefaultInfo(files = files, runfiles = ctx.runfiles(files = runfiles)),
-        PyInfo(transitive_sources = files, imports = depset([output.short_path.replace("../", "")], transitive = transitive_imports)),
+        PyInfo(transitive_sources = files, imports = imports),
+        StarPyInfo(transitive_sources = files, imports = imports),
     ]
 
 package = rule(
     implementation = _package_impl,
-    provides = [PyInfo],
+    provides = [PyInfo, StarPyInfo],
     attrs = {
         "constraint": attr.string(mandatory = True, doc = "The package version constraint string"),
         "deps": attr.label_list(doc = "The package dependencies list"),
@@ -154,3 +157,15 @@ package = rule(
         "@bazel_tools//tools/python:toolchain_type",
     ],
 )
+
+def get_imports(target):
+    for info in [StarPyInfo, PyInfo]:
+        if info in target:
+            return target[info].imports
+    return depset()
+
+def get_transitive_sources(target):
+    for info in [StarPyInfo, PyInfo]:
+        if info in target:
+            return target[info].transitive_sources
+    return depset()
