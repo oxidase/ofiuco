@@ -3,7 +3,7 @@ Support for serverless deployments.
 """
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
-load("//python:poetry_deps.bzl", _get_imports = "get_imports")
+load("//python/private:poetry_deps.bzl", _get_imports = "get_imports")
 load(":runfiles.bzl", _matches = "matches")
 
 DEFAULT_STUB_SHEBANG = "#!/usr/bin/env python3"

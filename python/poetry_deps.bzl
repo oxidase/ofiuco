@@ -1,71 +1,9 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//lib:versions.bzl", "versions")
 load("@rules_python//python:defs.bzl", StarPyInfo = "PyInfo")
-load("//python:markers.bzl", "evaluate", "parse")
-
-# Environment Markers https://peps.python.org/pep-0508/#environment-markers
-#
-# Platform tags https://packaging.python.org/en/latest/specifications/platform-compatibility-tags/#platform-tag
-#
-# Order of platform tags is used to resolve ambiguity in pip as valid tags order defined in
-# [TargetPython.get_sorted_tags](https://github.com/pypa/pip/blob/0827d76b/src/pip/_internal/models/target_python.py#L104-L110)
-# is used as a priority map for found packages in a
-# [CandidateEvaluator._sort_key](https://github.com/pypa/pip/blob/0827d76b/src/pip/_internal/index/package_finder.py#L529-L533)
-# of CandidateEvaluator.compute_best_candidate.
-_DEFAULT_PLATFORMS = {
-    "aarch64-apple-darwin": """{"os_name": "posix", "platform_machine": "arm64", "platform_system": "Darwin", "platform_tags": ["macosx_11_0_arm64", "macosx_12_0_arm64", "macosx_13_0_arm64", "macosx_14_0_arm64"], "sys_platform": "darwin"}""",
-    "aarch64-unknown-linux-gnu": """{"os_name": "posix", "platform_machine": "arm64", "platform_system": "Linux", "platform_tags": ["manylinux_2_17_arm64", "manylinux_2_17_aarch64"], "sys_platform": "linux"}""",
-    "x86_64-apple-darwin": """{"os_name": "posix", "platform_machine": "x86_64", "platform_system": "Darwin", "platform_tags": ["macosx_10_15_x86_64"], "sys_platform": "darwin"}""",
-    "x86_64-pc-windows-msvc": """{"os_name": "nt", "platform_machine": "x86_64", "platform_system": "Windows", "platform_tags": ["win_amd64"], "sys_platform": "win32"}""",
-    "x86_64-unknown-linux-gnu": """{"os_name": "posix", "platform_machine": "x86_64", "platform_system": "Linux", "platform_tags": ["linux_x86_64", "manylinux2014_x86_64", "manylinux_2_12_x86_64", "manylinux_2_17_x86_64", "manylinux_2_27_x86_64", "manylinux_2_28_x86_64"], "sys_platform": "linux"}""",
-}
-
-def _collect_version(parts):
-    version = []
-    for index in range(len(parts)):
-        if not parts[index].isdigit():
-            break
-
-        version.append(parts[index])
-
-    return ".".join(version)
-
-def _get_python_version(interpreter):
-    parts = interpreter.split("_")
-    for index in range(len(parts)):
-        if parts[index].endswith("python3"):
-            return "3." + _collect_version(parts[index + 1:])
-        elif parts[index].endswith("python"):
-            return _collect_version(parts[index + 1:])
-
-    return "3"
-
-def _derive_environment_markers(interpreter, interpreter_markers):
-    tags = {
-        "extra": "*",
-        "implementation_name": "cpython",
-        "platform_python_implementation": "CPython",
-        "platform_tags": [],
-        "python_version": _get_python_version(interpreter),
-        "interpreter": interpreter,
-    }
-
-    for fr, to in interpreter_markers.items():
-        if fr in interpreter:
-            tags.update(**json.decode(to))
-            return fr, tags
-
-    return "default", tags
-
-def _include_dep(dep, markers, environment):
-    if not markers:
-        return True
-    markers = json.decode(markers)
-    if dep.label.name not in markers:
-        return True
-
-    marker = markers[dep.label.name]
-    return evaluate(parse(marker, environment))
+load("//python/private:poetry_deps.bzl", _derive_environment_markers = "derive_environment_markers", _include_dep = "include_dep")
+load("//python/private:poetry_deps.bzl", _get_imports = "get_imports", _get_transitive_sources = "get_transitive_sources")
+load("//python/private:poetry_deps.bzl", _DEFAULT_PLATFORMS = "DEFAULT_PLATFORMS")
 
 def _package_impl(ctx):
     """
@@ -123,8 +61,8 @@ def _package_impl(ctx):
     )
 
     deps = [dep for dep in ctx.attr.deps if _include_dep(dep, ctx.attr.markers, tags)]
-    transitive_imports = [get_imports(dep) for dep in deps]
-    transitive_depsets = [get_transitive_sources(dep) for dep in deps]
+    transitive_imports = [_get_imports(dep) for dep in deps]
+    transitive_depsets = [_get_transitive_sources(dep) for dep in deps]
     runfiles = [output] + [item for dep in transitive_depsets for item in dep.to_list()]
     files = depset([output], transitive = transitive_depsets)
     imports = depset([output.short_path.replace("../", "")], transitive = transitive_imports)
@@ -157,15 +95,3 @@ package = rule(
         "@bazel_tools//tools/python:toolchain_type",
     ],
 )
-
-def get_imports(target):
-    for info in [StarPyInfo, PyInfo]:
-        if info in target:
-            return target[info].imports
-    return depset()
-
-def get_transitive_sources(target):
-    for info in [StarPyInfo, PyInfo]:
-        if info in target:
-            return target[info].transitive_sources
-    return depset()

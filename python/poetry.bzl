@@ -1,5 +1,5 @@
 load("@rules_poetry_deps//:defs.bzl", _python = "python")
-load("//python:poetry_deps.bzl", _get_imports = "get_imports")
+load("//python/private:poetry_deps.bzl", _get_imports = "get_imports")
 
 def _poetry_update_impl(ctx):
     script = """#!{python}

@@ -11,7 +11,7 @@ py_venv(
 
 py_test(
     name = "test",
-    size = "small",
+    size = "medium",
     srcs = ["test.py"],
     data = ["poetry.lock"],
     deps = [
