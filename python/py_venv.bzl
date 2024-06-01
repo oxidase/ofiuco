@@ -1,5 +1,5 @@
 load("@rules_python//python:defs.bzl", StarPyInfo = "PyInfo")
-load("//python:poetry_deps.bzl", _get_imports = "get_imports", _get_transitive_sources = "get_transitive_sources")
+load("//python/private:poetry_deps.bzl", _get_imports = "get_imports", _get_transitive_sources = "get_transitive_sources")
 
 def _py_venv_impl(ctx):
     """

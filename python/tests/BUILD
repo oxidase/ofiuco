@@ -1,7 +1,10 @@
 load(":markers_test.bzl", "markers_test_suite")
+load(":poetry_deps_test.bzl", "poetry_deps_test_suite")
 load(":poetry_venv_test.bzl", "poetry_venv_test_suite")
 
 markers_test_suite()
+
+poetry_deps_test_suite()
 
 poetry_venv_test_suite()
 
