@@ -1,7 +1,7 @@
 startup --windows_enable_symlinks
 common --enable_bzlmod
-query --deleted_packages=examples/simple,examples/torch,examples/transitions,examples/markers,examples/aspect_rules_py
-build --deleted_packages=examples/simple,examples/torch,examples/transitions,examples/markers,examples/aspect_rules_py
+query --deleted_packages=examples/simple,examples/torch,examples/transitions,examples/markers,examples/aspect_rules_py,examples/cc_toolchain
+build --deleted_packages=examples/simple,examples/torch,examples/transitions,examples/markers,examples/aspect_rules_py,examples/cc_toolchain
 build --enable_runfiles
 build --incompatible_default_to_explicit_init_py
 test --test_output=errors

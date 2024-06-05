@@ -26,14 +26,14 @@ def _package_impl(ctx):
          @bazel_tools//tools/python:toolchain_type
     """
 
-    # Get target toolchain and corresponding tags
-    toolchain = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"]
-    runtime_info = toolchain.py3_runtime
-    runtime_tag, tags = _derive_environment_markers(runtime_info.interpreter.path, ctx.attr.platforms)
+    # Get Python target toolchain and corresponding tags
+    py_toolchain = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"]
+    py_runtime_info = py_toolchain.py3_runtime
+    runtime_tag, tags = _derive_environment_markers(py_runtime_info.interpreter.path, ctx.attr.platforms)
     python_version = tags["python_version"]
     platform_tags = tags["platform_tags"]
 
-    # Get tooling toolchain and runfiles
+    # Get Python tooling toolchain and runfiles dependencies
     poetry_deps_info = ctx.attr._poetry_deps[DefaultInfo]
     poetry_deps_binary = poetry_deps_info.files_to_run.executable
     poetry_deps_runfiles = poetry_deps_info.default_runfiles.files
@@ -59,6 +59,29 @@ def _package_impl(ctx):
 
     for platform in platform_tags:
         arguments += ["--platform", platform]
+
+    # Get CC target toolchain and propagate to the installation script
+    cc_toolchain_files = depset()
+    cc_toolchain = ctx.toolchains["@bazel_tools//tools/cpp:toolchain_type"]
+    if cc_toolchain and hasattr(cc_toolchain, "cc"):
+        cc = cc_toolchain.cc
+        cc_toolchain_files = cc.all_files
+        arguments.append("--cc_toolchain=" + json.encode({
+            "~AR": cc.ar_executable,
+            "~CC": cc.compiler_executable,
+            " CFLAGS": " ".join(["-I{}".format(dir) for dir in cc.built_in_include_directories]),
+            "~GCOV": cc.gcov_executable,
+            "~LD": cc.ld_executable,
+            " LDFLAGS": "-Wl,-rpath,{}".format(cc.dynamic_runtime_solib_dir),
+            "~NM": cc.nm_executable,
+            "~OBJCOPY": cc.objcopy_executable,
+            "~OBJDUMP": cc.objdump_executable,
+            "~CPP": cc.preprocessor_executable,
+            "~STRIP": cc.strip_executable,
+            "sysroot": str(cc.sysroot),
+            "target_gnu_system_name": cc.target_gnu_system_name,
+            "toolchain_id": cc.toolchain_id,
+        }))
 
     # Run wheel installation
     ctx.actions.run(
@@ -110,5 +133,6 @@ package = rule(
     },
     toolchains = [
         "@bazel_tools//tools/python:toolchain_type",
+        "@bazel_tools//tools/cpp:toolchain_type",
     ],
 )

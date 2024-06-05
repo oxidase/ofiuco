@@ -1,0 +1,12 @@
+[tool.poetry]
+name = "cc_toolchain"
+version = "0.0.0"
+description = "Use a wheel which requires cc toolchain"
+authors = []
+
+[tool.poetry.dependencies]
+python = "^3.11"
+llama_cpp_python = "^0.2"
+
+[tool.poetry.group.dev.dependencies]
+pytest = {version = "^7.2", "python" = ">=3.7"}

@@ -6,6 +6,7 @@
     data = glob(["{}/**/*".format(name)]) + ["//:MODULE.bazel"],
 ) for name in [
     "aspect_rules_py",
+    "cc_toolchain",
     "markers",
     "simple",
     "torch",
