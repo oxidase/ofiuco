@@ -1,6 +1,6 @@
 [sh_test(
     name = "{}_integration_test".format(name),
-    size = "medium",
+    size = "large",
     srcs = ["integration_test.sh"],
     args = [name],
     data = glob(["{}/**/*".format(name)]) + ["//:MODULE.bazel"],
