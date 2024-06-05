@@ -92,6 +92,7 @@ def install(args):
 
     install_args += [
         f"--target={output_path}",
+        "--prefer-binary",
         "--no-compile",
         "--no-dependencies",
         "--disable-pip-version-check",
@@ -99,9 +100,13 @@ def install(args):
         "--quiet",
     ]
 
+    if args.cc_toolchain is not None:
+        cc = json.loads(args.cc_toolchain)
+        os.environ.update({k[1:]: v for k, v in cc.items() if k[0] == " "})
+        os.environ.update({k[1:]: os.fspath(Path(v).resolve()) for k, v in cc.items() if k[0] == "~"})
+
     if retcode := install_command.main(install_args + get_platform_args(args)):
         logging.error(f"pip install returned {retcode}")
-        # TODO: proper handling of CC toolchains
         return retcode
 
     # Clean-up some metadata files which may contain non-hermetic data
@@ -131,6 +136,7 @@ if __name__ == "__main__":
     parser_install.add_argument("--platform", type=str, nargs="*", action="extend", help="platform tag")
     parser_install.add_argument("--index", type=str, nargs="*", action="extend", help="index URL")
     parser_install.add_argument("--source_url", type=str, nargs="*", action="extend", help="source URLs")
+    parser_install.add_argument("--cc_toolchain", type=str, help="CC toolchain")
 
     args = parser.parse_args()
     sys.exit(args.func(args))

@@ -1,0 +1,10 @@
+py_test(
+    name = "test",
+    size = "small",
+    srcs = ["test.py"],
+    data = ["poetry.lock"],
+    deps = [
+        "@poetry//:llama-cpp-python",
+        "@poetry//:pytest",
+    ],
+)

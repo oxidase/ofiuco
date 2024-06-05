@@ -29,6 +29,7 @@ class InstallArgs:
     )
     index = []
     source_url = []
+    cc_toolchain = None
 
 
 class TestInstallSubcommand(unittest.TestCase):
@@ -142,6 +143,31 @@ class TestInstallSubcommand(unittest.TestCase):
             with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output:
                 retcode = main.install(args)
                 self.assertEqual(retcode, 0)
+
+    def test_get_data(self):
+        args = InstallArgs()
+        args.cc_toolchain = """{"~CC":"."," DD":".","EE":"."}"""
+
+        class InstallCommand:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def main(self, args):
+                assert "CC" in os.environ
+                assert "DD" in os.environ
+                assert "EE" not in os.environ
+
+                assert Path(os.environ["CC"]).is_absolute()
+                assert os.environ["DD"] == "."
+
+                return 42
+
+        with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as output_dir:
+            args.output = Path(output_dir)
+
+            with patch("pip._internal.commands.install.InstallCommand", InstallCommand):
+                retcode = main.install(args)
+                self.assertEqual(retcode, 42)
 
 
 if __name__ == "__main__":
