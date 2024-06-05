@@ -26,15 +26,26 @@ def _package_impl(ctx):
          @bazel_tools//tools/python:toolchain_type
     """
 
+    # Get target toolchain and corresponding tags
     toolchain = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"]
     runtime_info = toolchain.py3_runtime
     runtime_tag, tags = _derive_environment_markers(runtime_info.interpreter.path, ctx.attr.platforms)
     python_version = tags["python_version"]
     platform_tags = tags["platform_tags"]
 
+    # Get tooling toolchain and runfiles
+    poetry_deps_info = ctx.attr._poetry_deps[DefaultInfo]
+    poetry_deps_binary = poetry_deps_info.files_to_run.executable
+    poetry_deps_runfiles = poetry_deps_info.default_runfiles.files
+    poetry_deps_python = [x for x in poetry_deps_runfiles.to_list() if x.path.endswith("bin/python3")].pop()
+    _, input_manifests = ctx.resolve_tools(tools = [ctx.attr._poetry_deps])
+
+    # Declare package output directory
     output = ctx.actions.declare_directory("{}/{}/{}".format(python_version, runtime_tag, ctx.label.name))
 
+    # Collect installation tool arguments
     arguments = [
+        poetry_deps_binary.path,
         "install",
         ctx.attr.constraint,
         output.path,
@@ -49,17 +60,23 @@ def _package_impl(ctx):
     for platform in platform_tags:
         arguments += ["--platform", platform]
 
+    # Run wheel installation
     ctx.actions.run(
         outputs = [output],
-        inputs = [],
+        inputs = poetry_deps_info.files,
         mnemonic = "InstallWheel",
         progress_message = "Installing package {} ({}) for Python {} {}".format(ctx.label.name, ctx.attr.constraint, python_version, runtime_tag),
         arguments = arguments,
         use_default_shell_env = True,
-        executable = ctx.executable._poetry_deps,
+        input_manifests = input_manifests,
+        executable = poetry_deps_python,
+        tools = poetry_deps_runfiles,
         execution_requirements = {"requires-network": ""},
     )
 
+    # Create output information providers
+    # NOTE: keep built-in till [PyInfo](https://github.com/bazelbuild/bazel/blob/d7cf0048/src/main/java/com/google/devtools/build/lib/starlarkbuildapi/python/PyInfoApi.java#L31)
+    # is used in the upstream code
     deps = [dep for dep in ctx.attr.deps if _include_dep(dep, ctx.attr.markers, tags)]
     transitive_imports = [_get_imports(dep) for dep in deps]
     transitive_depsets = [_get_transitive_sources(dep) for dep in deps]
