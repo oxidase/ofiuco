@@ -45,6 +45,7 @@ def _package_impl(ctx):
 
     # Collect installation tool arguments
     arguments = [
+        "-B",
         poetry_deps_binary.path,
         "install",
         ctx.attr.constraint,
