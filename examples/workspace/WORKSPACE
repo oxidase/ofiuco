@@ -1,0 +1,14 @@
+local_repository(
+    name = "rules_poetry",
+    path = "../..",
+)
+
+load("@rules_poetry//python:poetry_parse.bzl", "poetry_parse")
+load("@rules_poetry//python:repositories.bzl", install_poetry_dependencies = "install_dependencies")
+
+install_poetry_dependencies()
+
+poetry_parse(
+    name = "poetry",
+    lock = "//:poetry.lock",
+)

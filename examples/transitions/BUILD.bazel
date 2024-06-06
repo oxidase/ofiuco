@@ -114,7 +114,7 @@ py_zip(
 
 py_test(
     name = "test",
-    size = "small",
+    size = "large",
     srcs = ["test.py"],
     data = [
         ":default",

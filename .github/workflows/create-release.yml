@@ -23,9 +23,15 @@ jobs:
           git config user.name "${{ github.triggering_actor }}"
           git config user.email "${{ github.triggering_actor }}@users.noreply.github.com"
 
+          export PREFIX="${NAME}-${TAG}"
+          export ARCHIVE="$PREFIX.tar.gz"
+
           sha=$(git rev-parse HEAD)
-          git archive --format=tar --prefix="${NAME}-${TAG}/" $sha | gzip > "${NAME}-${TAG}.tar.gz"
-          gh release create "v$TAG" --title "$TAG" --target $sha --generate-notes "${NAME}-${TAG}.tar.gz"
+          git archive --format=tar --prefix="${NAME}-${TAG}/" $sha | gzip > $ARCHIVE
+
+          export SHA256=$(shasum -a 256 $ARCHIVE | awk '{print $1}')
+          cat .github/workflows/release-notes.md | envsubst > notes.md
+          gh release create "v$TAG" --title "$TAG" --target $sha --generate-notes --notes "$(cat notes.md)" $ARCHIVE
         env:
           NAME: "rules_poetry"
           TAG: ${{ inputs.tag }}

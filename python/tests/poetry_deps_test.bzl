@@ -1,8 +1,8 @@
-"""unit tests for globstar poetry_venv repository rule"""
+"""unit tests for globstar poetry_parse repository rule"""
 
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest")
-load("//python/private:poetry_deps.bzl", "derive_environment_markers", "DEFAULT_PLATFORMS")
+load("//python/private:poetry_deps.bzl", "DEFAULT_PLATFORMS", "derive_environment_markers")
 
 def _derive_environment_markers_test_impl(ctx):
     env = unittest.begin(ctx)
@@ -17,14 +17,12 @@ def _derive_environment_markers_test_impl(ctx):
     asserts.true(env, tags["python_version"] == "3.11")
     asserts.true(env, tags["python_full_version"][:5] == "3.11.")
 
-
     interpreter_path = "some/python/interpreter"
     runtime, tags = derive_environment_markers(interpreter_path, DEFAULT_PLATFORMS, "{}")
     asserts.true(env, runtime == "host")
     asserts.true(env, tags == {})
 
     return unittest.end(env)
-
 
 def _derive_environment_markers_host_test_impl(ctx):
     env = unittest.begin(ctx)
@@ -42,7 +40,6 @@ def _derive_environment_markers_host_test_impl(ctx):
     asserts.true(env, tags["python_full_version"] == host_tags["python_full_version"])
 
     return unittest.end(env)
-
 
 derive_environment_markers_test = unittest.make(_derive_environment_markers_test_impl)
 derive_environment_markers_host_test = unittest.make(_derive_environment_markers_host_test_impl)

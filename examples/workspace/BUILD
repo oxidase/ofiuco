@@ -1,10 +1,9 @@
-load("@aspect_rules_py//py:defs.bzl", "py_binary")
-
 py_test(
     name = "test",
     size = "large",
     srcs = ["test.py"],
+    data = ["poetry.lock"],
     deps = [
-        "@poetry//:absl-py",
+        "@poetry//:pytest",
     ],
 )

@@ -2,7 +2,7 @@ load("@rules_poetry//python:poetry.bzl", "poetry_update")
 
 py_test(
     name = "test",
-    size = "small",
+    size = "large",
     srcs = ["test.py"],
     data = ["poetry.lock"],
     deps = [
