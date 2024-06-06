@@ -5,6 +5,9 @@ load("//python/private:poetry_deps.bzl", _derive_environment_markers = "derive_e
 load("//python/private:poetry_deps.bzl", _get_imports = "get_imports", _get_transitive_sources = "get_transitive_sources")
 load("//python/private:poetry_deps.bzl", _DEFAULT_PLATFORMS = "DEFAULT_PLATFORMS")
 
+
+PYTHON_BINARY = ["bin/python3", "python/py3wrapper.sh"]
+
 def _package_impl(ctx):
     """
     Rule to install a Python package.
@@ -29,7 +32,7 @@ def _package_impl(ctx):
     # Get Python target toolchain and corresponding tags
     py_toolchain = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"]
     py_runtime_info = py_toolchain.py3_runtime
-    runtime_tag, tags = _derive_environment_markers(py_runtime_info.interpreter.path, ctx.attr.platforms)
+    runtime_tag, tags = _derive_environment_markers(py_runtime_info.interpreter.path, ctx.attr.platforms, ctx.attr.host_platform)
     python_version = tags["python_version"]
     platform_tags = tags["platform_tags"]
 
@@ -37,7 +40,7 @@ def _package_impl(ctx):
     poetry_deps_info = ctx.attr._poetry_deps[DefaultInfo]
     poetry_deps_binary = poetry_deps_info.files_to_run.executable
     poetry_deps_runfiles = poetry_deps_info.default_runfiles.files
-    poetry_deps_python = [x for x in poetry_deps_runfiles.to_list() if x.path.endswith("bin/python3")].pop()
+    poetry_deps_python = [x for x in poetry_deps_runfiles.to_list() if any([x.path.endswith(suffix) for suffix in PYTHON_BINARY])].pop()
     _, input_manifests = ctx.resolve_tools(tools = [ctx.attr._poetry_deps])
 
     # Declare package output directory
@@ -113,6 +116,7 @@ def _package_impl(ctx):
         StarPyInfo(transitive_sources = files, imports = imports),
     ]
 
+
 package = rule(
     implementation = _package_impl,
     provides = [PyInfo, StarPyInfo],
@@ -130,6 +134,7 @@ package = rule(
                   "Default value corresponds to platforms defined at " +
                   "https://github.com/bazelbuild/rules_python/blob/23cf6b66/python/versions.bzl#L231-L277",
         ),
+        "host_platform": attr.string(doc = "The host platform environment markers as a JSON string"),
         "_poetry_deps": attr.label(default = ":poetry_deps", cfg = "exec", executable = True),
     },
     toolchains = [
