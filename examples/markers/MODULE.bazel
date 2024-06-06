@@ -19,7 +19,7 @@ local_path_override(
 
 poetry = use_extension("@rules_poetry//python:extensions.bzl", "poetry")
 poetry.parse(
-    name = "poetry",
+    name = "python",
     lock = "//:poetry.lock",
     platforms = {
         python_version + "_x86_64-unknown-linux-gnu": "{" + ",".join(
@@ -54,4 +54,4 @@ poetry.parse(
         ) + "}",
     },
 )
-use_repo(poetry, "poetry")
+use_repo(poetry, "python")
