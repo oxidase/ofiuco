@@ -1,8 +1,8 @@
-"""unit tests for globstar poetry_venv repository rule"""
+"""unit tests for globstar poetry_parse repository rule"""
 
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts", "unittest")
-load("//python/private:poetry_venv.bzl", "dfs_cycles", "parse_lock_file")
+load("//python/private:poetry_parse.bzl", "dfs_cycles", "parse_lock_file")
 
 def _parse_lock_file_test_impl(ctx):
     env = unittest.begin(ctx)
@@ -173,9 +173,9 @@ def _dfs_cycles_test_impl(ctx):
 
 dfs_cycles_test = unittest.make(_dfs_cycles_test_impl)
 
-def poetry_venv_test_suite():
+def poetry_parse_test_suite():
     unittest.suite(
-        "poetry_venv_test",
+        "poetry_parse_test",
         partial.make(parse_lock_file_test),
         partial.make(dfs_cycles_test),
     )

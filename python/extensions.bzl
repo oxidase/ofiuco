@@ -1,10 +1,10 @@
 load("@rules_poetry//python:repositories.bzl", "install_dependencies")
-load("@rules_poetry//python:poetry_venv.bzl", "poetry_venv")
+load("@rules_poetry//python:poetry_parse.bzl", "poetry_parse")
 
 def _poetry_impl(module_ctx):
     for mod in module_ctx.modules:
         for attr in mod.tags.parse:
-            poetry_venv(
+            poetry_parse(
                 name = attr.name,
                 lock = attr.lock,
                 generate_extras = attr.generate_extras,

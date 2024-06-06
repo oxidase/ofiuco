@@ -41,8 +41,7 @@ def _py_venv_impl(ctx):
     return [
         DefaultInfo(files = files, runfiles = ctx.runfiles(files = runfiles)),
         PyInfo(transitive_sources = files, imports = imports),
-        StarPyInfo(transitive_sources = files, imports = imports),
-    ]
+    ] + ([] if PyInfo == StarPyInfo else [StarPyInfo(transitive_sources = files, imports = imports)])
 
 py_venv = rule(
     implementation = _py_venv_impl,

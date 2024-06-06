@@ -1,0 +1,11 @@
+[tool.poetry]
+name = "example"
+version = "0.0.0"
+description = "example with dependencies"
+authors = []
+
+[tool.poetry.dependencies]
+python = "^3.8"
+
+[tool.poetry.group.dev.dependencies]
+pytest = {version = "^7.2", "python" = ">=3.7"}

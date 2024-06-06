@@ -5,7 +5,6 @@ load("//python/private:poetry_deps.bzl", _derive_environment_markers = "derive_e
 load("//python/private:poetry_deps.bzl", _get_imports = "get_imports", _get_transitive_sources = "get_transitive_sources")
 load("//python/private:poetry_deps.bzl", _DEFAULT_PLATFORMS = "DEFAULT_PLATFORMS")
 
-
 PYTHON_BINARY = ["bin/python3", "python/py3wrapper.sh"]
 
 def _package_impl(ctx):
@@ -113,9 +112,7 @@ def _package_impl(ctx):
     return [
         DefaultInfo(files = files, runfiles = ctx.runfiles(files = runfiles)),
         PyInfo(transitive_sources = files, imports = imports),
-        StarPyInfo(transitive_sources = files, imports = imports),
-    ]
-
+    ] + ([] if PyInfo == StarPyInfo else [StarPyInfo(transitive_sources = files, imports = imports)])
 
 package = rule(
     implementation = _package_impl,
