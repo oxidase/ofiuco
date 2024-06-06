@@ -6,7 +6,7 @@ py_test(
     srcs = ["test.py"],
     data = ["poetry.lock"],
     deps = [
-        "@poetry//:pytest",
+        "@python//:pytest",
     ],
 )
 

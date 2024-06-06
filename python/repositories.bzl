@@ -9,7 +9,7 @@ _POETRY_INTERNAL_DEPS = [
         "pip",
         _PACKAGES_ENDPOINT + "8a/6a/19e9fe04fca059ccf770861c7d5721ab4c2aebc539889e97c7977528a53b/pip-24.0-py3-none-any.whl",
         "ba0d021a166865d2265246961bec0152ff124de910c5cc39f1156ce3fa7c69dc",
-        [":patches/scripts_executable.patch"],
+        ["@rules_poetry//python:patches/scripts_executable.patch"],
     ),
 ]
 
