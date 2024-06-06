@@ -37,26 +37,25 @@ def _get_python_version(interpreter):
         elif parts[index].endswith("python"):
             return _collect_version(parts[index + 1:])
 
-    return "3"
+    return "host"
 
-def derive_environment_markers(interpreter, interpreter_markers):
+def derive_environment_markers(interpreter, interpreter_markers, host_tags):
     python_version = _get_python_version(interpreter)
-    tags = {
-        "extra": "*",
-        "implementation_name": "cpython",
-        "platform_python_implementation": "CPython",
-        "platform_tags": [],
-        "python_version": python_version,
-        "python_full_version": _MINOR_MAPPING[python_version],
-        "interpreter": interpreter,
-    }
-
     for fr, to in interpreter_markers.items():
         if fr in interpreter:
+            tags = {
+                "extra": "*",
+                "implementation_name": "cpython",
+                "platform_python_implementation": "CPython",
+                "platform_tags": [],
+                "python_version": python_version,
+                "python_full_version": _MINOR_MAPPING.get(python_version, python_version),
+                "interpreter": interpreter,
+            }
             tags.update(**json.decode(to))
             return fr, tags
 
-    return "default", tags
+    return "host", json.decode(host_tags)
 
 def include_dep(dep, markers, environment):
     if not markers:
