@@ -64,11 +64,9 @@ def _package_impl(ctx):
         arguments += ["--platform", platform]
 
     # Get CC target toolchain and propagate to the installation script
-    cc_toolchain_files = depset()
     cc_toolchain = ctx.toolchains["@bazel_tools//tools/cpp:toolchain_type"]
-    if cc_toolchain and hasattr(cc_toolchain, "cc"):
+    if cc_toolchain and hasattr(cc_toolchain, "cc") and type(cc_toolchain.cc) == "CcToolchainInfo":
         cc = cc_toolchain.cc
-        cc_toolchain_files = cc.all_files
         arguments.append("--cc_toolchain=" + json.encode({
             "~AR": cc.ar_executable,
             "~CC": cc.compiler_executable,

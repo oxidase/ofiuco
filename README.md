@@ -6,6 +6,9 @@ The repository defines Bazel installation rules for [Poetry](https://github.com/
 The major difference to pip rules in [rules_python](https://github.com/bazelbuild/rules_python) is that Python packages are installed as `py_library` targets and not as external repositories.
 This allows to use platform information of resolved Python toolchains and build cross-platform Python artifacts.
 
+Minimum requirements:
+
+* Bazel 6.x
 
 ## Getting started
 
@@ -81,4 +84,5 @@ For example, in the following case
 ```
 `pytest` will be loaded from the `repo2` repository.
 
-⚠ Mixing different repositories in one `deps` block may lead to side-effects related to using incompatible versions of transitive dependencies.
+> **Note**
+> Mixing different repositories in one `deps` block may lead to side-effects related to using incompatible versions of transitive dependencies.
