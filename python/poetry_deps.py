@@ -15,6 +15,8 @@ with warnings.catch_warnings():
     from pip._vendor.packaging.utils import parse_wheel_filename
     from pip._vendor.packaging.version import InvalidVersion
 
+from python.utils import populate_symlink_tree
+
 _SHA256_PREFIX = "sha256:"
 
 
@@ -44,8 +46,7 @@ def install(args):
         local_package_path = Path(args.source_url[0])
         if local_package_path.is_absolute() and local_package_path.is_dir():
             # Add symbolic links to the local directory
-            for item in local_package_path.iterdir():
-                (output_path / item.name).symlink_to(item)
+            populate_symlink_tree(local_package_path, output_path / local_package_path.name)
             return 0
 
         # Otherwise it is a list of files or URLs

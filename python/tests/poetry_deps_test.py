@@ -56,8 +56,10 @@ class TestInstallSubcommand(unittest.TestCase):
                 retcode = main.install(args)
                 self.assertEqual(retcode, 0)
 
-                wheels = glob.glob(f"{args.output}/six*")
+                wheels = list(args.output.rglob("six*"))
                 self.assertGreater(len(wheels), 0)
+                self.assertTrue(wheels[0].is_symlink())
+                self.assertEqual(wheels[0].parent.name, Path(tmp_input).name)
 
     def test_install_from_url(self):
         args = InstallArgs()
