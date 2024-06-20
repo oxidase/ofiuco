@@ -148,7 +148,15 @@ class TestInstallSubcommand(unittest.TestCase):
 
     def test_get_data(self):
         args = InstallArgs()
-        args.cc_toolchain = """{"~CC":"."," DD":".","EE":"."}"""
+        args.cc_toolchain = json.dumps(
+            dict(
+                compiler_executable=".",
+                dynamic_runtime_solib_dir=".",
+                built_in_include_directories=[".", "x", "/x"],
+                compiler="clang",
+                cpu="darwin_arm64",
+            )
+        )
 
         class InstallCommand:
             def __init__(self, *args, **kwargs):
@@ -156,11 +164,15 @@ class TestInstallSubcommand(unittest.TestCase):
 
             def main(self, args):
                 assert "CC" in os.environ
-                assert "DD" in os.environ
-                assert "EE" not in os.environ
+                assert "CFLAGS" in os.environ
+                assert "LDFLAGS" in os.environ
+                assert "CMAKE_ARGS" in os.environ
+                assert "AR" not in os.environ
 
                 assert Path(os.environ["CC"]).is_absolute()
-                assert os.environ["DD"] == "."
+                assert os.environ["CFLAGS"] == "-arch arm64"
+                assert os.environ["CXXFLAGS"] == "-arch arm64 -I. -Ix -I/x"
+                assert os.environ["LDFLAGS"] == "-Wl,-rpath,."
 
                 return 42
 

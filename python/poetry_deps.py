@@ -17,8 +17,6 @@ with warnings.catch_warnings():
 
 from python.utils import populate_symlink_tree
 
-_SHA256_PREFIX = "sha256:"
-
 
 def get_platform_args(args):
     """Format Python platform tags and version arguments.
@@ -35,6 +33,25 @@ def get_platform_args(args):
         platform_args.append(f"--python-version={args.python_version}")
 
     return platform_args
+
+
+# Mapping of toolchain compiler and CPU names
+# https://github.com/search?q=repo%3Abazelbuild%2Fbazel+%22values+%3D+%7B%5C%22cpu%5C%22%22&type=code
+# to Clang architecture values and CMake flags
+# https://clang.llvm.org/docs/CrossCompilation.html#target-triple
+cc_compiler_cpu_to_cflags = {
+    "clang": {
+        "darwin_arm64": "-arch arm64",
+        "darwin_x86_64": "-arch x86_64",
+        "darwin_arm64e": "-arch arm64e",
+    }
+}
+
+cc_cpu_to_cmake_args = {
+    "darwin_arm64": "-DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=arm64",
+    "darwin_x86_64": "-DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=x86_64",
+    "darwin_arm64e": "-DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=arm64e",
+}
 
 
 def install(args):
@@ -103,8 +120,30 @@ def install(args):
 
     if args.cc_toolchain is not None:
         cc = json.loads(args.cc_toolchain)
-        os.environ.update({k[1:]: v for k, v in cc.items() if k[0] == " "})
-        os.environ.update({k[1:]: os.fspath(Path(v).resolve()) for k, v in cc.items() if k[0] == "~"})
+
+        paths = dict(
+            AR="ar_executable",
+            CC="compiler_executable",
+            CPP="preprocessor_executable",
+            GCOV="gcov_executable",
+            LD="ld_executable",
+            NM="nm_executable",
+            OBJCOPY="objcopy_executable",
+            OBJDUMP="objdump_executable",
+            STRIP="strip_executable",
+        )
+
+        cflags = [cc_compiler_cpu_to_cflags.get(cc.get("compiler"), {}).get(cc.get("cpu"), "")]
+        cxxflags = cflags + ["-I{}".format(dir) for dir in cc.get("built_in_include_directories", [])]
+        flags = dict(
+            CFLAGS=" ".join([flag for flag in cflags if flag]),
+            CXXFLAGS=" ".join([flag for flag in cxxflags if flag]),
+            LDFLAGS="-Wl,-rpath,{}".format(cc.get("dynamic_runtime_solib_dir", "")),
+            CMAKE_ARGS=cc_cpu_to_cmake_args.get(cc.get("cpu"), ""),
+        )
+
+        os.environ.update(flags)
+        os.environ.update({k: os.fspath(Path(cc[v]).resolve()) for k, v in paths.items() if v in cc})
 
     if retcode := install_command.main(install_args + get_platform_args(args)):
         logging.error(f"pip install returned {retcode}")
