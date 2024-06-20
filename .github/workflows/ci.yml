@@ -37,6 +37,7 @@ jobs:
       - name: Show info
         id: info
         run: |
+          uname -a
           python3 -V
           bazel info
         shell: bash

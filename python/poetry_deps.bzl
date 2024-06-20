@@ -42,6 +42,8 @@ def _package_impl(ctx):
     poetry_deps_python = [x for x in poetry_deps_runfiles.to_list() if any([x.path.endswith(suffix) for suffix in PYTHON_BINARY])].pop()
     _, input_manifests = ctx.resolve_tools(tools = [ctx.attr._poetry_deps])
 
+    install_inputs = poetry_deps_info.files
+
     # Declare package output directory
     output = ctx.actions.declare_directory("{}/{}/{}".format(python_version, runtime_tag, ctx.label.name))
 
@@ -67,27 +69,15 @@ def _package_impl(ctx):
     cc_toolchain = ctx.toolchains["@bazel_tools//tools/cpp:toolchain_type"]
     if cc_toolchain and hasattr(cc_toolchain, "cc") and type(cc_toolchain.cc) == "CcToolchainInfo":
         cc = cc_toolchain.cc
-        arguments.append("--cc_toolchain=" + json.encode({
-            "~AR": cc.ar_executable,
-            "~CC": cc.compiler_executable,
-            " CFLAGS": " ".join(["-I{}".format(dir) for dir in cc.built_in_include_directories]),
-            "~GCOV": cc.gcov_executable,
-            "~LD": cc.ld_executable,
-            " LDFLAGS": "-Wl,-rpath,{}".format(cc.dynamic_runtime_solib_dir),
-            "~NM": cc.nm_executable,
-            "~OBJCOPY": cc.objcopy_executable,
-            "~OBJDUMP": cc.objdump_executable,
-            "~CPP": cc.preprocessor_executable,
-            "~STRIP": cc.strip_executable,
-            "sysroot": str(cc.sysroot),
-            "target_gnu_system_name": cc.target_gnu_system_name,
-            "toolchain_id": cc.toolchain_id,
-        }))
+        cc_attr = {k: getattr(cc, k) for k in dir(cc) if type(getattr(cc, k)) != "depset" and type(getattr(cc, k)) != "builtin_function_or_method"}
+        arguments.append("--cc_toolchain=" + json.encode(cc_attr))
+
+        install_inputs = depset(transitive = [install_inputs, cc.all_files])
 
     # Run wheel installation
     ctx.actions.run(
         outputs = [output],
-        inputs = poetry_deps_info.files,
+        inputs = install_inputs,
         mnemonic = "InstallWheel",
         progress_message = "Installing package {} ({}) for Python {} {}".format(ctx.label.name, ctx.attr.constraint, python_version, runtime_tag),
         arguments = arguments,
