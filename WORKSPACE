@@ -1,1 +1,1 @@
-workspace(name = "rules_poetry")
+workspace(name = "rules_ophiuchus")

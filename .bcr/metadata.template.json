@@ -1,5 +1,5 @@
 {
-    "homepage": "https://github.com/oxidase/rules_poetry",
+    "homepage": "https://github.com/oxidase/rules_ophiuchus",
     "maintainers": [
         {
             "email": "michael.krasnyk@gmail.com",
@@ -8,7 +8,7 @@
         }
     ],
     "repository": [
-        "github:oxidase/rules_poetry"
+        "github:oxidase/rules_ophiuchus"
     ],
     "versions": [],
     "yanked_versions": {}

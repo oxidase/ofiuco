@@ -11,7 +11,7 @@ runfiles_test_suite()
 filegroup(
     name = "test_filegroup",
     srcs = [
-        "@rules_poetry_pip//:pkg",
+        "@rules_ophiuchus_pip//:pkg",
     ],
     data = [
         "BUILD",

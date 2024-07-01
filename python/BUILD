@@ -4,7 +4,7 @@ py_binary(
     visibility = ["__subpackages__"],
     deps = [
         ":utils",
-        "@rules_poetry_pip//:pkg",
+        "@rules_ophiuchus_pip//:pkg",
     ],
 )
 

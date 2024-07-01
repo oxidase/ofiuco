@@ -1,5 +1,5 @@
 load("@bazel_tools//tools/cpp:empty_cc_toolchain_config.bzl", "cc_toolchain_config")
-load("@rules_poetry//lib:py_zip.bzl", "py_zip")
+load("@rules_ophiuchus//lib:py_zip.bzl", "py_zip")
 load(":transitions.bzl", "py_binary_linux_x86_64")
 
 platform(

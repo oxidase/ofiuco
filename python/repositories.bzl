@@ -4,12 +4,12 @@ load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 _PACKAGES_ENDPOINT = "https://files.pythonhosted.org/packages/"
 
 # curl -s --header 'Accept: application/vnd.pypi.simple.v1+json' https://pypi.org/simple/pip/ | jq -r '.files[] | "\"\(.url)\", \"\(.hashes.sha256)\""'
-_POETRY_INTERNAL_DEPS = [
+_INTERNAL_DEPS = [
     (
         "pip",
         _PACKAGES_ENDPOINT + "8a/6a/19e9fe04fca059ccf770861c7d5721ab4c2aebc539889e97c7977528a53b/pip-24.0-py3-none-any.whl",
         "ba0d021a166865d2265246961bec0152ff124de910c5cc39f1156ce3fa7c69dc",
-        ["@rules_poetry//python:patches/scripts_executable.patch"],
+        ["@rules_ophiuchus//python:patches/scripts_executable.patch"],
     ),
 ]
 
@@ -42,7 +42,7 @@ def _poetry_deps_repo_impl(ctx):
 )""".format(output = ctx.attr.output)
 
     else:
-        build_file_content = "# Poetry deps require an installed host Python 3 interpreter"
+        build_file_content = "# Poetry deps require an installed host Python 3 interpreter"  # TODO: switch to a host interpreter from rules_python
 
     ctx.file("BUILD", build_file_content)
     ctx.file("defs.bzl", 'python = "{}"'.format(python))
@@ -56,9 +56,9 @@ poetry_deps_repo = repository_rule(
 )
 
 def install_dependencies(auth_patterns = {}, netrc = ""):
-    prefix = "rules_poetry_"
+    prefix = "rules_ophiuchus_"
 
-    for (name, url, sha256, patches) in _POETRY_INTERNAL_DEPS:
+    for (name, url, sha256, patches) in _INTERNAL_DEPS:
         maybe(
             http_archive,
             prefix + name,
@@ -85,7 +85,7 @@ def install_dependencies(auth_patterns = {}, netrc = ""):
         )
 
     poetry_deps_repo(
-        name = prefix + "deps",
+        name = prefix + "poetry_deps",
         output = "site-packages",
         deps = [
             "@{}pip//:BUILD.bazel".format(prefix),

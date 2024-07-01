@@ -1,8 +1,8 @@
-# Python Poetry Rules for Bazel
+# ⛎ Ophiuchus Rules for Bazel
 
 ## Overview
 
-The repository defines Bazel installation rules for [Poetry](https://github.com/python-poetry/poetry) lock files.
+The repository defines Bazel installation rules for multi-platform Python lock files.
 The major difference to pip rules in [rules_python](https://github.com/bazelbuild/rules_python) is that Python packages are installed as `py_library` targets and not as external repositories.
 This allows to use platform information of resolved Python toolchains and build cross-platform Python artifacts.
 
@@ -12,9 +12,9 @@ Minimum requirements:
 
 ## Getting started
 
-### Import `rules_poetry` as a module
+### Import `rules_ophiuchus` as a module
 
-To import `rules_poetry` in your project, you first need to add it to your `MODULE.bazel` file
+To import `rules_ophiuchus` in your project, you first need to add it to your `MODULE.bazel` file
 
 ```python
 bazel_dep(name = "rules_python", version = "0.32.2")
@@ -23,9 +23,9 @@ python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.12")
 use_repo(python, "python_3_12")
 
-bazel_dep(name = "rules_poetry", version = "0.3.6")
+bazel_dep(name = "rules_ophiuchus", version = "0.3.6")
 
-poetry = use_extension("@rules_poetry//python:extensions.bzl", "poetry")
+poetry = use_extension("@rules_ophiuchus//python:extensions.bzl", "poetry")
 poetry.parse(
     name = "poetry",
     lock = "@//path/to:poetry.lock",
@@ -57,7 +57,7 @@ poetry update
 
 or using a pre-defined target
 ```
-load("@rules_poetry//python:poetry.bzl", "poetry_update")
+load("@rules_ophiuchus//python:poetry.bzl", "poetry_update")
 
 poetry_update(
     name = "update_lock",

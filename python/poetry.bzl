@@ -1,4 +1,4 @@
-load("@rules_poetry_deps//:defs.bzl", _python = "python")
+load("@rules_ophiuchus_poetry_deps//:defs.bzl", _python = "python")
 load("//python/private:poetry_deps.bzl", _get_imports = "get_imports")
 
 def _poetry_update_impl(ctx):
@@ -46,6 +46,6 @@ poetry_update = rule(
         "toml": attr.label(allow_single_file = [".toml"]),
         "lock": attr.label(allow_single_file = [".lock"]),
         "update": attr.bool(default = True),
-        "_poetry_deps": attr.label(default = "@rules_poetry_deps//:pkg"),
+        "_poetry_deps": attr.label(default = "@rules_ophiuchus_poetry_deps//:pkg"),
     },
 )

@@ -23,13 +23,13 @@ py_zip_test = analysistest.make(_py_zip_test_impl)
 def _test_py_zip():
     py_zip(
         name = "test_py_zip_contents_subject",
-        target = "@rules_poetry_pip//:pkg",
+        target = "@rules_ophiuchus_pip//:pkg",
         exclude = EXCLUDE,
     )
 
     py_zip(
         name = "test_py_zip_transition_subject",
-        target = "@rules_poetry_pip//:pkg",
+        target = "@rules_ophiuchus_pip//:pkg",
         platform = ":lambda",
         exclude = EXCLUDE,
     )

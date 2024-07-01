@@ -1,6 +1,6 @@
 # Simple example
 
-This example shows how to use rules_poetry to fetch external dependencies from a pyproject.toml file
+This example shows how to use rules_ophiuchus to fetch external dependencies from a pyproject.toml file
 and than use in BUILD files as dependencies of Bazel targets.
 
 The `poetry.lock` file can be updated with
