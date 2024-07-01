@@ -12,8 +12,8 @@ tasks:
     platform: ${{ platform }}
     bazel: ${{ bazel }}
     build_targets:
-      - '@rules_poetry//python/...'
-      - '@rules_poetry//lib/...'
+      - '@rules_ophiuchus//python/...'
+      - '@rules_ophiuchus//lib/...'
 bcr_test_module:
   module_path: "examples/transitions"
   matrix:

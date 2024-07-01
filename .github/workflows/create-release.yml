@@ -33,6 +33,6 @@ jobs:
           cat .github/workflows/release-notes.md | envsubst > notes.md
           gh release create "v$TAG" --title "$TAG" --target $sha --generate-notes --notes "$(cat notes.md)" $ARCHIVE
         env:
-          NAME: "rules_poetry"
+          NAME: "rules_ophiuchus"
           TAG: ${{ inputs.tag }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

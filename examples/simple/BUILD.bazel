@@ -1,4 +1,4 @@
-load("@rules_poetry//python:poetry.bzl", "poetry_update")
+load("@rules_ophiuchus//python:poetry.bzl", "poetry_update")
 
 py_test(
     name = "test",

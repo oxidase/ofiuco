@@ -1,5 +1,5 @@
-load("@rules_poetry//python:repositories.bzl", "install_dependencies")
-load("@rules_poetry//python:poetry_parse.bzl", "poetry_parse")
+load("@rules_ophiuchus//python:repositories.bzl", "install_dependencies")
+load("@rules_ophiuchus//python:poetry_parse.bzl", "poetry_parse")
 
 def _poetry_impl(module_ctx):
     for mod in module_ctx.modules:
