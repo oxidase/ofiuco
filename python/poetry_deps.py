@@ -41,17 +41,21 @@ def get_platform_args(args):
 # https://clang.llvm.org/docs/CrossCompilation.html#target-triple
 cc_compiler_cpu_to_cflags = {
     "clang": {
-        "darwin_arm64": "-arch arm64",
-        "darwin_x86_64": "-arch x86_64",
-        "darwin_arm64e": "-arch arm64e",
+        "darwin_arm64": ["-arch arm64"],
+        "darwin_x86_64": ["-arch x86_64"],
+        "darwin_arm64e": ["-arch arm64e"],
     }
 }
 
 cc_cpu_to_cmake_args = {
-    "darwin_arm64": "-DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=arm64",
-    "darwin_x86_64": "-DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=x86_64",
-    "darwin_arm64e": "-DCMAKE_SYSTEM_NAME=Darwin -DCMAKE_SYSTEM_PROCESSOR=arm64e",
+    "darwin_arm64": ["-DCMAKE_SYSTEM_NAME=Darwin", "-DCMAKE_SYSTEM_PROCESSOR=arm64"],
+    "darwin_x86_64": ["-DCMAKE_SYSTEM_NAME=Darwin", "-DCMAKE_SYSTEM_PROCESSOR=x86_64"],
+    "darwin_arm64e": ["-DCMAKE_SYSTEM_NAME=Darwin", "-DCMAKE_SYSTEM_PROCESSOR=arm64e"],
 }
+
+
+def join(flags):
+    return " ".join([flag for flag in flags if flag])
 
 
 def install(args):
@@ -115,31 +119,41 @@ def install(args):
         "--no-dependencies",
         "--disable-pip-version-check",
         "--use-pep517",
-        "--quiet",
+        # "--quiet",
+        "--verbose",
     ]
 
     if args.cc_toolchain is not None:
         cc = json.loads(args.cc_toolchain)
+        compiler = cc.get("compiler")
+        cpu = cc.get("cpu")
 
         paths = dict(
+            AS="AS",
+            CC="CC",
+            CXX="CXX",
+            LD="LD",
             AR="ar_executable",
-            CC="compiler_executable",
             CPP="preprocessor_executable",
             GCOV="gcov_executable",
-            LD="ld_executable",
             NM="nm_executable",
             OBJCOPY="objcopy_executable",
             OBJDUMP="objdump_executable",
             STRIP="strip_executable",
         )
 
-        cflags = [cc_compiler_cpu_to_cflags.get(cc.get("compiler"), {}).get(cc.get("cpu"), "")]
-        cxxflags = cflags + ["-I{}".format(dir) for dir in cc.get("built_in_include_directories", [])]
+        cpu_flags = cc_compiler_cpu_to_cflags.get(compiler, {}).get(cpu, [])
+        asflags = cpu_flags + cc.get("ASFLAGS", [])
+        cflags = cpu_flags + cc.get("CFLAGS", [])
+        cxxflags = cpu_flags + cc.get("CXXFLAGS", [])
+        ldflags = ["-Wl,-rpath,{}".format(cc.get("dynamic_runtime_solib_dir", ""))] + cc.get("LDFLAGS", [])
         flags = dict(
-            CFLAGS=" ".join([flag for flag in cflags if flag]),
-            CXXFLAGS=" ".join([flag for flag in cxxflags if flag]),
-            LDFLAGS="-Wl,-rpath,{}".format(cc.get("dynamic_runtime_solib_dir", "")),
-            CMAKE_ARGS=cc_cpu_to_cmake_args.get(cc.get("cpu"), ""),
+            ASMFLAGS=join(asflags),
+            ASFLAGS=join(asflags),
+            CFLAGS=join(cflags),
+            CXXFLAGS=join(cxxflags),
+            LDFLAGS=join(ldflags),
+            CMAKE_ARGS=join(cc_cpu_to_cmake_args.get(cpu, []) + ["-DCMAKE_VERBOSE_MAKEFILE=ON"]),
         )
 
         os.environ.update(flags)
