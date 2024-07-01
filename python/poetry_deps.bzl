@@ -1,11 +1,27 @@
+load("@rules_python//python:defs.bzl", StarPyInfo = "PyInfo")
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//lib:versions.bzl", "versions")
-load("@rules_python//python:defs.bzl", StarPyInfo = "PyInfo")
+load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("//python/private:poetry_deps.bzl", _derive_environment_markers = "derive_environment_markers", _include_dep = "include_dep")
 load("//python/private:poetry_deps.bzl", _get_imports = "get_imports", _get_transitive_sources = "get_transitive_sources")
 load("//python/private:poetry_deps.bzl", _DEFAULT_PLATFORMS = "DEFAULT_PLATFORMS")
 
 PYTHON_BINARY = ["bin/python3", "python/py3wrapper.sh"]
+
+def get_tool(ctx, cc_toolchain, feature_configuration, action_name):
+    binary = cc_common.get_tool_for_action(feature_configuration = feature_configuration, action_name = action_name)
+    flags = cc_common.get_memory_inefficient_command_line(
+        feature_configuration = feature_configuration,
+        action_name = action_name,
+        variables = cc_common.create_compile_variables(
+            feature_configuration = feature_configuration,
+            cc_toolchain = cc_toolchain,
+            include_directories = depset(direct = cc_toolchain.built_in_include_directories),
+            user_compile_flags = ctx.attr.copts if hasattr(ctx.attr, "copts") else [],
+            use_pic = True,
+        ),
+    )
+    return binary, flags
 
 def _package_impl(ctx):
     """
@@ -69,7 +85,17 @@ def _package_impl(ctx):
     cc_toolchain = ctx.toolchains["@bazel_tools//tools/cpp:toolchain_type"]
     if cc_toolchain and hasattr(cc_toolchain, "cc") and type(cc_toolchain.cc) == "CcToolchainInfo":
         cc = cc_toolchain.cc
+        feature_configuration = cc_common.configure_features(
+            ctx = ctx,
+            cc_toolchain = cc,
+            requested_features = ctx.features,
+            unsupported_features = ctx.disabled_features,
+        )
         cc_attr = {k: getattr(cc, k) for k in dir(cc) if type(getattr(cc, k)) != "depset" and type(getattr(cc, k)) != "builtin_function_or_method"}
+        cc_attr["AS"], cc_attr["ASFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.assemble)
+        cc_attr["CC"], cc_attr["CFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.c_compile)
+        cc_attr["CXX"], cc_attr["CXXFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.cpp_compile)
+        cc_attr["LD"], cc_attr["LDFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.cpp_link_dynamic_library)
         arguments.append("--cc_toolchain=" + json.encode(cc_attr))
 
         install_inputs = depset(transitive = [install_inputs, cc.all_files])
@@ -126,4 +152,5 @@ package = rule(
         "@bazel_tools//tools/python:toolchain_type",
         "@bazel_tools//tools/cpp:toolchain_type",
     ],
+    fragments = ["cpp"],
 )

@@ -150,7 +150,11 @@ class TestInstallSubcommand(unittest.TestCase):
         args = InstallArgs()
         args.cc_toolchain = json.dumps(
             dict(
-                compiler_executable=".",
+                CC="CC",
+                CXX="CXX",
+                LD="LD",
+                CXXFLAGS=["-I.", "-Ix", "-I/x"],
+                compiler_executable="compiler_executable",
                 dynamic_runtime_solib_dir=".",
                 built_in_include_directories=[".", "x", "/x"],
                 compiler="clang",
@@ -170,9 +174,12 @@ class TestInstallSubcommand(unittest.TestCase):
                 assert "AR" not in os.environ
 
                 assert Path(os.environ["CC"]).is_absolute()
+                assert os.environ["ASMFLAGS"] == os.environ["ASFLAGS"]
+                assert os.environ["ASMFLAGS"] == "-arch arm64"
                 assert os.environ["CFLAGS"] == "-arch arm64"
                 assert os.environ["CXXFLAGS"] == "-arch arm64 -I. -Ix -I/x"
                 assert os.environ["LDFLAGS"] == "-Wl,-rpath,."
+                assert "Darwin" in os.environ["CMAKE_ARGS"]
 
                 return 42
 
