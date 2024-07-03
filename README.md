@@ -8,7 +8,7 @@ This allows to use platform information of resolved Python toolchains and build 
 
 Minimum requirements:
 
-* Bazel 6.x
+* Bazel 6.x and rules_python with registered Python >= 3.11 toolchain.
 
 ## Getting started
 
@@ -17,7 +17,7 @@ Minimum requirements:
 To import `rules_ophiuchus` in your project, you first need to add it to your `MODULE.bazel` file
 
 ```python
-bazel_dep(name = "rules_python", version = "0.32.2")
+bazel_dep(name = "rules_python", version = "0.33.2")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.12")

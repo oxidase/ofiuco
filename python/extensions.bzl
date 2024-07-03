@@ -1,4 +1,3 @@
-load("@rules_ophiuchus//python:repositories.bzl", "install_dependencies")
 load("@rules_ophiuchus//python:poetry_parse.bzl", "poetry_parse")
 
 def _poetry_impl(module_ctx):
@@ -22,15 +21,5 @@ poetry = module_extension(
                 "platforms": attr.string_dict(),
             },
         ),
-    },
-)
-
-def _internal_deps_impl(module_ctx):
-    install_dependencies()
-
-internal_deps = module_extension(
-    implementation = _internal_deps_impl,
-    tag_classes = {
-        "install": tag_class(dict()),
     },
 )

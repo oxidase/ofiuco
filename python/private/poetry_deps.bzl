@@ -1,6 +1,7 @@
+load("@rules_ophiuchus_defs//:defs.bzl", _python_toolchain_prefix = "python_toolchain_prefix", _python_version = "python_version")
+load("@rules_python//python:defs.bzl", StarPyInfo = "PyInfo")
 load("@rules_python//python:versions.bzl", _MINOR_MAPPING = "MINOR_MAPPING")
 load("//python:markers.bzl", "evaluate", "parse")
-load("@rules_python//python:defs.bzl", StarPyInfo = "PyInfo")
 
 # Environment Markers https://peps.python.org/pep-0508/#environment-markers
 #
@@ -19,25 +20,18 @@ DEFAULT_PLATFORMS = {
     "x86_64-unknown-linux-gnu": """{"os_name": "posix", "platform_machine": "x86_64", "platform_system": "Linux", "platform_tags": ["linux_x86_64", "manylinux2014_x86_64", "manylinux_2_12_x86_64", "manylinux_2_17_x86_64", "manylinux_2_27_x86_64", "manylinux_2_28_x86_64"], "sys_platform": "linux"}""",
 }
 
-def _collect_version(parts):
-    version = []
-    for index in range(len(parts)):
-        if not parts[index].isdigit():
-            break
-
-        version.append(parts[index])
-
-    return ".".join(version)
-
 def _get_python_version(interpreter):
-    parts = interpreter.split("_")
-    for index in range(len(parts)):
-        if parts[index].endswith("python3"):
-            return "3." + _collect_version(parts[index + 1:])
-        elif parts[index].endswith("python"):
-            return _collect_version(parts[index + 1:])
+    parts = interpreter.replace(".", "_").split(_python_toolchain_prefix.replace(".", "_"))
+    for part in parts:
+        tokens = [token for token in part.split("_") if token]
+        for index in range(len(tokens)):
+            if not tokens[index].isdigit():
+                break
+        version = ".".join(tokens[:index])
+        if version:
+            return version
 
-    return "host"
+    return _python_version
 
 def derive_environment_markers(interpreter, interpreter_markers, host_tags):
     python_version = _get_python_version(interpreter)

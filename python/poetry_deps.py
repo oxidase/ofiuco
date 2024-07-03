@@ -119,8 +119,7 @@ def install(args):
         "--no-dependencies",
         "--disable-pip-version-check",
         "--use-pep517",
-        # "--quiet",
-        "--verbose",
+        "--quiet",
     ]
 
     if args.cc_toolchain is not None:

@@ -1,8 +1,8 @@
-load("@python//3.12:defs.bzl", py_test_3_12 = "py_test")
-load("@python//3.11:defs.bzl", py_test_3_11 = "py_test")
-load("@python//3.10:defs.bzl", py_test_3_10 = "py_test")
-load("@python//3.9:defs.bzl", py_test_3_9 = "py_test")
-load("@python//3.8:defs.bzl", py_test_3_8 = "py_test")
+load("@copperhead//3.10:defs.bzl", py_test_3_10 = "py_test")
+load("@copperhead//3.11:defs.bzl", py_test_3_11 = "py_test")
+load("@copperhead//3.12:defs.bzl", py_test_3_12 = "py_test")
+load("@copperhead//3.8:defs.bzl", py_test_3_8 = "py_test")
+load("@copperhead//3.9:defs.bzl", py_test_3_9 = "py_test")
 
 [
     py_test(

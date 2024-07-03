@@ -4,9 +4,12 @@ module(
     compatibility_level = 1,
 )
 
-bazel_dep(name = "bazel_skylib", version = "1.7.0")
+bazel_dep(name = "bazel_skylib", version = "1.7.1")
 bazel_dep(name = "platforms", version = "0.0.10")
-bazel_dep(name = "rules_python", version = "0.32.2")
+bazel_dep(name = "rules_python", version = "0.33.2")
 
-internal_deps = use_extension("@rules_ophiuchus//python:extensions.bzl", "internal_deps")
-use_repo(internal_deps, "rules_ophiuchus_pip", "rules_ophiuchus_poetry_deps")
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+use_repo(python, "python_3_11_host")
+
+internal_deps = use_extension("@rules_ophiuchus//python:internal_deps.bzl", "internal_deps")
+use_repo(internal_deps, "rules_ophiuchus_defs", "rules_ophiuchus_pip", "rules_ophiuchus_poetry_deps")
