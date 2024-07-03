@@ -105,6 +105,7 @@ def install_dependencies(toolchain_prefix, python_version, auth_patterns = {}, n
     srcs = glob(include=["**/*.py"]),
     data = glob(include=["**/*"], exclude=[
         "bin/**/*",
+        "**/__pycache__/**",
         "**/*.py",
         "**/*.pyc",
         "**/* *",
