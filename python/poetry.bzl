@@ -1,7 +1,9 @@
-load("@rules_ophiuchus_poetry_deps//:defs.bzl", _python = "python")
 load("//python/private:poetry_deps.bzl", _get_imports = "get_imports")
 
 def _poetry_update_impl(ctx):
+    python_toolchain = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"]
+    runtime_info = python_toolchain.py3_runtime
+
     script = """#!{python}
 
 import runpy
@@ -23,7 +25,7 @@ if __name__ == "__main__":
     sys.argv = [sys.argv[0], "lock", f"--directory={{dir}}"{update}, *sys.argv[1:]]
     runpy.run_module("poetry", run_name="__main__", alter_sys=True)
 """.format(
-        python = _python,
+        python = runtime_info.interpreter.short_path,
         deps = repr(["../{}".format(path) for path in _get_imports(ctx.attr._poetry_deps).to_list()]),
         toml = ctx.attr.toml.files.to_list().pop().short_path,
         lock = ctx.attr.lock.files.to_list().pop().short_path,
@@ -32,7 +34,7 @@ if __name__ == "__main__":
 
     output = ctx.actions.declare_file(ctx.label.name + ".update")
     ctx.actions.write(output, script, is_executable = True)
-    runfiles = ctx.runfiles(ctx.attr.toml.files.to_list() + ctx.attr.lock.files.to_list())
+    runfiles = ctx.runfiles(transitive_files = depset(transitive = [ctx.attr.toml.files, ctx.attr.lock.files, runtime_info.files]))
     runfiles = runfiles.merge(ctx.attr._poetry_deps.default_runfiles)
 
     return [
@@ -48,4 +50,7 @@ poetry_update = rule(
         "update": attr.bool(default = True),
         "_poetry_deps": attr.label(default = "@rules_ophiuchus_poetry_deps//:pkg"),
     },
+    toolchains = [
+        "@bazel_tools//tools/python:toolchain_type",
+    ],
 )

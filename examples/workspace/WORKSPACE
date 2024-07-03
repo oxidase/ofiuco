@@ -1,12 +1,28 @@
+load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "rules_python",
+    sha256 = "e3f1cc7a04d9b09635afb3130731ed82b5f58eadc8233d4efb59944d92ffc06f",
+    strip_prefix = "rules_python-0.33.2",
+    url = "https://github.com/bazelbuild/rules_python/releases/download/0.33.2/rules_python-0.33.2.tar.gz",
+)
+
+load("@rules_python//python:repositories.bzl", "py_repositories", "python_register_toolchains")
+
+py_repositories()
+
+python_register_toolchains("black_mamba", "3.11")
+
 local_repository(
     name = "rules_ophiuchus",
     path = "../..",
 )
 
-load("@rules_ophiuchus//python:poetry_parse.bzl", "poetry_parse")
 load("@rules_ophiuchus//python:repositories.bzl", install_poetry_dependencies = "install_dependencies")
 
-install_poetry_dependencies()
+install_poetry_dependencies("black_mamba", "3.11")
+
+load("@rules_ophiuchus//python:poetry_parse.bzl", "poetry_parse")
 
 poetry_parse(
     name = "poetry",

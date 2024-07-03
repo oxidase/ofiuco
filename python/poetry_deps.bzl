@@ -1,10 +1,8 @@
-load("@rules_python//python:defs.bzl", StarPyInfo = "PyInfo")
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//lib:versions.bzl", "versions")
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
-load("//python/private:poetry_deps.bzl", _derive_environment_markers = "derive_environment_markers", _include_dep = "include_dep")
-load("//python/private:poetry_deps.bzl", _get_imports = "get_imports", _get_transitive_sources = "get_transitive_sources")
-load("//python/private:poetry_deps.bzl", _DEFAULT_PLATFORMS = "DEFAULT_PLATFORMS")
+load("@rules_python//python:defs.bzl", StarPyInfo = "PyInfo")
+load("//python/private:poetry_deps.bzl", _DEFAULT_PLATFORMS = "DEFAULT_PLATFORMS", _derive_environment_markers = "derive_environment_markers", _get_imports = "get_imports", _get_transitive_sources = "get_transitive_sources", _include_dep = "include_dep")
 
 PYTHON_BINARY = ["bin/python3", "python/py3wrapper.sh"]
 
@@ -47,7 +45,7 @@ def _package_impl(ctx):
     # Get Python target toolchain and corresponding tags
     py_toolchain = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"]
     py_runtime_info = py_toolchain.py3_runtime
-    runtime_tag, tags = _derive_environment_markers(py_runtime_info.interpreter.path, ctx.attr.platforms, ctx.attr.host_platform)
+    runtime_tag, tags = _derive_environment_markers(py_runtime_info.interpreter.path, ctx.attr.platforms, ctx.attr.system_platform)
     python_version = tags["python_version"]
     platform_tags = tags["platform_tags"]
 
@@ -120,11 +118,10 @@ def _package_impl(ctx):
     deps = [dep for dep in ctx.attr.deps if _include_dep(dep, ctx.attr.markers, tags)]
     transitive_imports = [_get_imports(dep) for dep in deps]
     transitive_depsets = [_get_transitive_sources(dep) for dep in deps]
-    runfiles = [output] + [item for dep in transitive_depsets for item in dep.to_list()]
     files = depset([output], transitive = transitive_depsets)
     imports = depset([output.short_path.replace("../", "")], transitive = transitive_imports)
     return [
-        DefaultInfo(files = files, runfiles = ctx.runfiles(files = runfiles)),
+        DefaultInfo(files = files, runfiles = ctx.runfiles(transitive_files = files)),
         PyInfo(transitive_sources = files, imports = imports),
     ] + ([] if PyInfo == StarPyInfo else [StarPyInfo(transitive_sources = files, imports = imports)])
 
@@ -145,7 +142,7 @@ package = rule(
                   "Default value corresponds to platforms defined at " +
                   "https://github.com/bazelbuild/rules_python/blob/23cf6b66/python/versions.bzl#L231-L277",
         ),
-        "host_platform": attr.string(doc = "The host platform environment markers as a JSON string"),
+        "system_platform": attr.string(doc = "The system platform environment markers as a JSON string"),
         "_poetry_deps": attr.label(default = ":poetry_deps", cfg = "exec", executable = True),
     },
     toolchains = [

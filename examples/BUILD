@@ -12,5 +12,5 @@
     "torch",
     "transitions",
     "workspace",
-    "workspace_rules_python",
+    "workspace_multi",
 ]]
