@@ -23,7 +23,7 @@ python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.12")
 use_repo(python, "python_3_12")
 
-bazel_dep(name = "rules_ophiuchus", version = "0.3.6")
+bazel_dep(name = "rules_ophiuchus", version = "0.3.7")
 
 poetry = use_extension("@rules_ophiuchus//python:extensions.bzl", "poetry")
 poetry.parse(
@@ -73,8 +73,8 @@ In both cases the host interpreter is used in the latter case poetry package wit
 
 Minimal example which uses the system Python run-time could be as in [examples/workspace/WORKSPACE](./examples/workspace/WORKSPACE).
 
-Multi-version and multi-repository example which uses Python interpreters is in [examples/workspace_rules_python](./workspace_rules_python/WORKSPACE) directory.
-The test [`test_multiple_repos_import`](./examples/workspace_rules_python/test.py) checks the modules imports priority which is defined by the order of dependencies in `deps` section.
+Multi-version and multi-repository example which uses Python interpreters is in [examples/workspace_multi](./examples/workspace_multi/WORKSPACE) directory.
+The test [`test_multiple_repos_import`](./examples/workspace_multi/test.py) checks the modules imports priority which is defined by the order of dependencies in `deps` section.
 For example, in the following case
 ```
             [
