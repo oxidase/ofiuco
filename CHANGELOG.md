@@ -13,26 +13,26 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/) a
 ### Fixed
 
 
-## [v0.2.0](https://github.com/oxidase/rules_ophiuchus/tree/v0.2.0) - 2023-05-18
+## [v0.2.0](https://github.com/oxidase/ofiuco/tree/v0.2.0) - 2023-05-18
 
-[Full Changelog](https://github.com/oxidase/rules_ophiuchus/compare/v0.1.0...v0.2.0)
+[Full Changelog](https://github.com/oxidase/ofiuco/compare/v0.1.0...v0.2.0)
 
 ### Added
 
-- chore: add transitions example [#25](https://github.com/oxidase/rules_ophiuchus/pull/25)
-- feat: split download and install steps [#23](https://github.com/oxidase/rules_ophiuchus/pull/23)
-- feat: add interpreter_markers attribute [#22](https://github.com/oxidase/rules_ophiuchus/pull/22)
-- feat: add source_url argument [#21](https://github.com/oxidase/rules_ophiuchus/pull/21)
-- feat: remove awk dependency [#14](https://github.com/oxidase/rules_ophiuchus/pull/14)
-- feat: add py_zip rule [#13](https://github.com/oxidase/rules_ophiuchus/pull/13)
+- chore: add transitions example [#25](https://github.com/oxidase/ofiuco/pull/25)
+- feat: split download and install steps [#23](https://github.com/oxidase/ofiuco/pull/23)
+- feat: add interpreter_markers attribute [#22](https://github.com/oxidase/ofiuco/pull/22)
+- feat: add source_url argument [#21](https://github.com/oxidase/ofiuco/pull/21)
+- feat: remove awk dependency [#14](https://github.com/oxidase/ofiuco/pull/14)
+- feat: add py_zip rule [#13](https://github.com/oxidase/ofiuco/pull/13)
 
 ### Fixed
 
-- fix: add platform_machine to platform tags [#24](https://github.com/oxidase/rules_ophiuchus/pull/24)
-- fix: cleanup [#15](https://github.com/oxidase/rules_ophiuchus/pull/15)
-- fix: workflows naming [#11](https://github.com/oxidase/rules_ophiuchus/pull/11)
+- fix: add platform_machine to platform tags [#24](https://github.com/oxidase/ofiuco/pull/24)
+- fix: cleanup [#15](https://github.com/oxidase/ofiuco/pull/15)
+- fix: workflows naming [#11](https://github.com/oxidase/ofiuco/pull/11)
 
 
-## [v0.1.0](https://github.com/oxidase/rules_ophiuchus/tree/v0.1.0) - 2023-04-01
+## [v0.1.0](https://github.com/oxidase/ofiuco/tree/v0.1.0) - 2023-04-01
 
-[Full Changelog](https://github.com/oxidase/rules_ophiuchus/compare/6f8ac8716f8ab65d115c678feed3a473f71ebcfb...v0.1.0)
+[Full Changelog](https://github.com/oxidase/ofiuco/compare/6f8ac8716f8ab65d115c678feed3a473f71ebcfb...v0.1.0)

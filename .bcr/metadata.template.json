@@ -1,5 +1,5 @@
 {
-    "homepage": "https://github.com/oxidase/rules_ophiuchus",
+    "homepage": "https://github.com/oxidase/ofiuco",
     "maintainers": [
         {
             "email": "michael.krasnyk@gmail.com",
@@ -8,7 +8,7 @@
         }
     ],
     "repository": [
-        "github:oxidase/rules_ophiuchus"
+        "github:oxidase/ofiuco"
     ],
     "versions": [],
     "yanked_versions": {}

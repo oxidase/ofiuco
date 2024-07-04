@@ -1,4 +1,4 @@
-load("@rules_ophiuchus//python:poetry_parse.bzl", "poetry_parse")
+load("@ofiuco//python:poetry_parse.bzl", "poetry_parse")
 
 def _poetry_impl(module_ctx):
     for mod in module_ctx.modules:

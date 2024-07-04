@@ -1,6 +1,6 @@
 # Torch example
 
-This example shows how to use rules_ophiuchus to fetch external dependencies from a pyproject.toml file
+This example shows how to use `ofiuco` to fetch external dependencies from a pyproject.toml file
 using PyPI repository and a direct URL as
 ```
 torch = [
@@ -26,14 +26,14 @@ __init__.py  cublas  cuda_cupti  cuda_nvrtc  cuda_runtime  cudnn  cufft  curand 
 
  ls -l bazel-bin/venv/torch_venv/nvidia/cudnn/lib/
 total 32
-lrwxrwxrwx 1 test test 128 Mar 25 10:31 __init__.py -> ../../../../../external/rules_ophiuchus~~poetry~poetry/3.12/x86_64-unknown-linux-gnu/nvidia-cudnn-cu12/nvidia/cudnn/lib/__init__.py
-lrwxrwxrwx 1 test test 130 Mar 25 10:31 libcudnn.so.8 -> ../../../../../external/rules_ophiuchus~~poetry~poetry/3.12/x86_64-unknown-linux-gnu/nvidia-cudnn-cu12/nvidia/cudnn/lib/libcudnn.so.8
-lrwxrwxrwx 1 test test 140 Mar 25 10:31 libcudnn_adv_infer.so.8 -> ../../../../../external/rules_ophiuchus~~poetry~poetry/3.12/x86_64-unknown-linux-gnu/nvidia-cudnn-cu12/nvidia/cudnn/lib/libcudnn_adv_infer.so.8
-lrwxrwxrwx 1 test test 140 Mar 25 10:31 libcudnn_adv_train.so.8 -> ../../../../../external/rules_ophiuchus~~poetry~poetry/3.12/x86_64-unknown-linux-gnu/nvidia-cudnn-cu12/nvidia/cudnn/lib/libcudnn_adv_train.so.8
-lrwxrwxrwx 1 test test 140 Mar 25 10:31 libcudnn_cnn_infer.so.8 -> ../../../../../external/rules_ophiuchus~~poetry~poetry/3.12/x86_64-unknown-linux-gnu/nvidia-cudnn-cu12/nvidia/cudnn/lib/libcudnn_cnn_infer.so.8
-lrwxrwxrwx 1 test test 140 Mar 25 10:31 libcudnn_cnn_train.so.8 -> ../../../../../external/rules_ophiuchus~~poetry~poetry/3.12/x86_64-unknown-linux-gnu/nvidia-cudnn-cu12/nvidia/cudnn/lib/libcudnn_cnn_train.so.8
-lrwxrwxrwx 1 test test 140 Mar 25 10:31 libcudnn_ops_infer.so.8 -> ../../../../../external/rules_ophiuchus~~poetry~poetry/3.12/x86_64-unknown-linux-gnu/nvidia-cudnn-cu12/nvidia/cudnn/lib/libcudnn_ops_infer.so.8
-lrwxrwxrwx 1 test test 140 Mar 25 10:31 libcudnn_ops_train.so.8 -> ../../../../../external/rules_ophiuchus~~poetry~poetry/3.12/x86_64-unknown-linux-gnu/nvidia-cudnn-cu12/nvidia/cudnn/lib/libcudnn_ops_train.so.8
+lrwxrwxrwx 1 test test 128 Mar 25 10:31 __init__.py -> ../../../../../external/ofiuco~~poetry~poetry/3.12/x86_64-unknown-linux-gnu/nvidia-cudnn-cu12/nvidia/cudnn/lib/__init__.py
+lrwxrwxrwx 1 test test 130 Mar 25 10:31 libcudnn.so.8 -> ../../../../../external/ofiuco~~poetry~poetry/3.12/x86_64-unknown-linux-gnu/nvidia-cudnn-cu12/nvidia/cudnn/lib/libcudnn.so.8
+lrwxrwxrwx 1 test test 140 Mar 25 10:31 libcudnn_adv_infer.so.8 -> ../../../../../external/ofiuco~~poetry~poetry/3.12/x86_64-unknown-linux-gnu/nvidia-cudnn-cu12/nvidia/cudnn/lib/libcudnn_adv_infer.so.8
+lrwxrwxrwx 1 test test 140 Mar 25 10:31 libcudnn_adv_train.so.8 -> ../../../../../external/ofiuco~~poetry~poetry/3.12/x86_64-unknown-linux-gnu/nvidia-cudnn-cu12/nvidia/cudnn/lib/libcudnn_adv_train.so.8
+lrwxrwxrwx 1 test test 140 Mar 25 10:31 libcudnn_cnn_infer.so.8 -> ../../../../../external/ofiuco~~poetry~poetry/3.12/x86_64-unknown-linux-gnu/nvidia-cudnn-cu12/nvidia/cudnn/lib/libcudnn_cnn_infer.so.8
+lrwxrwxrwx 1 test test 140 Mar 25 10:31 libcudnn_cnn_train.so.8 -> ../../../../../external/ofiuco~~poetry~poetry/3.12/x86_64-unknown-linux-gnu/nvidia-cudnn-cu12/nvidia/cudnn/lib/libcudnn_cnn_train.so.8
+lrwxrwxrwx 1 test test 140 Mar 25 10:31 libcudnn_ops_infer.so.8 -> ../../../../../external/ofiuco~~poetry~poetry/3.12/x86_64-unknown-linux-gnu/nvidia-cudnn-cu12/nvidia/cudnn/lib/libcudnn_ops_infer.so.8
+lrwxrwxrwx 1 test test 140 Mar 25 10:31 libcudnn_ops_train.so.8 -> ../../../../../external/ofiuco~~poetry~poetry/3.12/x86_64-unknown-linux-gnu/nvidia-cudnn-cu12/nvidia/cudnn/lib/libcudnn_ops_train.so.8
 ```
 
 

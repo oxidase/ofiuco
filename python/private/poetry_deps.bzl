@@ -1,4 +1,4 @@
-load("@rules_ophiuchus_defs//:defs.bzl", _python_toolchain_prefix = "python_toolchain_prefix", _python_version = "python_version")
+load("@ofiuco_defs//:defs.bzl", _python_toolchain_prefix = "python_toolchain_prefix", _python_version = "python_version")
 load("@rules_python//python:defs.bzl", StarPyInfo = "PyInfo")
 load("@rules_python//python:versions.bzl", _MINOR_MAPPING = "MINOR_MAPPING")
 load("//python:markers.bzl", "evaluate", "parse")
