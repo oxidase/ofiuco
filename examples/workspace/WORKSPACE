@@ -14,15 +14,15 @@ py_repositories()
 python_register_toolchains("black_mamba", "3.11")
 
 local_repository(
-    name = "rules_ophiuchus",
+    name = "ofiuco",
     path = "../..",
 )
 
-load("@rules_ophiuchus//python:repositories.bzl", install_poetry_dependencies = "install_dependencies")
+load("@ofiuco//python:repositories.bzl", install_poetry_dependencies = "install_dependencies")
 
 install_poetry_dependencies("black_mamba", "3.11")
 
-load("@rules_ophiuchus//python:poetry_parse.bzl", "poetry_parse")
+load("@ofiuco//python:poetry_parse.bzl", "poetry_parse")
 
 poetry_parse(
     name = "poetry",

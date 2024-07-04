@@ -48,7 +48,7 @@ poetry_update = rule(
         "toml": attr.label(allow_single_file = [".toml"]),
         "lock": attr.label(allow_single_file = [".lock"]),
         "update": attr.bool(default = True),
-        "_poetry_deps": attr.label(default = "@rules_ophiuchus_poetry_deps//:pkg"),
+        "_poetry_deps": attr.label(default = "@ofiuco_poetry_deps//:pkg"),
     },
     toolchains = [
         "@bazel_tools//tools/python:toolchain_type",

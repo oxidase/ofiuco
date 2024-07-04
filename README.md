@@ -1,4 +1,4 @@
-# ⛎ Ophiuchus Rules for Bazel
+# ⛎ Ofiuco Rules for Bazel
 
 ## Overview
 
@@ -12,9 +12,9 @@ Minimum requirements:
 
 ## Getting started
 
-### Import `rules_ophiuchus` as a module
+### Import `ofiuco` as a module
 
-To import `rules_ophiuchus` in your project, you first need to add it to your `MODULE.bazel` file
+To import `ofiuco` in your project, you first need to add it to your `MODULE.bazel` file
 
 ```python
 bazel_dep(name = "rules_python", version = "0.33.2")
@@ -23,9 +23,9 @@ python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.12")
 use_repo(python, "python_3_12")
 
-bazel_dep(name = "rules_ophiuchus", version = "0.3.7")
+bazel_dep(name = "ofiuco", version = "0.3.7")
 
-poetry = use_extension("@rules_ophiuchus//python:extensions.bzl", "poetry")
+poetry = use_extension("@ofiuco//python:extensions.bzl", "poetry")
 poetry.parse(
     name = "poetry",
     lock = "@//path/to:poetry.lock",
@@ -57,7 +57,7 @@ poetry update
 
 or using a pre-defined target
 ```
-load("@rules_ophiuchus//python:poetry.bzl", "poetry_update")
+load("@ofiuco//python:poetry.bzl", "poetry_update")
 
 poetry_update(
     name = "update_lock",

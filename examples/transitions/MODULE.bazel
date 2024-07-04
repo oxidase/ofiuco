@@ -5,13 +5,13 @@ python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.12")
 use_repo(python, "python_3_12")
 
-bazel_dep(name = "rules_ophiuchus", version = "0.0.0")
+bazel_dep(name = "ofiuco", version = "0.0.0")
 local_path_override(
-    module_name = "rules_ophiuchus",
+    module_name = "ofiuco",
     path = "../..",
 )
 
-poetry = use_extension("@rules_ophiuchus//python:extensions.bzl", "poetry")
+poetry = use_extension("@ofiuco//python:extensions.bzl", "poetry")
 poetry.parse(
     name = "poetry",
     lock = "//:poetry.lock",

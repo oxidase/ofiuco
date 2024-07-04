@@ -1,4 +1,4 @@
-load("@rules_ophiuchus_defs//:defs.bzl", _python_host = "python_host")
+load("@ofiuco_defs//:defs.bzl", _python_host = "python_host")
 
 def dfs_cycles(graph):
     # Detect pip dependency cycles u->...->v...->w->v and remove edges w->v

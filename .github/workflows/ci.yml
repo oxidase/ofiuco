@@ -9,7 +9,6 @@ on:
 
 jobs:
   test:
-    name: Test rules_ophiuchus
     runs-on: ${{ matrix.os }}
     timeout-minutes: 40
     strategy:

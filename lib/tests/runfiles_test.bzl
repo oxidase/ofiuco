@@ -80,7 +80,7 @@ def _test_runfiles_provider_external_workspace():
         data = [":test_filegroup"],
         workspace = ["?**"],
         include = ["*/_main~**"],
-        exclude = ["**/*.dist-info/*", "**__*__???", "**_vendor**", "**.typed", "**ophiuchus_pip/*"],
+        exclude = ["**/*.dist-info/*", "**__*__???", "**_vendor**", "**.typed", "**ofiuco_pip/*"],
     )
 
     runfiles_provider_external_workspace_test(

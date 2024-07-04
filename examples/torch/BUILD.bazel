@@ -1,5 +1,5 @@
-load("@rules_ophiuchus//python:poetry.bzl", "poetry_update")
-load("@rules_ophiuchus//python:py_venv.bzl", "py_venv")
+load("@ofiuco//python:poetry.bzl", "poetry_update")
+load("@ofiuco//python:py_venv.bzl", "py_venv")
 
 py_venv(
     name = "torch_venv",

@@ -2,13 +2,13 @@
 
 Explicitly set `--enable_bzlmod=false` to disable bzlmod.
 
-Add rules_ophiuchus to `WORKSPACE` file as
+Add `ofiuco` to `WORKSPACE` file as
 ```
-load("@rules_ophiuchus//python:repositories.bzl", install_poetry_dependencies = "install_dependencies")
+load("@ofiuco//python:repositories.bzl", install_poetry_dependencies = "install_dependencies")
 
 install_poetry_dependencies("copperhead_3_11", "3.11")
 
-load("@rules_ophiuchus//python:poetry_parse.bzl", "poetry_parse")
+load("@ofiuco//python:poetry_parse.bzl", "poetry_parse")
 
 poetry_parse(
     name = "poetry_repo1",

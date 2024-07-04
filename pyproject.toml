@@ -21,7 +21,7 @@ multi_line_output = 3
 no_lines_before = "LOCALFOLDER"
 py_version = 311
 skip = [
-  "bazel-rules_ophiuchus",
+  "bazel-ofiuco",
   "bazel-bin",
   "bazel-out",
   "bazel-testlogs",
@@ -33,7 +33,7 @@ version = "0.1.0"
 description = ""
 authors = ["Michael Krasnyk <michael.krasnyk@gmail.com>"]
 readme = "README.md"
-packages = [{include = "rules_ophiuchus"}]
+packages = [{include = "ofiuco"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"

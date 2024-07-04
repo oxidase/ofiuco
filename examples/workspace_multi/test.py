@@ -32,6 +32,8 @@ def test_conditional_dependency():
     is_required = int(platform.python_version_tuple()[1]) < 11
     try:
         import exceptiongroup
+
+        assert exceptiongroup
     except ImportError:
         is_installed = False
     else:
