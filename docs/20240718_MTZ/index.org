@@ -1,0 +1,354 @@
+:REVEAL_PROPERTIES:
+#+REVEAL_ROOT: https://cdn.jsdelivr.net/npm/reveal.js
+#+REVEAL_REVEAL_JS_VERSION: 4
+#+REVEAL_THEME: moon
+#+REVEAL_HLEVEL: 1
+#+REVEAL_PLUGINS: (highlight CopyCode)
+#+REVEAL_EXTRA_CSS: index.css
+#+REVEAL_INIT_OPTIONS: width:1600, height:1200, controls: false
+#+EXCLUDE_TAGS: skip
+#+OPTIONS: timestamp:nil toc:nil num:nil
+#+MACRO: NEWLINE @@latex:\\@@ @@html:<br>@@
+:END:
+
+#+TITLE: yY6 xj7Y`Û = xj7Y`Û W zU7hE5ÈÁ
+#+HTML_HEAD_EXTRA: <title>Different Title for Browser Tab</title>
+#+SUBTITLE: One TOML file to rule them all {{{NEWLINE}}}  +official+ ofiuco rules for multi-version multi-target Python setup
+#+AUTHOR: Michael Krasnyk
+#+DATE: [2024-07-18]
+
+* Random fun fact
+
+The term "ofiuco" refers to the constellation Ophiuchus, which is known as the "Serpent Bearer" in English.
+
+The name origin is from the Greek ὀφιοῦχος with the Latinized form Ophiuchus /​ˌɒfiˈjuːkəs​/
+which was further simplified to ofiuco  /​o.fiˈu.ko​/ in some languages.
+
+The brightest star is Rasalhague
+from the Arabic  الحواء   رأس
+
+@@html:<div style="display: flex; justify-content: center; align-items: center;"><img style="mix-blend-mode: multiply;" width="720px" src="con_OPH_000.png" /></div>@@
+
+Ref [[https://in-the-sky.org/data/constellation.php?id=60][in-the-sky.org]]
+
+
+
+* Multi-platform Python setup at [[https://www.ruumi.io/][ruumi @@html:<img style="vertical-align: baseline; margin-bottom: 0px;" src="green_logo.png" />@@]]
+
+Motivation for a "yet another Python rules" was:
+
+
+- Running production artifacts on
+
+  - AWS Lambda @@html:<img style="height: 1.2em; vertical-align: -5px; margin-bottom: 0px; border-radius: 5px;" src="aws-lambda.svg" />@@
+    running on =arm64= architecture with Python 3.10—3.12 [[https://docs.aws.amazon.com/lambda/latest/dg/lambda-runtimes.html][runtimes]]  and packaged as a Zip file which will be executed on Amazon Linux 2 or 2023
+    with some pre-installed packages like =boto3=. The lambdas must be small and used as pre-filters for
+    SNS messages @@html:<img style="height: 1.2em; vertical-align: -5px; margin: 0px; border-radius: 5px;" src="aws-sns.svg" />@@
+    via
+    AWS SQS @@html:<img style="height: 1.2em; vertical-align: -5px; margin: 0px; border-radius: 5px;" src="aws-sqs.svg" />@@
+
+  - AWS Batch @@html:<img style="height: 1.2em; vertical-align: -5px; margin-bottom: 0px; border-radius: 5px;" src="aws-batch.svg" />@@ processing jobs
+    running on
+    AWS Fargate Spot @@html:<img style="height: 1.2em; vertical-align: -5px; margin: 0px; border-radius: 5px;" src="aws-fargate.svg" />@@
+    packaged as Docker images and pushed to
+    AWS ECS @@html:<img style="height: 1.2em; vertical-align: -5px; margin: 0px; border-radius: 5px;" src="aws-ecs.svg" />@@
+
+  - Services on
+    AWS EC2 @@html:<img style="height: 1.2em; vertical-align: -5px; margin-bottom: 0px; border-radius: 5px;" src="aws-ec2.svg" />@@
+
+
+- Development workflows on
+
+  - Developer machines with  MacOS =aarch64= or Linux =x86_64=
+
+  - Training machines with NVIDIA card locally or at
+    AWS SageMaker @@html:<img style="height: 1.2em; vertical-align: -5px; margin: 0px; border-radius: 5px;" src="aws-sagemaker.svg" />@@
+
+  - GitHub Actions for CI/CD
+
+- Deployment via AWS CDK in TypeScript
+
+* ofiuco workflow
+
+- Prepare [[https://packaging.python.org/en/latest/specifications/pyproject-toml/][PyPA]] =pyproject.toml= file with tool [[https://packaging.python.org/en/latest/specifications/pyproject-toml/#arbitrary-tool-configuration-the-tool-table][sections]] [[https://python-poetry.org/docs/pyproject/#dependencies-and-dependency-groups][=[tool.poetry.*]=]]
+#+begin_src toml
+[[tool.poetry.source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu121/"
+priority = "explicit"
+
+[tool.poetry.dependencies]
+awslambdaric = "^2.0.4"
+boto3 = "1.28.72"
+botocore = "1.31.72"
+...
+safetensors = {version = "0.4.0", extras = ["numpy"]}
+timm = "^0.9.10"
+torch = [
+  {platform = "darwin", version = "2.2.1", source="pypi"},
+  {platform = "linux", url = "https://download.pytorch.org/whl/cu121/torch-2.2.1%2Bcu121-cp312-cp312-linux_x86_64.whl"},
+]
+torchinfo = "^1.8.0"
+torchvision = [
+   {version = "0.17.1"},
+   {platform = "linux", version = "0.17.1", source="pytorch"},
+]
+#+end_src
+
+#+reveal: split
+
+- Generate a lock file as =poetry update= or using =poetry_update= rule defined at =@ofiuco//python:poetry.bzl=
+
+  {{{NEWLINE}}}
+
+- Add =poetry.lock= file parsing to =MODULE.bazel= as
+#+begin_src python
+poetry = use_extension("@ofiuco//python:extensions.bzl", "poetry")
+poetry.parse(
+    name = "poetry",
+    lock = "@//tools/build_rules:poetry.lock",
+)
+use_repo(poetry, "poetry")
+#+end_src
+
+
+#+reveal: split
+
+- Use Python dependencies as
+
+#+begin_src python
+py_library(
+    name = "model",
+    srcs = [
+        "network.py",
+    ],
+    data = [
+        "conf/model/default.yaml",
+    ],
+    deps = [
+        "//src:torch",
+        "@poetry//:pydantic",
+        "@poetry//:timm",
+    ],
+)
+#+end_src
+
+
+  {{{NEWLINE}}}
+
+- Add virtual environments if needed
+
+#+begin_src python
+load("@ofiuco//python:py_venv.bzl", "py_venv")
+
+py_venv(
+    name = "torch",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@poetry//:numpy",
+        "@poetry//:torch",
+    ],
+)
+#+end_src
+
+* Multiple platforms for AWS Lambda
+
+Let's define a platform in =BUILD= file as
+
+#+begin_src python
+platform(
+    name = "aws_lambda",
+    constraint_values = [
+        "@platforms//os:linux",
+        "@platforms//cpu:arm64",
+    ],
+)
+#+end_src
+
+
+and Python lambda as
+
+#+begin_src python
+py_library(
+    name = "lambda",
+    srcs = ["lambda.py"],
+    deps = [
+        "//src/data/common:lambda_utils",
+        "@poetry//:awslambdaric",
+        "@poetry//:boto3",
+        "@poetry//:shapely",
+    ],
+)
+#+end_src
+
+
+Challenges:
+
+- running unit tests in a host environment
+- integration tests where =lambda= is packed as a zip file for a fixed target platform
+- deployment has to be done for a platform which is defined from configuration
+- =awslambdaric= and =boto3= packages shall not be included into zip package
+- =shapely= package must have correct binary files
+
+* Platform transitions
+
+The rule =load("@ofiuco//lib:py_zip.bzl", "py_zip")= has an attribute which is used as a transition
+configuration for =target=:
+
+#+begin_src python
+py_zip(
+    name = "deploy_aws_lambda",
+    platform = ":aws_lambda",
+    target = ":lambda",
+)
+#+end_src
+
+Also possible to exclude files from the target zip by path patterns
+
+#+begin_src python
+py_zip(
+    ...
+    exclude = [
+        "**.dist-info/**",
+        "**/__pycache__/**",
+        "**/bin/*",
+
+        # Ignore some packages since hey are provided by AWS Lambda runtime context.
+        "ofiuco**/awslambdaric**",
+        "ofiuco**/boto3**",
+        ...
+    ],
+)
+#+end_src
+
+
+* OCI deployment
+
+Define =command_aws_batch= as
+
+#+begin_src python
+load("@rules_multirun//:defs.bzl", "command_with_transition", "multirun_with_transition")
+
+def _aws_batch_platforms_impl(settings, attr):
+    return {"//command_line_option:platforms": [":aws_batch"]}
+
+aws_batch_transition = transition(
+    implementation = _aws_batch_platforms_impl,
+    inputs = [],
+    outputs = ["//command_line_option:platforms"],
+)
+
+command_aws_batch = command_with_transition(aws_batch_transition)
+#+end_src
+
+#+reveal: split
+
+Define =:deploy= target as a push command with transition to =aws_batch=
+
+#+begin_src python
+oci_tarball(
+    name = "worker_tarball",
+    image = ":worker_image",
+    repo_tags = ["repo/project:latest"],
+    tags = ["manual"],
+)
+
+oci_push(
+    name = "worker_push",
+    image = ":worker_image",
+    remote_tags = ["latest"],
+    repository = ecr_registry.format(id = aws_account_id, region = aws_default_region,) + "/repo/project",
+    tags = ["manual"],
+)
+
+command_aws_batch(
+    name = "deploy",
+    arguments = [],
+    command = ":worker_push",
+    tags = ["manual"],
+    visibility = ["//visibility:public"],
+)
+#+end_src
+
+
+* How it works under the hood
+
+- Lock files are parsed in a repository context and =BUILD= files is generated with declarations
+
+#+begin_src python
+package(
+  name = "anyio",
+  constraint = "anyio==4.4.0",
+  description = "High level compatibility layer for multiple asynchronous event loop implementations",
+  files = {
+    "anyio-4.4.0-py3-none-any.whl": "sha256:c1b2d8f46a8a812513012e1107cb0e68c17159a7a594208005a57dc776e1bdc7",
+    "anyio-4.4.0.tar.gz": "sha256:5aadc6a1bbb7cdb0bede386cac5e2940f5e2ff3aa20277e991cf028e0585ce94",
+   },
+  deps = [":exceptiongroup", ":idna", ":sniffio", ":typing-extensions", "tomli", "pyreadline3", "colorama"],
+  markers = '''{"exceptiongroup":"python_version < \\\"3.11\\\"",
+                "typing-extensions":"python_version < \\\"3.11\\\"",
+                "tomli":"python_version < \\\"3.11\\\"",
+                "pyreadline3":"sys_platform == \\\"win32\\\" and python_version >= \\\"3.8\\\"",
+                "colorama":"platform_system == \\\"Windows\\\""}''',
+  visibility = ["//visibility:public"],
+)
+#+end_src
+
+- =package= rule executed in a rule context with resolved toolchains
+   - ="@bazel_tools//tools/python:toolchain_type"= which is used to resolve markers and collect required dependencies
+   - ="@bazel_tools//tools/cpp:toolchain_type"= which is used to compile wheels if no binary files provided
+   - =exec= configuration Python toolchain to run pip install command with listed files and corresponding SHA256 checks
+
+* What is missing or not yet finished
+
+- Support for Windows platforms
+
+- Support for PDM and uv (requires [[https://github.com/astral-sh/uv/issues/3347][#3347]])
+
+- Using Python for parsing lock files
+
+- Build wheels with compiled dependencies from sources ([[https://www.psycopg.org/docs/install.html#psycopg-vs-psycopg-binary][psycopg vs psycopg-binary]], [[https://en.wikipedia.org/wiki/XZ_Utils_backdoor][XZ Utils backdoor]], etc)
+
+
+* Thank you for your time!
+
+I welcome any feedback on the rules and would be glad to make them "official", [sic].
+
+@@html:<div style="display: flex; justify-content: center; align-items: center;"><img style="mix-blend-mode: multiply;" width="720px" src="qr-cn.png" /></div>@@
+
+
+
+
+#+begin_notes
+
+
+Icons are from
+https://icon-sets.iconify.design/logos/aws-lambda/
+
+Original gradients in SVG files:
+    <linearGradient id="logosAwsLambda0" x1="0%" x2="100%" y1="100%" y2="0%">
+      <stop offset="0%" stop-color="#c8511b"/>
+      <stop offset="100%" stop-color="#f90"/>
+    </linearGradient>
+
+https://huggingface.co/spaces/huggingface-projects/QR-code-AI-art-generator
+QR
+black sky with background color #002b36, stars constellation, gustav klimt style  , matte painting concept art, a detailed matte painting
+
+
+Control Networks
+https://huggingface.co/monster-labs/control_v1p_sd15_qrcode_monster/blob/main/v2/control_v1p_sd15_qrcode_monster_v2.safetensors
+https://huggingface.co/Nacholmo/controlnet-qr-pattern-v2/blob/main/automatic1111/QRPattern_v2_9500.safetensors
+
+rendering of night sky with stars in zenith, (Photorealistic:1.3), (Highly detailed:1.2), (Natural light:1.2) elves style
+Negative prompt: ugly, disfigured, low quality, blurry
+Steps: 100, Sampler: DPM++ SDE, Schedule type: Karras, CFG scale: 7, Seed: 43453184, Size: 512x512, Model hash: 6ce0161689, Model: v1-5-pruned-emaonly, ControlNet 0: "preprocessor: none, model: QRPattern_v2_9500 [2d8d5750], weight: 1.1, starting/ending: (0, 1), resize mode: Crop and Resize, pixel perfect: True, control mode: Balanced, preprocessor params: (-1, -1, -1)", Version: v1.9.4
+
+#+end_notes
+
+# Local Variables:
+# org-html-metadata-timestamp-format: "%B %e, %Y"
+# End:
+
+
+
