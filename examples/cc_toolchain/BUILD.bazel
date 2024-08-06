@@ -1,10 +1,19 @@
+load("@ofiuco//python:poetry.bzl", "poetry_update")
+
 py_test(
     name = "test",
     size = "large",
     srcs = ["test.py"],
     data = ["poetry.lock"],
     deps = [
+        "@poetry//:evdev",
         "@poetry//:llama-cpp-python",
         "@poetry//:pytest",
     ],
+)
+
+poetry_update(
+    name = "update_lock",
+    lock = "poetry.lock",
+    toml = "pyproject.toml",
 )
