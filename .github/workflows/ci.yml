@@ -13,11 +13,13 @@ jobs:
     timeout-minutes: 40
     strategy:
       matrix:
-        include: # TODO: windows-latest
+        include:
           - os: ubuntu-latest
             cache: ~/.cache/bazel
           - os: macos-latest
             cache: /private/var/tmp/_bazel_runner
+          - os: windows-latest
+            cache:  ~/.cache/bazel
 
     steps:
       - name: Checkout code
@@ -39,7 +41,7 @@ jobs:
         shell: bash
 
       - name: Mount bazel cache
-        uses: actions/cache@v3.3.1
+        uses: actions/cache@v4
         with:
           path: ${{ matrix.cache }}
           key: bazel-${{ matrix.os }}
