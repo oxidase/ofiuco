@@ -4,8 +4,7 @@ matrix:
     - debian10
     - ubuntu2004
     - macos
-  bazel:
-    - 7.x
+  bazel: [8.x, 7.x]
 tasks:
   verify_targets:
     name: Verify build targets
@@ -21,8 +20,7 @@ bcr_test_module:
       - debian11
       - macos
       - ubuntu2004
-    bazel:
-      - 7.x
+    bazel: [8.x, 7.x]
   tasks:
     run_test_module:
       name: Run test module

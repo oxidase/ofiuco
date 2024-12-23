@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import re
 import sys
 import urllib
 import warnings
@@ -56,6 +57,19 @@ cc_cpu_to_cmake_args = {
 
 def join(flags):
     return " ".join([flag for flag in flags if flag])
+
+
+def filter_cxx_builtin_include_directories(flags):
+    r"""Bazel rules_cc mixes CXX directories into CFLAGS so compiling of GNU11 can fail ¯\_(ツ)_/¯
+
+    In case of CXXFLAGS C++ header must be followed by C headers to prevent:
+    <cstddef> tried including <stddef.h> but didn't find libc++'s <stddef.h> header.
+    This usually means that your header search paths are not configured properly.
+    The header search paths should contain the C++ Standard Library headers before
+    any C Standard Library, and you are probably using compiler flags that make that
+    not be the case."""
+    cxx_include_directory = re.compile(r"^-[iI].*/c\+\+/")
+    return [flag for flag in flags if not cxx_include_directory.match(flag)]
 
 
 def install(args):
@@ -143,7 +157,7 @@ def install(args):
 
         cpu_flags = cc_compiler_cpu_to_cflags.get(compiler, {}).get(cpu, [])
         asflags = cpu_flags + cc.get("ASFLAGS", [])
-        cflags = cpu_flags + cc.get("CFLAGS", [])
+        cflags = cpu_flags + filter_cxx_builtin_include_directories(cc.get("CFLAGS", []))
         cxxflags = cpu_flags + cc.get("CXXFLAGS", [])
         ldflags = ["-Wl,-rpath,{}".format(cc.get("dynamic_runtime_solib_dir", ""))] + cc.get("LDFLAGS", [])
         flags = dict(

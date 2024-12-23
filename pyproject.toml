@@ -1,7 +1,6 @@
 [tool.black]
 include = "\\.pyi?$"
 line-length = 120
-max-complexity = 12
 
 [tool.ruff]
 line-length = 120
@@ -28,7 +27,7 @@ skip = [
 ]
 
 [tool.poetry]
-name = "rules-poetry"
+name = "ofiuco"
 version = "0.1.0"
 description = ""
 authors = ["Michael Krasnyk <michael.krasnyk@gmail.com>"]
@@ -38,6 +37,10 @@ packages = [{include = "ofiuco"}]
 [tool.poetry.dependencies]
 python = "^3.9"
 poetry = "^1.6.1"
+
+[tool.poetry.group.dev.dependencies]
+isort = "^5.13.2"
+black = "^24.10.0"
 
 [build-system]
 requires = ["poetry-core"]

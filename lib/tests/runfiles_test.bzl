@@ -79,7 +79,7 @@ def _test_runfiles_provider_external_workspace():
         name = "runfiles_external_workspace_contents_subject",
         data = [":test_filegroup"],
         workspace = ["?**"],
-        include = ["*/_main~**"],
+        include = ["*/**"],
         exclude = ["**/*.dist-info/*", "**__*__???", "**_vendor**", "**.typed", "**ofiuco_pip/*"],
     )
 

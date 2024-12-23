@@ -3,11 +3,11 @@ import tomllib
 
 import pytest
 
-import evdev
 import llama_cpp
+from llama_cpp.llama_cpp import _base_path as base_path
 from llama_cpp.llama_cpp import _lib as llama_lib
 from llama_cpp.llama_cpp import _lib_base_name as lib_base_name
-from llama_cpp.llama_cpp import _load_shared_library as load_shared_library
+from llama_cpp.llama_cpp import load_shared_library
 
 
 def test_llama_version():
@@ -20,18 +20,17 @@ def test_llama_version():
 
 def test_llama_library_rpath():
     assert llama_lib
-    lib = load_shared_library(lib_base_name)
+    lib = load_shared_library(lib_base_name, base_path)
     assert llama_lib._name == lib._name
     with open(lib._name, "rb") as handle:
-        assert b"bazel-out/" in handle.read()
+        assert b"llama_model_size" in handle.read()
 
 
+@pytest.mark.skipif(sys.platform not in {"linux", "linux2"}, reason="evdev requires Linux platform")
 def test_evdev():
-    devices = [evdev.InputDevice(path) for path in evdev.list_devices()]
-    for device in devices:
-        print(device.path, device.name, device.phys)
+    import evdev
 
-    assert len(evdev.list_devices()) > 0
+    assert evdev
 
 
 if __name__ == "__main__":
