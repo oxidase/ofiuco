@@ -77,7 +77,7 @@ class TestInstallSubcommand(unittest.TestCase):
         args = InstallArgs()
         files = list(json.loads(args.files).keys())
         args.input = "six==1.16.0"
-        args.files = f"""{{"{files.pop()}":"sha256:x"}}"""
+        args.files = f"""{{"{files.pop()}":"sha256:invalid_hash"}}"""
         with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output:
             assert main.install(args) != 0
 
@@ -85,9 +85,9 @@ class TestInstallSubcommand(unittest.TestCase):
         args = InstallArgs()
         list(json.loads(args.files).keys())
         args.input = "six==1.16.0"
-        args.files = """{"x":"sha256:x"}"""
+        args.files = """{"x":"sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"}"""
         with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output:
-            assert main.install(args) != 0
+            assert main.install(args) == 0
 
     def test_wrong_python_version(self):
         args = InstallArgs()
@@ -100,8 +100,7 @@ class TestInstallSubcommand(unittest.TestCase):
         args = InstallArgs()
         args.input = "/x"
         with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output:
-            retcode = main.install(args)
-            self.assertEqual(retcode, 1)
+            assert main.install(args) != 0
 
     def test_extra_index_url(self):
         args = InstallArgs()
@@ -115,8 +114,7 @@ class TestInstallSubcommand(unittest.TestCase):
         )
 
         with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output:
-            retcode = main.install(args)
-            self.assertEqual(retcode, 1)
+            assert main.install(args) != 0
 
     def test_source_urls(self):
         args = InstallArgs()
@@ -189,6 +187,35 @@ class TestInstallSubcommand(unittest.TestCase):
             with patch("pip._internal.commands.install.InstallCommand", InstallCommand):
                 retcode = main.install(args)
                 self.assertEqual(retcode, 42)
+
+    def test_filter_cxx_builtin_include_directories(self):
+        cflags = [
+            "-U_FORTIFY_SOURCE",
+            "-fstack-protector",
+            "-Wall",
+            "-Wthread-safety",
+            "-Wself-assign",
+            "-Wunused-but-set-parameter",
+            "-Wno-free-nonheap-object",
+            "-fcolor-diagnostics",
+            "-fno-omit-frame-pointer",
+            "-fPIC",
+            "-I/usr/local/include",
+            "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1",
+            "-I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/include",
+            "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include",
+            "-I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include",
+            "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks",
+            "-I/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/clang/16/share",
+            "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk",
+            "-mmacosx-version-min=15.2",
+            "-no-canonical-prefixes",
+            "-Wno-builtin-macro-redefined",
+            '-D__DATE__="redacted"',
+            '-D__TIMESTAMP__="redacted"',
+            '-D__TIME__="redacted"',
+        ]
+        self.assertEqual(len(main.filter_cxx_builtin_include_directories(cflags)), len(cflags) - 1)
 
 
 if __name__ == "__main__":

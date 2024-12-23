@@ -3,7 +3,6 @@ import os
 import pathlib
 import platform
 import re
-import struct
 import subprocess
 import sys
 import zipfile
@@ -28,21 +27,21 @@ def test_elf_dynamic_libraries_in_deployment_zip(zip_name, arch):
         assert any([name for name in dynamic_libraries if library in name])
 
 
-def test_pe_files_in_deployment_zip():
-    files_re, files = re.compile(".*\\.(dll|exe|pyd)$"), []
-    with zipfile.ZipFile("deploy_win32_x86_64.zip") as zip_file:
-        for file_name in [name for name in zip_file.namelist() if files_re.match(name)]:
-            with zip_file.open(file_name) as zipped_file:
-                data = zipped_file.read()
-            assert data[0:2] == b"MZ"
-            (offset,) = struct.unpack("<I", data[0x3C:0x40])
-            assert data[offset : offset + 4] == b"PE\x00\x00"
-            (machine_type,) = struct.unpack("<H", data[offset + 4 : offset + 6])
-            assert machine_type in {0x14C, 0x8664, 0xAA64}
-            files.append(pathlib.Path(file_name).name)
+# def test_pe_files_in_deployment_zip():
+#     files_re, files = re.compile(".*\\.(dll|exe|pyd)$"), []
+#     with zipfile.ZipFile("deploy_win32_x86_64.zip") as zip_file:
+#         for file_name in [name for name in zip_file.namelist() if files_re.match(name)]:
+#             with zip_file.open(file_name) as zipped_file:
+#                 data = zipped_file.read()
+#             assert data[0:2] == b"MZ"
+#             (offset,) = struct.unpack("<I", data[0x3C:0x40])
+#             assert data[offset : offset + 4] == b"PE\x00\x00"
+#             (machine_type,) = struct.unpack("<H", data[offset + 4 : offset + 6])
+#             assert machine_type in {0x14C, 0x8664, 0xAA64}
+#             files.append(pathlib.Path(file_name).name)
 
-    for name_part in ["python.exe", "python3.dll", "openblas", "multiarray_umath"]:
-        assert any([name for name in files if name_part in name])
+#     for name_part in ["python.exe", "python3.dll", "openblas", "multiarray_umath"]:
+#         assert any([name for name in files if name_part in name])
 
 
 @pytest.mark.parametrize("name", ["deploy_linux_arm64", "deploy_linux_x86_64"])

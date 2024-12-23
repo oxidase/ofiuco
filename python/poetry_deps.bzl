@@ -54,7 +54,6 @@ def _package_impl(ctx):
     poetry_deps_binary = poetry_deps_info.files_to_run.executable
     poetry_deps_runfiles = poetry_deps_info.default_runfiles.files
     poetry_deps_python = [x for x in poetry_deps_runfiles.to_list() if any([x.path.endswith(suffix) for suffix in PYTHON_BINARY])].pop()
-    _, input_manifests = ctx.resolve_tools(tools = [ctx.attr._poetry_deps])
 
     install_inputs = poetry_deps_info.files
 
@@ -81,7 +80,8 @@ def _package_impl(ctx):
 
     # Get CC target toolchain and propagate to the installation script
     cc_toolchain = ctx.toolchains["@bazel_tools//tools/cpp:toolchain_type"]
-    if cc_toolchain and hasattr(cc_toolchain, "cc") and type(cc_toolchain.cc) == "CcToolchainInfo":
+    if cc_toolchain and hasattr(cc_toolchain, "cc") and type(cc_toolchain.cc) != "string":
+        print(cc_toolchain)
         cc = cc_toolchain.cc
         feature_configuration = cc_common.configure_features(
             ctx = ctx,
@@ -89,7 +89,9 @@ def _package_impl(ctx):
             requested_features = ctx.features,
             unsupported_features = ctx.disabled_features,
         )
-        cc_attr = {k: getattr(cc, k) for k in dir(cc) if type(getattr(cc, k)) != "depset" and type(getattr(cc, k)) != "builtin_function_or_method"}
+        cc_attr = {k: getattr(cc, k) for k in dir(cc) if type(getattr(cc, k)) == "string" or
+                                                         type(getattr(cc, k)) == "File"}
+        cc_attr = {k: v.path if type(v) == "File" else v for k, v in cc_attr.items()}
         cc_attr["AS"], cc_attr["ASFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.assemble)
         cc_attr["CC"], cc_attr["CFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.c_compile)
         cc_attr["CXX"], cc_attr["CXXFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.cpp_compile)
@@ -106,7 +108,6 @@ def _package_impl(ctx):
         progress_message = "Installing package {} ({}) for Python {} {}".format(ctx.label.name, ctx.attr.constraint, python_version, runtime_tag),
         arguments = arguments,
         use_default_shell_env = True,
-        input_manifests = input_manifests,
         executable = poetry_deps_python,
         tools = poetry_deps_runfiles,
         execution_requirements = {"requires-network": ""},

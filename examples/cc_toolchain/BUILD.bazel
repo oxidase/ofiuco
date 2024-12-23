@@ -6,10 +6,12 @@ py_test(
     srcs = ["test.py"],
     data = ["poetry.lock"],
     deps = [
-        "@poetry//:evdev",
         "@poetry//:llama-cpp-python",
         "@poetry//:pytest",
-    ],
+    ] + select({
+        "@platforms//os:linux": ["@poetry//:evdev"],
+        "//conditions:default": [],
+    }),
 )
 
 poetry_update(

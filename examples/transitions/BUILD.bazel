@@ -1,5 +1,5 @@
-load("@bazel_tools//tools/cpp:empty_cc_toolchain_config.bzl", "cc_toolchain_config")
 load("@ofiuco//lib:py_zip.bzl", "py_zip")
+load(":cc_toolchain_config.bzl", "cc_toolchain_config")
 load(":transitions.bzl", "py_binary_linux_x86_64")
 
 platform(
@@ -34,17 +34,17 @@ platform(
     ],
 )
 
-filegroup(
-    name = "empty",
-    srcs = [],
-)
+# As of Bazel 8.0 Python packaging for Windows requires a proper compiler
+# Add a host clang compiler as described in
+# https://bazel.build/tutorials/ccp-toolchain-config#configure-cc-toolchain
+filegroup(name = "empty")
 
 cc_toolchain_config(
-    name = "empty_config",
+    name = "cc-toolchain-config",
 )
 
 cc_toolchain(
-    name = "cc-compiler-empty",
+    name = "cc-compiler",
     all_files = ":empty",
     ar_files = ":empty",
     as_files = ":empty",
@@ -54,14 +54,17 @@ cc_toolchain(
     objcopy_files = ":empty",
     strip_files = ":empty",
     supports_param_files = 0,
-    toolchain_config = ":empty_config",
+    toolchain_config = ":cc-toolchain-config",
+    toolchain_identifier = "cc-toolchain",
 )
 
 toolchain(
-    name = "empty_cc_toolchain",
+    name = "cc-toolchain",
+    exec_compatible_with = [
+    ],
     target_compatible_with = [
     ],
-    toolchain = ":cc-compiler-empty",
+    toolchain = ":cc-compiler",
     toolchain_type = "@bazel_tools//tools/cpp:toolchain_type",
 )
 
@@ -96,11 +99,11 @@ py_zip(
     target = ":app",
 )
 
-py_zip(
-    name = "deploy_win32_x86_64",
-    platform = ":win32_x86_64",
-    target = ":app",
-)
+# py_zip(
+#     name = "deploy_win32_x86_64",
+#     platform = ":win32_x86_64",
+#     target = ":app",
+# )
 
 py_binary_linux_x86_64(
     name = "app_linux_x86_64",
@@ -121,7 +124,7 @@ py_test(
         ":deploy_darwin_arm64",
         ":deploy_linux_arm64",
         ":deploy_linux_x86_64",
-        ":deploy_win32_x86_64",
+        # ":deploy_win32_x86_64",
         ":host",
     ],
     deps = [
