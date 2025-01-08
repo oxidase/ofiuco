@@ -23,7 +23,7 @@ python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.12")
 use_repo(python, "python_3_12")
 
-bazel_dep(name = "ofiuco", version = "0.3.7")
+bazel_dep(name = "ofiuco", version = "0.4.1")
 
 poetry = use_extension("@ofiuco//python:extensions.bzl", "poetry")
 poetry.parse(
