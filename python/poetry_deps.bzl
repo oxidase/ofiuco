@@ -81,7 +81,6 @@ def _package_impl(ctx):
     # Get CC target toolchain and propagate to the installation script
     cc_toolchain = ctx.toolchains["@bazel_tools//tools/cpp:toolchain_type"]
     if cc_toolchain and hasattr(cc_toolchain, "cc") and type(cc_toolchain.cc) != "string":
-        print(cc_toolchain)
         cc = cc_toolchain.cc
         feature_configuration = cc_common.configure_features(
             ctx = ctx,
