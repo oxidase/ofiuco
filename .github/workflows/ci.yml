@@ -20,6 +20,13 @@ jobs:
             cache: /private/var/tmp/_bazel_runner
 
     steps:
+      - name: Mount bazel cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ matrix.cache }}
+          key: bazel-${{ matrix.os }}
+          restore-keys: bazel-${{ matrix.os }}
+
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -37,13 +44,6 @@ jobs:
           uname -a
           bazel info
         shell: bash
-
-      - name: Mount bazel cache
-        uses: actions/cache@v3.3.1
-        with:
-          path: ${{ matrix.cache }}
-          key: bazel-${{ matrix.os }}
-          restore-keys: bazel-${{ matrix.os }}
 
       - name: Run tests
         id: tests
