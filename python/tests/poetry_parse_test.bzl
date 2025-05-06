@@ -77,6 +77,7 @@ files = [
 colorama = {version = "*", markers = "platform_system == \\"Windows\\""}
 
 [package.extras]
+check = ["pytest-checkdocs (>=2.4)", "pytest-ruff (>=0.2.1) ; sys_platform != \\"cygwin\\"", "ruff (>=0.8.0) ; sys_platform != \\"cygwin\\""]
 dev = ["py-make (>=0.1.0)", "twine", "wheel"]
 notebook = ["ipywidgets (>=6)"]
 slack = ["slack-sdk"]
@@ -147,7 +148,9 @@ reference = "pytorch"
     asserts.true(env, """extra_index_urls = ["https://download.pytorch.org/whl/cu118"],""" in build_content)
     asserts.true(env, """markers = '''{"triton":"platform_system == \\\\\\"Linux\\\\\\" and platform_machine == \\\\\\"x86_64\\\\\\""}''',""" in build_content)
     asserts.true(env, """name = "tqdm[telegram]",""" in build_content and """name = "tqdm[slack]",""" in build_content)
-    asserts.true(env, """deps = [":tqdm", ":requests"],""" in build_content and """deps = [":tqdm", ":slack-sdk"],""" in build_content)
+    asserts.true(env, """deps = [":tqdm", ":requests"],""" in build_content)
+    asserts.true(env, """deps = [":tqdm", ":slack-sdk"],""" in build_content)
+    asserts.true(env, """deps = [":tqdm", ":pytest-checkdocs", ":pytest-ruff", ":ruff"],""" in build_content)
 
     return unittest.end(env)
 
