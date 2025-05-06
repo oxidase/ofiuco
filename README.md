@@ -8,7 +8,7 @@ This allows to use platform information of resolved Python toolchains and build 
 
 Minimum requirements:
 
-* Bazel 6.x and rules_python with registered Python >= 3.11 toolchain.
+* Bazel 7.x and rules_python with registered Python >= 3.11 toolchain.
 
 ## Getting started
 

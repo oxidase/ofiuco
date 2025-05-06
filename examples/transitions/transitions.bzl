@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "PyInfo", "py_binary")
+
 def _linux_x86_64_platform_impl(settings, attr):
     return {"//command_line_option:platforms": [":linux_x86_64"]}
 

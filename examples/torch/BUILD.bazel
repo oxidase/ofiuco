@@ -1,5 +1,6 @@
 load("@ofiuco//python:poetry.bzl", "poetry_update")
 load("@ofiuco//python:py_venv.bzl", "py_venv")
+load("@rules_python//python:defs.bzl", "py_test")
 
 py_venv(
     name = "torch_venv",
