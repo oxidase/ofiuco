@@ -1,8 +1,8 @@
-bazel_dep(name = "rules_python", version = "1.0.0")
+bazel_dep(name = "rules_python", version = "1.4.0")
 
-python_version = "3_12"
+python_version = "3_13"
 
-python_full_version = "3.12.2"
+python_full_version = "3.13.0"
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = python_version.replace("_", "."))

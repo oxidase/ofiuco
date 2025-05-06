@@ -26,7 +26,7 @@ Paste this snippet into your `WORKSPACE` file:
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
 toolchain_name = "python"
-python_version = "3.12"
+python_version = "3.13"
 
 # Setup rules_python
 http_archive(
