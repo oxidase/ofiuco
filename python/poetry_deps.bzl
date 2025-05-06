@@ -1,7 +1,7 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//lib:versions.bzl", "versions")
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
-load("@rules_python//python:defs.bzl", StarPyInfo = "PyInfo")
+load("@rules_python//python:defs.bzl", "PyInfo")
 load("//python/private:poetry_deps.bzl", _DEFAULT_PLATFORMS = "DEFAULT_PLATFORMS", _derive_environment_markers = "derive_environment_markers", _get_imports = "get_imports", _get_transitive_sources = "get_transitive_sources", _include_dep = "include_dep")
 
 PYTHON_BINARY = ["bin/python3", "python/py3wrapper.sh"]
@@ -113,8 +113,6 @@ def _package_impl(ctx):
     )
 
     # Create output information providers
-    # NOTE: keep built-in till [PyInfo](https://github.com/bazelbuild/bazel/blob/d7cf0048/src/main/java/com/google/devtools/build/lib/starlarkbuildapi/python/PyInfoApi.java#L31)
-    # is used in the upstream code
     deps = [dep for dep in ctx.attr.deps if _include_dep(dep, ctx.attr.markers, tags)]
     transitive_imports = [_get_imports(dep) for dep in deps]
     transitive_depsets = [_get_transitive_sources(dep) for dep in deps]
@@ -123,11 +121,11 @@ def _package_impl(ctx):
     return [
         DefaultInfo(files = files, runfiles = ctx.runfiles(transitive_files = files)),
         PyInfo(transitive_sources = files, imports = imports),
-    ] + ([] if PyInfo == StarPyInfo else [StarPyInfo(transitive_sources = files, imports = imports)])
+    ]
 
 package = rule(
     implementation = _package_impl,
-    provides = [PyInfo, StarPyInfo],
+    provides = [PyInfo],
     attrs = {
         "constraint": attr.string(mandatory = True, doc = "The package version constraint string"),
         "deps": attr.label_list(doc = "The package dependencies list"),

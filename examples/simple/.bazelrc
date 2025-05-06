@@ -1,2 +1,3 @@
 build --sandbox_default_allow_network=false
 build --nolegacy_external_runfiles
+build --incompatible_autoload_externally=
