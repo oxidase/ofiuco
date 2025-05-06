@@ -3,8 +3,8 @@ module(
     version = "0.1.0",
 )
 
-bazel_dep(name = "aspect_rules_py", version = "0.7.3")
-bazel_dep(name = "rules_python", version = "1.0.0")
+bazel_dep(name = "aspect_rules_py", version = "1.3.4")
+bazel_dep(name = "rules_python", version = "1.4.0")
 
 # Register a hermetic Python toolchain rather than rely on a locally-installed
 # interpreter.
@@ -12,9 +12,9 @@ python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(
     configure_coverage_tool = True,
     is_default = True,
-    python_version = "3.11",
+    python_version = "3.13",
 )
-use_repo(python, "python_3_11")
+use_repo(python, "python_3_13")
 
 bazel_dep(name = "ofiuco", version = "0.0.0")
 local_path_override(
