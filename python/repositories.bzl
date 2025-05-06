@@ -13,7 +13,7 @@ _INTERNAL_DEPS = [
     ),
 ]
 
-_POETRY_VERSION = "1.8.3"
+_POETRY_VERSION = "2.1.3"
 
 # TODO: drop it
 def _poetry_deps_repo_impl(rctx):
