@@ -4,4 +4,5 @@ query --deleted_packages=examples/simple,examples/torch,examples/transitions,exa
 build --deleted_packages=examples/simple,examples/torch,examples/transitions,examples/markers,examples/aspect_rules_py,examples/cc_toolchain,examples/workspace,examples/workspace_multi
 build --enable_runfiles
 build --incompatible_default_to_explicit_init_py
+build --incompatible_autoload_externally=
 test --test_output=errors

@@ -1,6 +1,7 @@
 load(":globstar_test.bzl", "globstar_test_suite")
 load(":py_zip_test.bzl", "py_zip_test_suite")
 load(":runfiles_test.bzl", "runfiles_test_suite")
+load("@rules_python//python:defs.bzl", "py_binary")
 
 globstar_test_suite()
 

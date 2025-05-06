@@ -1,6 +1,7 @@
 load(":markers_test.bzl", "markers_test_suite")
 load(":poetry_deps_test.bzl", "poetry_deps_test_suite")
 load(":poetry_parse_test.bzl", "poetry_parse_test_suite")
+load("@rules_python//python:defs.bzl", "py_test")
 
 markers_test_suite()
 

@@ -2,6 +2,7 @@
 
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
+load("@rules_shell//shell:sh_test.bzl", "sh_test")
 load("//lib:py_zip.bzl", "py_zip")
 
 EXCLUDE = ["**/*.dist-info/*", "**__*__???", "**_vendor**", "**.typed", "**poetry_pip/*"]
@@ -50,21 +51,21 @@ def _test_py_zip():
     py_zip_test(name = "py_zip_with_main_test", target_under_test = ":test_py_zip_with_main_subject")
     py_zip_test(name = "py_zip_without_main_test", target_under_test = ":test_py_zip_without_main_subject")
 
-    native.sh_test(
+    sh_test(
         name = "py_zip_validate",
         srcs = ["py_zip_validator.sh"],
         args = ["$(locations :test_py_zip_contents_subject)"],
         data = [":test_py_zip_contents_subject"],
     )
 
-    native.sh_test(
+    sh_test(
         name = "py_zip_has_main",
         srcs = ["py_zip_grep.sh"],
         args = ["$(locations :test_py_zip_with_main_subject) -qce ' __main__.py'"],
         data = [":test_py_zip_with_main_subject"],
     )
 
-    native.sh_test(
+    sh_test(
         name = "py_zip_has_no_main",
         srcs = ["py_zip_grep.sh"],
         args = ["$(locations :test_py_zip_without_main_subject) -vqce ' __main__.py'"],
