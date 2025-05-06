@@ -1,5 +1,5 @@
 load("@ofiuco_defs//:defs.bzl", _python_toolchain_prefix = "python_toolchain_prefix", _python_version = "python_version")
-load("@rules_python//python:defs.bzl", StarPyInfo = "PyInfo")
+load("@rules_python//python:defs.bzl", "PyInfo")
 load("@rules_python//python:versions.bzl", _MINOR_MAPPING = "MINOR_MAPPING")
 load("//python:markers.bzl", "evaluate", "parse")
 
@@ -62,13 +62,7 @@ def include_dep(dep, markers, environment):
     return evaluate(parse(marker, environment))
 
 def get_imports(target):
-    for info in [StarPyInfo, PyInfo]:
-        if info in target:
-            return target[info].imports
-    return depset()
+    return target[PyInfo].imports if PyInfo in target else  depset()
 
 def get_transitive_sources(target):
-    for info in [StarPyInfo, PyInfo]:
-        if info in target:
-            return target[info].transitive_sources
-    return depset()
+    return target[PyInfo].transitive_sources if PyInfo in target else depset()

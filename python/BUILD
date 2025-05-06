@@ -1,3 +1,5 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
 py_binary(
     name = "poetry_deps",
     srcs = ["poetry_deps.py"],
