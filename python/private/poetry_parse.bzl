@@ -77,7 +77,7 @@ def parse_lock_file(data, platforms = None, generate_extras = True):
                 extra_name, extras_list = line.split("=", 1)
                 extras_list = [
                     normalize_dep_name(dep.strip(' "').split(" ")[0])
-                    for dep in extras_list.strip(" []").split('"')
+                    for dep in extras_list.strip(' []"').split('", "')
                     if dep and dep[0].isalpha()
                 ]
                 extras[extra_name.strip()] = {x: True for x in [name] + extras_list}.keys()

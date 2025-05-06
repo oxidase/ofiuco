@@ -7,6 +7,7 @@ authors = []
 [tool.poetry.dependencies]
 python = "^3.11"
 boto3 = "^1.26.99"
+setuptools = "^80.3.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = {version = "^7.2", "python" = ">=3.7"}
