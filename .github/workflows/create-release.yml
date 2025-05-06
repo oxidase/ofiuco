@@ -20,10 +20,10 @@ jobs:
         run: |
           set -euo pipefail
 
-          export RULES_PYTHON_RELEASE=$(curl -s https://api.github.com/repos/bazelbuild/rules_python/releases/latest | jq -c .)
+          export RULES_PYTHON_RELEASE=$(curl -sL https://api.github.com/repos/bazelbuild/rules_python/releases/latest | jq -c .)
           export RULES_PYTHON_TAG=$(echo $RULES_PYTHON_RELEASE | jq -r '.tag_name')
           export RULES_PYTHON_URL=$(echo $RULES_PYTHON_RELEASE | jq -r '.assets[].browser_download_url')
-          export RULES_PYTHON_SHA256=$(curl -s $RULES_PYTHON_URL | sha256sum)
+          export RULES_PYTHON_SHA256=$(curl -sL $RULES_PYTHON_URL | sha256sum | sed 's/ .*//')
 
           git config user.name "${{ github.triggering_actor }}"
           git config user.email "${{ github.triggering_actor }}@users.noreply.github.com"
