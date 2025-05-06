@@ -65,7 +65,6 @@ def _runfiles_provider_external_workspace_test_impl(ctx):
 
     files = target_under_test[DefaultInfo].files.to_list()
     asserts.true(env, files)
-    print(files)
     for file in files:
         asserts.true(env, file.path.startswith("external/"))
         asserts.true(env, "/pip/_internal/" in file.path and file.path.endswith(".py") or file.path.endswith(".txt"))

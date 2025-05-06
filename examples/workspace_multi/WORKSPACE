@@ -18,7 +18,6 @@ python_versions = [
     "3.11",
     "3.10",
     "3.9",
-    "3.8",
 ]
 
 python_register_multi_toolchains(
@@ -35,7 +34,7 @@ local_repository(
 
 load("@ofiuco//python:repositories.bzl", install_poetry_dependencies = "install_dependencies")
 
-install_poetry_dependencies("copperhead_3_11", "3.11")
+install_poetry_dependencies("copperhead_3_13", "3.13")
 
 load("@ofiuco//python:poetry_parse.bzl", "poetry_parse")
 
