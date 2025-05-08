@@ -30,6 +30,7 @@ class InstallArgs:
     index = []
     source_url = []
     cc_toolchain = None
+    entry_points = None
 
 
 class TestInstallSubcommand(unittest.TestCase):
@@ -37,12 +38,15 @@ class TestInstallSubcommand(unittest.TestCase):
         args = InstallArgs()
         with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as output_dir:
             args.output = Path(output_dir)
+            args.entry_points = Path(output_dir) / ".dist_info/entry_points.txt"
 
             retcode = main.install(args)
             self.assertEqual(retcode, 0)
 
             wheels = glob.glob(f"{args.output}/six*")
             self.assertGreater(len(wheels), 0)
+
+            self.assertTrue(args.entry_points.exists())
 
     def test_install_from_directory(self):
         args = InstallArgs()

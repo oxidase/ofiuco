@@ -187,6 +187,16 @@ def install(args):
             with open(record_path, "wt") as record_file:
                 record_file.writelines(record for record in records if not record.startswith(direct_url_line))
 
+    if args.entry_points:
+        # Ref: https://packaging.python.org/en/latest/specifications/entry-points/#file-format
+        args.entry_points.parent.mkdir(parents=True, exist_ok=True)
+        entry_points = list(output_path.glob(f"*.dist-info/entry_points.txt"))
+        if entry_points:
+            args.entry_points.symlink_to(os.path.relpath(entry_points.pop(), args.entry_points.parent))
+            assert not entry_points
+        else:
+            args.entry_points.touch()
+
     return 0
 
 
@@ -204,6 +214,7 @@ if __name__ == "__main__":
     parser_install.add_argument("--index", type=str, nargs="*", action="extend", help="index URL")
     parser_install.add_argument("--source_url", type=str, nargs="*", action="extend", help="source URLs")
     parser_install.add_argument("--cc_toolchain", type=str, help="CC toolchain")
+    parser_install.add_argument("--entry_points", type=Path, help="Add a symbolic link to .dist-info/entry_points.txt")
 
     args = parser.parse_args()
     sys.exit(args.func(args))
