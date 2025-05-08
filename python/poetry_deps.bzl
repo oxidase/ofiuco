@@ -59,6 +59,7 @@ def _package_impl(ctx):
 
     # Declare package output directory
     output = ctx.actions.declare_directory("{}/{}/{}".format(python_version, runtime_tag, ctx.label.name))
+    entry_points = ctx.actions.declare_file("{}/{}/.dist-info/{}/entry_points.txt".format(python_version, runtime_tag, ctx.label.name))
 
     # Collect installation tool arguments
     arguments = [
@@ -71,6 +72,8 @@ def _package_impl(ctx):
         json.encode(ctx.attr.files),
         "--python_version",
         python_version,
+        "--entry_points",
+        entry_points.path,
     ]
     arguments += ["--source_url={}".format(url) for url in ctx.attr.source_urls]
     arguments += ["--index={}".format(url) for url in ctx.attr.extra_index_urls]
@@ -101,7 +104,7 @@ def _package_impl(ctx):
 
     # Run wheel installation
     ctx.actions.run(
-        outputs = [output],
+        outputs = [output, entry_points],
         inputs = install_inputs,
         mnemonic = "InstallWheel",
         progress_message = "Installing package {} ({}) for Python {} {}".format(ctx.label.name, ctx.attr.constraint, python_version, runtime_tag),
@@ -119,7 +122,7 @@ def _package_impl(ctx):
     files = depset([output], transitive = transitive_depsets)
     imports = depset([output.short_path.replace("../", "")], transitive = transitive_imports)
     return [
-        DefaultInfo(files = files, runfiles = ctx.runfiles(transitive_files = files)),
+        DefaultInfo(files = depset([output, entry_points]), runfiles = ctx.runfiles(transitive_files = files)),
         PyInfo(transitive_sources = files, imports = imports),
     ]
 

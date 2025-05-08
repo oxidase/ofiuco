@@ -5,6 +5,7 @@ from pathlib import Path
 
 
 def populate_symlink_tree(source, target, skip_set=None):
+    print(f"{source = }, {target = }, {os.getcwd() = }, {source.exists() = } {source.is_dir() = }")
     if not source.exists() or not source.is_dir():
         raise RuntimeError(f"Required Python package directory {source} does not exist")
 

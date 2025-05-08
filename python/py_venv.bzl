@@ -20,12 +20,15 @@ def _py_venv_impl(ctx):
 
     deps = ctx.attr.deps
     output = ctx.actions.declare_directory("venv/{}".format(ctx.label.name))
+    transitive_depsets = [_get_transitive_sources(dep) for dep in deps]
+    transitive_deps = [item for dep in transitive_depsets for item in dep.to_list()]
+
     import_depsets = depset(transitive = [_get_imports(dep) for dep in deps])
     import_paths = ["{}/external/{}".format(ctx.bin_dir.path, path) for path in import_depsets.to_list()]
 
     ctx.actions.run(
         outputs = [output],
-        inputs = ctx.files.deps,
+        inputs = transitive_deps,
         mnemonic = "CreateVenv",
         progress_message = "Creating venv {}".format(ctx.label.name),
         arguments = [output.path] + import_paths,
@@ -33,8 +36,7 @@ def _py_venv_impl(ctx):
         executable = ctx.executable._py_venv,
     )
 
-    transitive_depsets = [_get_transitive_sources(dep) for dep in deps]
-    runfiles = [output] + [item for dep in transitive_depsets for item in dep.to_list()]
+    runfiles = [output] + transitive_deps
     files = depset([output], transitive = transitive_depsets)
     imports = depset(["_main/" + output.short_path])
 
