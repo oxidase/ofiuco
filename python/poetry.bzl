@@ -1,8 +1,10 @@
+load("@ofiuco_defs//:defs.bzl", _python_host_runtime = "python_host_runtime")
+load("@rules_python//python:defs.bzl", "PyRuntimeInfo")
 load("//python/private:poetry_deps.bzl", _get_imports = "get_imports")
 
 def _poetry_update_impl(ctx):
-    python_toolchain = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"]
-    runtime_info = python_toolchain.py3_runtime
+    interpreter = ctx.attr._python_host
+    runtime_info = interpreter[PyRuntimeInfo]
 
     script = """#!{python}
 
@@ -49,8 +51,6 @@ poetry_update = rule(
         "lock": attr.label(allow_single_file = [".lock"]),
         "update": attr.bool(default = True),
         "_poetry_deps": attr.label(default = "@ofiuco_poetry_deps//:pkg"),
+        "_python_host": attr.label(default = _python_host_runtime),
     },
-    toolchains = [
-        "@bazel_tools//tools/python:toolchain_type",
-    ],
 )
