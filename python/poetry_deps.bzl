@@ -1,7 +1,8 @@
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//lib:versions.bzl", "versions")
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
-load("@rules_python//python:defs.bzl", "PyInfo")
+load("@ofiuco_defs//:defs.bzl", _python_host_runtime = "python_host_runtime")
+load("@rules_python//python:defs.bzl", "PyInfo", "PyRuntimeInfo")
 load("//python/private:poetry_deps.bzl", _DEFAULT_PLATFORMS = "DEFAULT_PLATFORMS", _derive_environment_markers = "derive_environment_markers", _get_imports = "get_imports", _get_transitive_sources = "get_transitive_sources", _include_dep = "include_dep")
 
 PYTHON_BINARY = ["bin/python3", "python/py3wrapper.sh"]
@@ -53,9 +54,9 @@ def _package_impl(ctx):
     poetry_deps_info = ctx.attr._poetry_deps[DefaultInfo]
     poetry_deps_binary = poetry_deps_info.files_to_run.executable
     poetry_deps_runfiles = poetry_deps_info.default_runfiles.files
-    poetry_deps_python = [x for x in poetry_deps_runfiles.to_list() if any([x.path.endswith(suffix) for suffix in PYTHON_BINARY])].pop()
+    poetry_deps_runtime_info = ctx.attr._python_host[PyRuntimeInfo]
 
-    install_inputs = poetry_deps_info.files
+    install_inputs = depset(transitive = [poetry_deps_info.files, poetry_deps_runtime_info.files])
 
     # Declare package output directory
     output = ctx.actions.declare_directory("{}/{}/{}".format(python_version, runtime_tag, ctx.label.name))
@@ -110,7 +111,7 @@ def _package_impl(ctx):
         progress_message = "Installing package {} ({}) for Python {} {}".format(ctx.label.name, ctx.attr.constraint, python_version, runtime_tag),
         arguments = arguments,
         use_default_shell_env = True,
-        executable = poetry_deps_python,
+        executable = poetry_deps_runtime_info.interpreter.path,
         tools = poetry_deps_runfiles,
         execution_requirements = {"requires-network": ""},
     )
@@ -145,6 +146,7 @@ package = rule(
         ),
         "system_platform": attr.string(doc = "The system platform environment markers as a JSON string"),
         "_poetry_deps": attr.label(default = ":poetry_deps", cfg = "exec", executable = True),
+        "_python_host": attr.label(default = _python_host_runtime),
     },
     toolchains = [
         "@bazel_tools//tools/python:toolchain_type",
