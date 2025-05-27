@@ -4,9 +4,9 @@ import tempfile
 import unittest
 import zipfile
 
-from python.py_venv import SKIP_SET, main
+from python.private.py_venv import SKIP_SET, main
 
-WHEEL_FILE = "python/tests/resources/six-1.16.0-py2.py3-none-any.whl"
+WHEEL_FILE = "python/private/assets/six-1.16.0-py2.py3-none-any.whl"
 
 
 class TestInstallSubcommand(unittest.TestCase):

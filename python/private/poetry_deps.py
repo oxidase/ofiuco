@@ -16,7 +16,7 @@ with warnings.catch_warnings():
     from pip._vendor.packaging.utils import parse_wheel_filename
     from pip._vendor.packaging.version import InvalidVersion
 
-from python.utils import populate_symlink_tree
+from python.private.utils import populate_symlink_tree
 
 
 def get_platform_args(args):
@@ -190,7 +190,7 @@ def install(args):
     if args.entry_points:
         # Ref: https://packaging.python.org/en/latest/specifications/entry-points/#file-format
         args.entry_points.parent.mkdir(parents=True, exist_ok=True)
-        entry_points = list(output_path.glob(f"*.dist-info/entry_points.txt"))
+        entry_points = list(output_path.glob("*.dist-info/entry_points.txt"))
         if entry_points:
             args.entry_points.symlink_to(os.path.relpath(entry_points.pop(), args.entry_points.parent))
             assert not entry_points

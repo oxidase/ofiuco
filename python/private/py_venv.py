@@ -1,13 +1,13 @@
 import argparse
 from pathlib import Path
 
-from python.utils import populate_symlink_tree
+from python.private.utils import populate_symlink_tree
 
 SKIP_SET = {Path("requirements.txt")}
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Download and install a Poetry package")
+    parser = argparse.ArgumentParser(description="Create symbolic links in virtual environment to a package")
 
     parser.add_argument("target", type=Path, help="output virtual environment directory")
     parser.add_argument("path", type=Path, nargs="*", help="python package path")

@@ -158,7 +158,7 @@ def _poetry_parse_impl(rctx):
     rules_repository = self.split("/", 1)[0]
     rules_repository = ("@@" if "~" in rules_repository else "@") + rules_repository
     rules_repository = rules_repository.split("+")[0]
-    prefix = '''{header}\n\nload("{name}//python:poetry_deps.bzl", "package")'''.format(header = header, name = rules_repository)
+    prefix = '''{header}\n\nload("{name}//python/private:poetry_deps.bzl", "package")'''.format(header = header, name = rules_repository)
     lock_file_content = parse_lock_file(rctx.read(rctx.attr.lock), rctx.attr.platforms, rctx.attr.generate_extras)
     rctx.file("BUILD", "{}\n\n{}".format(prefix, lock_file_content))
     rctx.file("WORKSPACE")
