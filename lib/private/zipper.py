@@ -42,35 +42,39 @@ def compress(options: str, dir_path: Path, output_path: Path, file_paths: List[s
                 )
                 for globbed_file in sorted_files_list:
                     relative_path = zip_path + str(globbed_file).removeprefix(str(mayby_file_path))
-                    file_data = open(globbed_file, "rb").read()
+                    file_data = Path(globbed_file).read_bytes()
                     file_info = zipfile.ZipInfo(relative_path)
                     file_info.external_attr = get_external_attr(globbed_file)
                     zipf.writestr(file_info, file_data, compression)
             else:
                 zip_path = Path(zip_path).name if flatten else zip_path
-                file_data = open(mayby_file_path, "rb").read() if file_path else b""
+                file_data = Path(mayby_file_path).read_bytes() if file_path else b""
                 file_info = zipfile.ZipInfo(zip_path)
                 file_info.external_attr = get_external_attr(mayby_file_path)
                 zipf.writestr(file_info, file_data, compression)
 
 
-if __name__ == "__main__":
+def main(argv=None):
     parser = argparse.ArgumentParser(description="Create a zip file.")
     parser.add_argument("command", type=str, help="command 'vxc[fC]'")
     parser.add_argument("zip", type=str, help="zip file name'")
-    parser.add_argument("-d", dest="dir", default=".", help="output directory")
+    parser.add_argument("-d", "--dir", default=".", help="input directory")
     parser.add_argument("-m", dest="manifest", type=Path, help="manifest file")
     parser.add_argument("files", type=str, nargs="*")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     files = args.files
     if args.manifest is not None:
-        manifest_lines = [line.strip("\n") for line in args.manifest.open().readlines()]
-        files.extend([line for line in manifest_lines if line])
+        manifest_lines = [line for line in args.manifest.read_text().split("\n") if line]
+        files.extend(manifest_lines)
 
     if args.command.startswith("c"):
         compress(args.command, Path(args.dir), args.zip, args.files)
     else:
         logging.error("command %s is not supported", args.command)
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

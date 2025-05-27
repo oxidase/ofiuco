@@ -37,12 +37,12 @@ def _test_py_zip():
 
     py_zip(
         name = "test_py_zip_with_main_subject",
-        target = ":test_binary",
+        target = ":py_zip_test_binary",
     )
 
     py_zip(
         name = "test_py_zip_without_main_subject",
-        target = ":test_binary",
+        target = ":py_zip_test_binary",
         exclude = ["__main__.py"],
     )
 
@@ -52,22 +52,22 @@ def _test_py_zip():
     py_zip_test(name = "py_zip_without_main_test", target_under_test = ":test_py_zip_without_main_subject")
 
     sh_test(
-        name = "py_zip_validate",
-        srcs = ["py_zip_validator.sh"],
+        name = "py_zip_validation_test",
+        srcs = ["py_zip_test_validator.sh"],
         args = ["$(locations :test_py_zip_contents_subject)"],
         data = [":test_py_zip_contents_subject"],
     )
 
     sh_test(
-        name = "py_zip_has_main",
-        srcs = ["py_zip_grep.sh"],
+        name = "py_zip_has_main_test",
+        srcs = ["py_zip_test_grep.sh"],
         args = ["$(locations :test_py_zip_with_main_subject) -qce ' __main__.py'"],
         data = [":test_py_zip_with_main_subject"],
     )
 
     sh_test(
-        name = "py_zip_has_no_main",
-        srcs = ["py_zip_grep.sh"],
+        name = "py_zip_has_no_main_test",
+        srcs = ["py_zip_test_grep.sh"],
         args = ["$(locations :test_py_zip_without_main_subject) -vqce ' __main__.py'"],
         data = [":test_py_zip_without_main_subject"],
     )
@@ -75,11 +75,11 @@ def _test_py_zip():
     return [
         ":py_zip_contents_test",
         ":py_zip_transition_test",
-        ":py_zip_validate",
+        ":py_zip_validation_test",
         ":py_zip_with_main_test",
         ":py_zip_without_main_test",
-        ":py_zip_has_main",
-        "py_zip_has_no_main",
+        ":py_zip_has_main_test",
+        ":py_zip_has_no_main_test",
     ]
 
 def py_zip_test_suite():
