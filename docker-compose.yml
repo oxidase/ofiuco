@@ -1,0 +1,20 @@
+services:
+  ofiuco:
+    # apt update && apt install -y python3 git
+    image: katre/bazelisk
+    container_name: ofiuco
+    platform: linux/amd64
+    cap_add:
+      - NET_ADMIN
+    environment:
+      - USER=${USER}
+      - WORKSPACE=${PWD}
+      - HISTFILE=/home/fsw-dev/.cache/.bash_history
+    volumes:
+      - ${PWD}:${PWD}:rw
+      - ${HOME}/.gitconfig:/home/fsw-dev/.gitconfig:ro
+      - ${HOME}/.netrc:/home/fsw-dev/.netrc:ro
+      - ${HOME}/.ssh:/home/fsw-dev/.ssh:ro
+      - ${HOME}/foss:${HOME}/foss
+    working_dir: ${PWD}
+    entrypoint: sleep infinity

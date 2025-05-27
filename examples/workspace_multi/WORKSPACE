@@ -36,14 +36,14 @@ load("@ofiuco//python:repositories.bzl", install_poetry_dependencies = "install_
 
 install_poetry_dependencies("copperhead_3_13", "3.13")
 
-load("@ofiuco//python:poetry_parse.bzl", "poetry_parse")
+load("@ofiuco//python:lock_parser.bzl", "parse_lock")
 
-poetry_parse(
+parse_lock(
     name = "poetry_repo1",
     lock = "//:poetry.lock",
 )
 
-poetry_parse(
+parse_lock(
     name = "poetry_repo2",
     lock = "//:poetry.lock",
 )

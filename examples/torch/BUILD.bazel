@@ -4,9 +4,14 @@ load("@rules_python//python:defs.bzl", "py_test")
 
 py_venv(
     name = "torch_venv",
+    data = [
+        "sample/pyproject.toml",
+    ],
     visibility = ["//visibility:public"],
     deps = [
+        "@poetry//:colorama",
         "@poetry//:torch",
+        "@poetry//:torchvision",
     ],
 )
 
@@ -14,16 +19,20 @@ py_test(
     name = "test",
     size = "large",
     srcs = ["test.py"],
-    data = ["poetry.lock"],
+    data = [
+        "gen/poetry.lock",
+        "sample/pyproject.toml",
+    ],
     deps = [
         ":torch_venv",
         "@poetry//:numpy",
         "@poetry//:pytest",
+        "@poetry//:sample-package",
     ],
 )
 
 poetry_update(
     name = "update_lock",
-    lock = "poetry.lock",
+    lock = "gen/poetry.lock",
     toml = "pyproject.toml",
 )

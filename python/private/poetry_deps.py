@@ -4,7 +4,6 @@ import logging
 import os
 import re
 import sys
-import urllib
 import warnings
 from pathlib import Path
 
@@ -13,10 +12,6 @@ with warnings.catch_warnings():
     from pip._internal.commands import create_command
     from pip._internal.locations import USER_CACHE_DIR
     from pip._internal.models.direct_url import DIRECT_URL_METADATA_NAME
-    from pip._vendor.packaging.utils import parse_wheel_filename
-    from pip._vendor.packaging.version import InvalidVersion
-
-from python.private.utils import populate_symlink_tree
 
 
 def get_platform_args(args):
@@ -75,43 +70,45 @@ def filter_cxx_builtin_include_directories(flags):
 def install(args):
     output_path = Path(args.output)
 
-    source_urls = []
-    if args.source_url:
-        # Special case for debugging
-        local_package_path = Path(args.source_url[0])
-        if local_package_path.is_absolute() and local_package_path.is_dir():
-            # Add symbolic links to the local directory
-            populate_symlink_tree(local_package_path, output_path / local_package_path.name)
-            return 0
-
-        # Otherwise it is a list of files or URLs
-        # Filter by supported platforms
-        for url in args.source_url:
-            try:
-                wheel_name = urllib.parse.unquote(url[url.rfind("/") + 1 :], encoding="utf-8", errors="replace")
-                _, _, _, tags = parse_wheel_filename(wheel_name)
-
-                if any(tag.platform == "any" or tag.platform in args.platform for tag in tags):
-                    source_urls.append(url)
-            except InvalidVersion:
-                source_urls.append(url)
-
-    if len(source_urls) >= 2:
-        raise RuntimeError(f"expected a single source URL but {', '.join(source_urls)} received")
-
     # Install wheel
     install_command = create_command("install")
 
     package_files = json.loads(args.files) if args.files else {}
+    source = json.loads(args.source) if args.source else {}
+    source_type = source.get("type")
     requirements_file = output_path / "requirements.txt"
     with requirements_file.open("wt") as requirements_fileobj:
-        if args.index:
-            requirements_fileobj.write("".join([f"--extra-index-url={index}\n" for index in args.index]))
+        pip_arguments, requirements_lines = [], []
+        if source_type == "directory":
+            url = source.get("url")
+            assert url, f"package.source.url is undefined in {args.input} for {source_type} type"
+            requirements_lines = (
+                [
+                    f"--editable={url}",
+                ]
+                if args.develop
+                else [url]
+            )
+        elif source_type == "git":
+            url, reference = source.get("url"), source.get("resolved_reference")
+            assert url, f"package.source.url is undefined in {args.input} for {source_type} type"
+            assert reference, f"package.source.resolved_reference is undefined in {args.input} for {source_type} type"
+            pip_arguments = ["--editable"] if args.develop else []
+            requirements_lines = [f"git+{url}@{reference}"]
+        elif source_type == "legacy":
+            url = source.get("url")
+            assert url, f"package.source.url is undefined in {args.input} for {source_type} type"
+            pip_arguments = [f"--extra-index-url={url}\n"]
+            requirements_lines = [args.input]
+        elif source_type == "url":
+            url = source.get("url")
+            assert url, f"package.source.url is undefined in {args.input} for {source_type} type"
+            requirements_lines = [url]
+        else:
+            requirements_lines = [args.input]
 
-        requirements_lines = []
-        requirements_lines += source_urls if source_urls else [args.input]
         requirements_lines += [f" --hash={value}" for value in package_files.values()]
-        requirements_fileobj.write(" \\\n".join(requirements_lines))
+        requirements_fileobj.write("\n".join(pip_arguments + ["\\\n".join(requirements_lines)]))
 
     install_args = [
         "-r",
@@ -124,6 +121,7 @@ def install(args):
     except (PermissionError, OSError):
         use_cache = False
 
+    use_cache = False
     install_args.append(f"--cache-dir={possible_cache}" if use_cache else "--no-cache-dir")
 
     install_args += [
@@ -133,8 +131,17 @@ def install(args):
         "--no-dependencies",
         "--disable-pip-version-check",
         "--use-pep517",
-        "--quiet",
     ]
+
+    if True:
+        install_args += [
+            "--quiet",
+        ]
+    else:
+        install_args += [
+            # "--no-build-isolation",
+            "--no-clean",
+        ]
 
     if args.cc_toolchain is not None:
         cc = json.loads(args.cc_toolchain)
@@ -176,6 +183,22 @@ def install(args):
         logging.error(f"pip install returned {retcode}")
         return retcode
 
+    # Propagate *.pth paths as symbolic links as pth files are not loaded dynamically via PYTHONPATH
+    if args.develop:
+        for pth_file in output_path.glob("*.pth"):
+            for directory in [
+                path
+                for line in pth_file.read_text().split("\n")
+                if line
+                and not line.startswith("#")
+                and not line.startswith("import")
+                and (path := (output_path / line).resolve()).is_dir()
+            ]:
+                for entry in directory.iterdir():
+                    symlink_path = output_path / entry.name
+                    if not symlink_path.exists():
+                        symlink_path.symlink_to(entry)
+
     # Clean-up some metadata files which may contain non-hermetic data
     for direct_url_path in output_path.glob(f"*.dist-info/{DIRECT_URL_METADATA_NAME}"):
         direct_url_path.unlink()
@@ -211,8 +234,8 @@ if __name__ == "__main__":
     parser_install.add_argument("--files", type=str, default="{}", help="files:hash  dictionary")
     parser_install.add_argument("--python_version", type=str, default=None, help="python version")
     parser_install.add_argument("--platform", type=str, nargs="*", action="extend", help="platform tag")
-    parser_install.add_argument("--index", type=str, nargs="*", action="extend", help="index URL")
-    parser_install.add_argument("--source_url", type=str, nargs="*", action="extend", help="source URLs")
+    parser_install.add_argument("--source", type=str, help="source JSON ")
+    parser_install.add_argument("--develop", action="store_true", help="Install develop package")
     parser_install.add_argument("--cc_toolchain", type=str, help="CC toolchain")
     parser_install.add_argument("--entry_points", type=Path, help="Add a symbolic link to .dist-info/entry_points.txt")
 

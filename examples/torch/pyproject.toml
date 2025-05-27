@@ -5,12 +5,27 @@ description = ""
 readme = "README.md"
 authors = []
 
+[[tool.poetry.source]]
+name = "pypi"
+priority = "primary"
+
+[[tool.poetry.source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu121/"
+priority = "explicit"
+
 [tool.poetry.dependencies]
+colorama = {git = "https://github.com/tartley/colorama"}
 numpy = "^1.26.0"
 python = ">=3.12"
+sample_package = {path = "sample", develop= true}
 torch = [
   {platform = "darwin", version = "2.2.1", source="pypi"},
   {platform = "linux", url = "https://download.pytorch.org/whl/cu121/torch-2.2.1%2Bcu121-cp312-cp312-linux_x86_64.whl"},
+]
+torchvision = [
+   {version = "0.17.1"},
+   {platform = "linux", version = "0.17.1", source="pytorch"},
 ]
 
 [tool.poetry.group.dev.dependencies]

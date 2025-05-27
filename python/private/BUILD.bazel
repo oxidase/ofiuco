@@ -1,13 +1,10 @@
 load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
 load(":markers_test.bzl", "markers_test_suite")
 load(":poetry_deps_test.bzl", "poetry_deps_test_suite")
-load(":poetry_parse_test.bzl", "poetry_parse_test_suite")
 
 markers_test_suite()
 
 poetry_deps_test_suite()
-
-poetry_parse_test_suite()
 
 py_binary(
     name = "poetry_deps",
@@ -58,4 +55,26 @@ py_library(
     name = "utils",
     srcs = ["utils.py"],
     visibility = ["//python:__subpackages__"],
+)
+
+py_binary(
+    name = "lock_parser",
+    srcs = [
+        "lock_parser.py",
+    ],
+)
+
+py_test(
+    name = "lock_parser_test",
+    srcs = [
+        "lock_parser_test.py",
+    ],
+    data = [
+        # Update lock files: for d in sphinx torch ; poetry lock -C python/private/assets/$d ; end
+        "assets/sphinx/poetry.lock",
+        "assets/torch/poetry.lock",
+    ],
+    deps = [
+        ":lock_parser",
+    ],
 )

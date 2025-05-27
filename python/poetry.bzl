@@ -8,24 +8,43 @@ def _poetry_update_impl(ctx):
 
     script = """#!{python}
 
+import builtins
 import runpy
+import os
 import sys
+from contextlib import contextmanager
 from pathlib import Path
+from unittest.mock import patch
+from multiprocessing import Process
 
 _LOCK_FILE_NAME = "poetry.lock"
 
+@contextmanager
+def redirect_open(files_remap: dict[str, str | Path]):
+    open_original = builtins.open
+
+    def custom_open(file, mode="r", *args, **kwargs):
+        return open_original(files_remap.get(os.fspath(file), file), mode, *args, **kwargs)
+
+    with patch("builtins.open", new=custom_open):
+        yield
+
+def lock(project_dir, lock_file):
+    sys.argv = [sys.argv[0], "lock", f"--project={{project_dir}}"{update}, *sys.argv[1:]]
+    files_remap = {{os.fspath(project_dir / _LOCK_FILE_NAME): lock_file}}
+    with redirect_open(files_remap):
+        runpy.run_module("poetry", run_name="__main__", alter_sys=True)
+
+
 if __name__ == "__main__":
     sys.path = {deps} + sys.path
-    dir = Path('{toml}').parent
-    lock = Path('{lock}')
-    poetry_lock = dir / _LOCK_FILE_NAME
-    poetry_lock_is_same = lock.name == _LOCK_FILE_NAME and lock.resolve() == poetry_lock.resolve()
-    if not poetry_lock_is_same:
-        if poetry_lock.exists():
-            poetry_lock.unlink()
-        poetry_lock.symlink_to(lock.resolve())
-    sys.argv = [sys.argv[0], "lock", f"--directory={{dir}}"{update}, *sys.argv[1:]]
-    runpy.run_module("poetry", run_name="__main__", alter_sys=True)
+    lock_file = Path('{lock}')
+    project_dir = Path('{toml}').resolve().parent
+
+    lock_process = Process(target=lock, args=(project_dir, lock_file))
+    lock_process.start()
+    lock_process.join()
+    sys.exit(lock_process.exitcode)
 """.format(
         python = runtime_info.interpreter.short_path,
         deps = repr(["../{}".format(path) for path in _get_imports(ctx.attr._poetry_deps).to_list()]),

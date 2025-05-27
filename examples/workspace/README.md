@@ -8,9 +8,9 @@ load("@ofiuco//python:repositories.bzl", install_poetry_dependencies = "install_
 
 install_poetry_dependencies("black_mamba", "3.11")
 
-load("@ofiuco//python:poetry_parse.bzl", "poetry_parse")
+load("@ofiuco//python:lock_parser.bzl", "parse_lock")
 
-poetry_parse(
+parse_lock(
     name = "poetry",
     lock = "//:poetry.lock",
 )

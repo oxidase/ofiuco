@@ -1,11 +1,12 @@
-load("@ofiuco//python:poetry_parse.bzl", "poetry_parse")
+load("@ofiuco//python:lock_parser.bzl", "parse_lock")
 
 def _poetry_impl(module_ctx):
     for mod in module_ctx.modules:
         for attr in mod.tags.parse:
-            poetry_parse(
+            parse_lock(
                 name = attr.name,
                 lock = attr.lock,
+                toml = attr.toml,
                 generate_extras = attr.generate_extras,
                 platforms = attr.platforms,
             )
@@ -17,6 +18,7 @@ poetry = module_extension(
             attrs = {
                 "name": attr.string(mandatory = True),
                 "lock": attr.label(mandatory = True),
+                "toml": attr.label(),
                 "generate_extras": attr.bool(default = True),
                 "platforms": attr.string_dict(),
             },

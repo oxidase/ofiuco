@@ -13,6 +13,7 @@ local_path_override(
 poetry = use_extension("@ofiuco//python:extensions.bzl", "poetry")
 poetry.parse(
     name = "poetry",
-    lock = "//:poetry.lock",
+    lock = "//:gen/poetry.lock",
+    toml = ":pyproject.toml",
 )
 use_repo(poetry, "poetry")

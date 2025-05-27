@@ -113,6 +113,18 @@ def _package_impl(ctx):
     python_version = tags["python_version"]
     platform_tags = tags["platform_tags"]
 
+    if not ctx.attr.constraint:
+        # Virtual package does not require installation and only by-passes selected transitive dependencies
+        deps = [dep for dep in ctx.attr.deps if include_dep(dep, ctx.attr.markers, tags)]
+        transitive_imports = [get_imports(dep) for dep in deps]
+        transitive_depsets = [get_transitive_sources(dep) for dep in deps]
+        files = depset(transitive = transitive_depsets)
+        imports = depset([], transitive = transitive_imports)
+        return [
+            DefaultInfo(runfiles = ctx.runfiles(transitive_files = files)),
+            PyInfo(transitive_sources = files, imports = imports),
+        ]
+
     # Get Python tooling toolchain and runfiles dependencies
     poetry_deps_info = ctx.attr._poetry_deps[DefaultInfo]
     poetry_deps_binary = poetry_deps_info.files_to_run.executable
@@ -139,8 +151,8 @@ def _package_impl(ctx):
         "--entry_points",
         entry_points.path,
     ]
-    arguments += ["--source_url={}".format(url) for url in ctx.attr.source_urls]
-    arguments += ["--index={}".format(url) for url in ctx.attr.extra_index_urls]
+    arguments += ["--source={}".format(ctx.attr.source)] if ctx.attr.source else []
+    arguments += ["--develop"] if ctx.attr.develop else []
 
     for platform in platform_tags:
         arguments += ["--platform", platform]
@@ -194,12 +206,12 @@ package = rule(
     implementation = _package_impl,
     provides = [PyInfo],
     attrs = {
-        "constraint": attr.string(mandatory = True, doc = "The package version constraint string"),
+        "constraint": attr.string(doc = "The package version constraint string"),
         "deps": attr.label_list(doc = "The package dependencies list"),
         "description": attr.string(doc = "The package description"),
         "files": attr.string_dict(doc = "The package resolved files"),
-        "source_urls": attr.string_list(doc = "The source file URLs"),
-        "extra_index_urls": attr.string_list(doc = "The extra repository index"),
+        "source": attr.string(doc = "The source JSON struct"),
+        "develop": attr.bool(),
         "markers": attr.string(doc = "The JSON string with a dictionary of dependency markers accordingly to PEP 508"),
         "platforms": attr.string_dict(
             default = DEFAULT_PLATFORMS,
