@@ -17,7 +17,6 @@ def _py_venv_impl(ctx):
     Returns:
         The providers list or a tuple with a venv package.
     """
-
     deps = ctx.attr.deps
     output = ctx.actions.declare_directory("venv/{}".format(ctx.label.name))
     transitive_depsets = [_get_transitive_sources(dep) for dep in deps]
@@ -36,7 +35,7 @@ def _py_venv_impl(ctx):
         executable = ctx.executable._py_venv,
     )
 
-    runfiles = [output] + transitive_deps
+    runfiles = [output] + transitive_deps + ctx.files.data
     files = depset([output], transitive = transitive_depsets)
     imports = depset(["_main/" + output.short_path])
 
@@ -49,6 +48,7 @@ py_venv = rule(
     implementation = _py_venv_impl,
     provides = [PyInfo],
     attrs = {
+        "data": attr.label_list(allow_files = True, doc = "The package data list"),
         "deps": attr.label_list(doc = "The package dependencies list"),
         "_py_venv": attr.label(default = "//python/private:py_venv", cfg = "exec", executable = True),
     },

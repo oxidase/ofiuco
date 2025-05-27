@@ -1,0 +1,11 @@
+[project]
+name = "Sample_Package"
+version = "1.2.3"
+dependencies = []
+
+# As an example use poetry backend which won't be hermetic
+# To make builds hermetic the build system must be added explicitly as dependencies
+# and "--no-build-isolation" has to be added to the pip.install call
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

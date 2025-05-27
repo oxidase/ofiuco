@@ -10,6 +10,10 @@ version = conf["project"]["version"]
 
 with open("README.md", "r+") as handle:
     data = handle.read()
-    data = re.sub(r"""bazel_dep\(name = "ofiuco", version = "[^"]+"\)""",  f"""bazel_dep(name = "ofiuco", version = "{version}")""", data)
+    data = re.sub(
+        r"""bazel_dep\(name = "ofiuco", version = "[^"]+"\)""",
+        f"""bazel_dep(name = "ofiuco", version = "{version}")""",
+        data,
+    )
     handle.seek(0)
     handle.write(data)

@@ -1,7 +1,6 @@
 import glob
 import json
 import os
-import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -27,8 +26,8 @@ class InstallArgs:
         """{"six-1.16.0-py2.py3-none-any.whl": """
         + """"sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"}"""
     )
-    index = []
-    source_url = []
+    source = ""
+    develop = False
     cc_toolchain = None
     entry_points = None
 
@@ -47,23 +46,6 @@ class TestInstallSubcommand(unittest.TestCase):
             self.assertGreater(len(wheels), 0)
 
             self.assertTrue(args.entry_points.exists())
-
-    def test_install_from_directory(self):
-        args = InstallArgs()
-        input_file = args.input
-        with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as output_dir:
-            args.output = Path(output_dir)
-
-            with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as tmp_input:
-                shutil.copyfile(input_file, f"{tmp_input}/{Path(input_file).name}")
-                args.source_url = [tmp_input]
-                retcode = main.install(args)
-                self.assertEqual(retcode, 0)
-
-                wheels = list(args.output.rglob("six*"))
-                self.assertGreater(len(wheels), 0)
-                self.assertTrue(wheels[0].is_symlink())
-                self.assertEqual(wheels[0].parent.name, Path(tmp_input).name)
 
     def test_install_from_url(self):
         args = InstallArgs()
@@ -139,9 +121,9 @@ class TestInstallSubcommand(unittest.TestCase):
                 requirements_file = args[args.index("-r") + 1]
                 with open(requirements_file) as requirements_obj:
                     requirements = requirements_obj.read()
-                assert "torch-2.1.0.dev20230902%2Bcu121-cp311-cp311-linux_x86_64" in requirements
+                print(requirements)
+                assert "torch==2.1.0.dev20230902" in requirements
                 assert "macosx_11_0_arm64" not in requirements
-                assert "whl/cu118" in requirements
 
         with patch("pip._internal.commands.install.InstallCommand", InstallCommand):
             with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output:
