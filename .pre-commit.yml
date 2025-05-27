@@ -1,0 +1,16 @@
+default_install_hook_types:
+  - pre-commit
+  - pre-push
+
+default_stages:
+  - pre-commit
+
+repos:
+  - repo: local
+    hooks:
+      - id: check-version
+        name: check Commit Messages
+        stages: [pre-commit]
+        require_serial: true
+        language: script
+        entry: ./tools/check_version.py
