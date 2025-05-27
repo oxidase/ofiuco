@@ -72,7 +72,6 @@ python_toolchain_prefix = "{python_toolchain_prefix}"
         python_toolchain_prefix = rctx.attr.python_toolchain_prefix,
     ))
 
-
 internal_definitions_repo = repository_rule(
     implementation = _internal_definitions_repo_impl,
     attrs = {

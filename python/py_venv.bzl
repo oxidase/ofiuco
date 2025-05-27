@@ -50,6 +50,6 @@ py_venv = rule(
     provides = [PyInfo],
     attrs = {
         "deps": attr.label_list(doc = "The package dependencies list"),
-        "_py_venv": attr.label(default = ":py_venv", cfg = "exec", executable = True),
+        "_py_venv": attr.label(default = "//python/private:py_venv", cfg = "exec", executable = True),
     },
 )

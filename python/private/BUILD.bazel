@@ -1,0 +1,61 @@
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+load(":markers_test.bzl", "markers_test_suite")
+load(":poetry_deps_test.bzl", "poetry_deps_test_suite")
+load(":poetry_parse_test.bzl", "poetry_parse_test_suite")
+
+markers_test_suite()
+
+poetry_deps_test_suite()
+
+poetry_parse_test_suite()
+
+py_binary(
+    name = "poetry_deps",
+    srcs = ["poetry_deps.py"],
+    visibility = ["//python:__subpackages__"],
+    deps = [
+        ":utils",
+        "@ofiuco_pip//:pkg",
+    ],
+)
+
+py_test(
+    name = "poetry_deps_test",
+    srcs = [
+        "poetry_deps_test.py",
+    ],
+    data = [
+        "assets/six-1.16.0-py2.py3-none-any.whl",
+    ],
+    deps = [
+        ":poetry_deps",
+    ],
+)
+
+py_binary(
+    name = "py_venv",
+    srcs = ["py_venv.py"],
+    visibility = ["//python:__subpackages__"],
+    deps = [
+        ":utils",
+    ],
+)
+
+py_test(
+    name = "py_venv_test",
+    srcs = [
+        "py_venv_test.py",
+    ],
+    data = [
+        "assets/six-1.16.0-py2.py3-none-any.whl",
+    ],
+    deps = [
+        ":py_venv",
+    ],
+)
+
+py_library(
+    name = "utils",
+    srcs = ["utils.py"],
+    visibility = ["//python:__subpackages__"],
+)
