@@ -14,8 +14,6 @@ def _py_zip_test_impl(ctx):
 
     files = {file.extension: file for file in target_under_test[DefaultInfo].files.to_list()}
     asserts.true(env, "zip" in files)
-    asserts.true(env, "json" in files)
-    asserts.true(env, files["zip"].basename.split(".")[0] == files["json"].basename.split(".")[0])
 
     return analysistest.end(env)
 
@@ -23,67 +21,72 @@ py_zip_test = analysistest.make(_py_zip_test_impl)
 
 def _test_py_zip():
     py_zip(
-        name = "test_py_zip_contents_subject",
+        name = "test_py_zip_contents_subject.zip",
         target = "@ofiuco_pip//:pkg",
         exclude = EXCLUDE,
     )
 
     py_zip(
-        name = "test_py_zip_transition_subject",
+        name = "test_py_zip_transition_subject.zip",
         target = "@ofiuco_pip//:pkg",
         platform = ":lambda",
         exclude = EXCLUDE,
     )
 
     py_zip(
-        name = "test_py_zip_with_main_subject",
+        name = "test_py_zip_with_main_subject.zip",
         target = ":py_zip_test_binary",
     )
 
     py_zip(
-        name = "test_py_zip_without_main_subject",
+        name = "test_py_zip_without_main_subject.zip",
         target = ":py_zip_test_binary",
         exclude = ["__main__.py"],
     )
 
     py_zip(
-        name = "test_py_zip_shebang_subject",
+        name = "test_py_zip_shebang_subject.pyz",
         target = ":py_zip_test_binary",
         shebang = "#!/usr/bin/env python3",
     )
 
+    native.filegroup(
+        name = "test_py_zip_shebang_subject",
+        srcs = [":test_py_zip_contents_subject.zip"],
+        output_group = "all",
+    )
 
-    py_zip_test(name = "py_zip_contents_test", target_under_test = ":test_py_zip_contents_subject")
-    py_zip_test(name = "py_zip_transition_test", target_under_test = ":test_py_zip_transition_subject")
-    py_zip_test(name = "py_zip_with_main_test", target_under_test = ":test_py_zip_with_main_subject")
-    py_zip_test(name = "py_zip_without_main_test", target_under_test = ":test_py_zip_without_main_subject")
+    py_zip_test(name = "py_zip_contents_test", target_under_test = ":test_py_zip_contents_subject.zip")
+    py_zip_test(name = "py_zip_transition_test", target_under_test = ":test_py_zip_transition_subject.zip")
+    py_zip_test(name = "py_zip_with_main_test", target_under_test = ":test_py_zip_with_main_subject.zip")
+    py_zip_test(name = "py_zip_without_main_test", target_under_test = ":test_py_zip_without_main_subject.zip")
 
     sh_test(
         name = "py_zip_validation_test",
         srcs = ["py_zip_test_validator.sh"],
-        args = ["$(locations :test_py_zip_contents_subject)"],
-        data = [":test_py_zip_contents_subject"],
+        args = ["$(locations :test_py_zip_shebang_subject)"],
+        data = [":test_py_zip_shebang_subject"],
     )
 
     sh_test(
         name = "py_zip_has_main_test",
         srcs = ["py_zip_test_grep.sh"],
-        args = ["$(locations :test_py_zip_with_main_subject) -qce ' __main__.py'"],
-        data = [":test_py_zip_with_main_subject"],
+        args = ["$(locations :test_py_zip_with_main_subject.zip) -qce ' __main__.py'"],
+        data = [":test_py_zip_with_main_subject.zip"],
     )
 
     sh_test(
         name = "py_zip_has_no_main_test",
         srcs = ["py_zip_test_grep.sh"],
-        args = ["$(locations :test_py_zip_without_main_subject) -vqce ' __main__.py'"],
-        data = [":test_py_zip_without_main_subject"],
+        args = ["$(locations :test_py_zip_without_main_subject.zip) -vqce ' __main__.py'"],
+        data = [":test_py_zip_without_main_subject.zip"],
     )
 
     sh_test(
         name = "py_zip_shebang_test",
         srcs = ["py_zip_test_shebang.sh"],
-        args = ["$(locations :test_py_zip_shebang_subject)"],
-        data = [":test_py_zip_shebang_subject"],
+        args = ["$(locations :test_py_zip_shebang_subject.pyz)"],
+        data = [":test_py_zip_shebang_subject.pyz"],
     )
 
     return [

@@ -46,7 +46,7 @@ def test_elf_dynamic_libraries_in_deployment_zip(zip_name, arch):
 
 @pytest.mark.parametrize("name", ["deploy_linux_arm64", "deploy_linux_x86_64"])
 def test_python_path(name):
-    with zipfile.ZipFile(name + ".zip") as zip_file, open(name + ".json") as json_file:
+    with zipfile.ZipFile(name + ".zip") as zip_file, open(name + ".zip.json") as json_file:
         zipped_names = zip_file.namelist()
         deployment_environment = json.load(json_file)
 
