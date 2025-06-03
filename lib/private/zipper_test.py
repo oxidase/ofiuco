@@ -1,4 +1,7 @@
 import os
+import shutil
+import stat
+import subprocess
 import tempfile
 import unittest
 import zipfile
@@ -61,17 +64,36 @@ class TestZipper(unittest.TestCase):
             assert sorted(file_list) == sorted(dir_list)
 
     def test_manifest(self):
-        manifeft_path = os.path.join(self.tmpdir, "manifest")
+        manifest_path = os.path.join(self.tmpdir, "manifest")
         zip_path = os.path.join(self.tmpdir, "test.zip")
 
-        with open(manifeft_path, "wt") as manifest:
+        with open(manifest_path, "w") as manifest:
             manifest.write(f"test/script={__file__}")
 
-        main(["-m", manifeft_path, "cC", zip_path])
+        main(["-m", manifest_path, "cC", zip_path])
         assert os.path.exists(zip_path)
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
             file_list = zip_ref.namelist()
             assert file_list == ["test/script"]
+
+    def test_shebang(self):
+        zip_path = os.path.join(self.tmpdir, "test.zip")
+        files = [__file__]
+
+        unzip = shutil.which("unzip")
+        shebang = [f"#!{unzip} -l" if unzip else "#!/bin/cat", "# hello"]
+        main(["-s", "\n".join(shebang), "cC", zip_path] + files)
+        assert os.path.exists(zip_path)
+        with open(zip_path, "rb") as zip_file:
+            lines = zip_file.readlines()
+            assert lines[: len(shebang)] == [line.encode() + b"\n" for line in shebang]
+            assert lines[len(shebang)].startswith(b"PK")
+            assert os.stat(zip_path).st_mode & stat.S_IXUSR
+
+            result = subprocess.run([zip_path], capture_output=True)
+            assert result.returncode == 0
+            assert not unzip or b"01-01-1980 00:00" in result.stdout or b"1980-01-01 00:00" in result.stdout
+            assert __file__.encode() in result.stdout
 
 
 if __name__ == "__main__":

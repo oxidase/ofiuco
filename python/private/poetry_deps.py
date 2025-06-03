@@ -207,7 +207,7 @@ def install(args):
             direct_url_line = f"{direct_url_path.relative_to(output_path)},"
             with open(record_path) as record_file:
                 records = record_file.readlines()
-            with open(record_path, "wt") as record_file:
+            with open(record_path, "w") as record_file:
                 record_file.writelines(record for record in records if not record.startswith(direct_url_line))
 
     if args.entry_points:

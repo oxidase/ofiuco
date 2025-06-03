@@ -6,6 +6,13 @@ default_stages:
   - pre-commit
 
 repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.12
+    hooks:
+      - id: ruff-check
+        args: [ --fix ]
+      - id: ruff-format
+
   - repo: local
     hooks:
       - id: check-version

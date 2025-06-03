@@ -2,9 +2,8 @@ import os
 import sys
 import tomllib
 
-import pytest
-
 import colorama
+import pytest
 import sample_package
 import torch
 import torchvision
@@ -17,7 +16,8 @@ def test_sample_package():
 
 
 def test_torch_version():
-    dependencies = tomllib.load(open(LOCK_FILE, "rb"))
+    with open(LOCK_FILE, "rb") as lock_file:
+        dependencies = tomllib.load(lock_file)
     locked_torch = [package for package in dependencies["package"] if package["name"] == "torch"]
     assert len(locked_torch) == 2
     assert torch.__version__ in set(package["version"] for package in locked_torch)
@@ -36,7 +36,8 @@ def test_cuda_libs_loaded():
 
 
 def test_torchvision_version():
-    dependencies = tomllib.load(open(LOCK_FILE, "rb"))
+    with open(LOCK_FILE, "rb") as lock_file:
+        dependencies = tomllib.load(lock_file)
     packages = [
         package
         for package in dependencies["package"]

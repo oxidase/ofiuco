@@ -73,11 +73,13 @@ def _py_zip_impl(ctx):
 
     ## Package zip file
     output_file = ctx.actions.declare_file(basename + ".zip")
+    zipper_args = ["cC", output_file.path, "-m", manifest_file.path]
+    zipper_args += ["-s", ctx.attr.shebang] if ctx.attr.shebang else []
     ctx.actions.run(
         outputs = [output_file],
         inputs = [manifest_file] + filtered_deps,
         executable = ctx.executable._zipper,
-        arguments = ["cC", output_file.path, "-m", manifest_file.path],
+        arguments = zipper_args,
         progress_message = "Creating archive {}".format(output_file.short_path),
         mnemonic = "archiver",
         env = {
@@ -103,6 +105,7 @@ py_zip = rule(
         "target": attr.label(cfg = _target_platform_transition),
         "exclude": attr.string_list(),
         "platform": attr.label(),
+        "shebang": attr.string(),
         "_allowlist_function_transition": attr.label(
             default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
         ),
