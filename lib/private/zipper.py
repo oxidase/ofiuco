@@ -1,10 +1,11 @@
 import argparse
+import io
 import logging
+import os
 import stat
 import sys
 import zipfile
 from pathlib import Path
-from typing import List
 
 
 def get_external_attr(path: Path) -> int:
@@ -13,7 +14,7 @@ def get_external_attr(path: Path) -> int:
     return (stat.S_IRUSR | stat.S_IWUSR | (st.st_mode & stat.S_IXUSR)) << 16
 
 
-def compress(options: str, dir_path: Path, output_path: Path, file_paths: List[str]) -> None:
+def compress(options: str, dir_path: Path, output_stream: io.BytesIO, file_paths: list[str]) -> None:
     """Create a zip archive.
 
     Args:
@@ -26,7 +27,7 @@ def compress(options: str, dir_path: Path, output_path: Path, file_paths: List[s
     compression = zipfile.ZIP_DEFLATED if "C" in options else zipfile.ZIP_STORED
     flatten = "f" in options
 
-    with zipfile.ZipFile(output_path, "w", compression) as zipf:
+    with zipfile.ZipFile(output_stream, "w", compression) as zipf:
         for maybe_paths_pair in sorted(file_paths):
             if maybe_paths_pair.count("=") == 1:
                 zip_path, file_path = maybe_paths_pair.split("=")
@@ -60,6 +61,7 @@ def main(argv=None):
     parser.add_argument("zip", type=str, help="zip file name'")
     parser.add_argument("-d", "--dir", default=".", help="input directory")
     parser.add_argument("-m", dest="manifest", type=Path, help="manifest file")
+    parser.add_argument("-s", dest="shebang", help="file shebang")
     parser.add_argument("files", type=str, nargs="*")
 
     args = parser.parse_args(argv)
@@ -70,7 +72,16 @@ def main(argv=None):
         files.extend(manifest_lines)
 
     if args.command.startswith("c"):
-        compress(args.command, Path(args.dir), args.zip, args.files)
+        with open(args.zip, "wb") as output_stream:
+            if args.shebang is not None:
+                shebang = f"{args.shebang}\n"
+                output_stream.write(shebang.encode())
+            compress(args.command, Path(args.dir), output_stream, args.files)
+
+        # Set +x mode if shebang is given
+        if args.shebang is not None:
+            x_bits = (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH) & ~os.umask(0)
+            os.chmod(args.zip, os.stat(args.zip).st_mode | x_bits)
     else:
         logging.error("command %s is not supported", args.command)
         sys.exit(1)

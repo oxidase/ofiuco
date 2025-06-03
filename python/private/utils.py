@@ -27,7 +27,7 @@ def populate_symlink_tree(source, target, skip_set=None):
                 if not filecmp.cmp(symlink_path, Path(directory_path) / file_name, shallow=False):
                     warnings.warn(
                         f"{symlink_path} already exists and points to {os.path.realpath(symlink_path)}\n"
-                        + f"Skip {target_path} which seems to have different contents"
+                        + f"Skip {target_path} which seems to have different contents", stacklevel=2
                     )
                 continue
 

@@ -46,6 +46,13 @@ def _test_py_zip():
         exclude = ["__main__.py"],
     )
 
+    py_zip(
+        name = "test_py_zip_shebang_subject",
+        target = ":py_zip_test_binary",
+        shebang = "#!/usr/bin/env python3",
+    )
+
+
     py_zip_test(name = "py_zip_contents_test", target_under_test = ":test_py_zip_contents_subject")
     py_zip_test(name = "py_zip_transition_test", target_under_test = ":test_py_zip_transition_subject")
     py_zip_test(name = "py_zip_with_main_test", target_under_test = ":test_py_zip_with_main_subject")
@@ -72,6 +79,13 @@ def _test_py_zip():
         data = [":test_py_zip_without_main_subject"],
     )
 
+    sh_test(
+        name = "py_zip_shebang_test",
+        srcs = ["py_zip_test_shebang.sh"],
+        args = ["$(locations :test_py_zip_shebang_subject)"],
+        data = [":test_py_zip_shebang_subject"],
+    )
+
     return [
         ":py_zip_contents_test",
         ":py_zip_transition_test",
@@ -80,6 +94,7 @@ def _test_py_zip():
         ":py_zip_without_main_test",
         ":py_zip_has_main_test",
         ":py_zip_has_no_main_test",
+        ":py_zip_shebang_test",
     ]
 
 def py_zip_test_suite():

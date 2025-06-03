@@ -10,12 +10,18 @@ dependencies = [
     "poetry",
 ]
 
-[tool.black]
-include = "\\.pyi?$"
-line-length = 120
-
 [tool.ruff]
 line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E", # pycodestyle
+    "F", # Pyflakes
+    "UP", # pyupgrade
+    "B", # flake8-bugbear
+    "SIM", # flake8-simplify
+    "I", # isort
+]
 
 [tool.isort]
 default_section = "FIRSTPARTY"

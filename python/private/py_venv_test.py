@@ -20,13 +20,13 @@ class TestInstallSubcommand(unittest.TestCase):
                 zip_ref.extractall(path)
 
         for index, name in enumerate(pkg_paths):
-            with open(os.path.join(name, "duplicated_name"), "wt") as f:
+            with open(os.path.join(name, "duplicated_name"), "w") as f:
                 f.write(str(index))
 
         test_package = os.path.join(tmpdir, "test_pkg")
         os.makedirs(os.path.join(test_package, "test"))
         for name in list(SKIP_SET) + ["test_file", "test/test_file"]:
-            with open(os.path.join(test_package, name), "wt") as f:
+            with open(os.path.join(test_package, name), "w") as f:
                 f.write("test")
 
         with self.assertWarnsRegex(UserWarning, expected_regex="Skip"):
