@@ -78,30 +78,36 @@ py_binary(
 )
 
 py_zip(
-    name = "default",
+    name = "default.zip",
     target = ":app",
 )
 
 py_zip(
-    name = "host",
+    name = "host.zip",
     platform = "@local_config_platform//:host",
     target = ":app",
 )
 
 py_zip(
-    name = "deploy_darwin_arm64",
+    name = "deploy_darwin_arm64.zip",
     platform = ":darwin_arm64",
     target = ":app",
 )
 
 py_zip(
-    name = "deploy_linux_arm64",
+    name = "deploy_linux_arm64.zip",
     platform = ":linux_arm64",
     target = ":app",
 )
 
+filegroup(
+    name = "deploy_linux_arm64",
+    srcs = [":deploy_linux_arm64.zip"],
+    output_group = "all",
+)
+
 # py_zip(
-#     name = "deploy_win32_x86_64",
+#     name = "deploy_win32_x86_64.zip",
 #     platform = ":win32_x86_64",
 #     target = ":app",
 # )
@@ -112,8 +118,14 @@ py_binary_linux_x86_64(
 )
 
 py_zip(
-    name = "deploy_linux_x86_64",
+    name = "deploy_linux_x86_64.zip",
     target = ":app_linux_x86_64",
+)
+
+filegroup(
+    name = "deploy_linux_x86_64",
+    srcs = [":deploy_linux_x86_64.zip"],
+    output_group = "all",
 )
 
 py_test(
@@ -121,12 +133,12 @@ py_test(
     size = "large",
     srcs = ["test.py"],
     data = [
-        ":default",
-        ":deploy_darwin_arm64",
+        ":default.zip",
+        ":deploy_darwin_arm64.zip",
         ":deploy_linux_arm64",
         ":deploy_linux_x86_64",
-        # ":deploy_win32_x86_64",
-        ":host",
+        # ":deploy_win32_x86_64.zip",
+        ":host.zip",
     ],
     deps = [
         "@poetry//:pyelftools",

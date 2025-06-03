@@ -1,4 +1,3 @@
-shift
 zip=$1
 shift
 unzip -l $zip | grep $*  || exit 1

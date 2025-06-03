@@ -72,7 +72,7 @@ def _py_zip_impl(ctx):
     ctx.actions.write(json_file, json.encode({"environment": {"PYTHONPATH": ":".join(python_paths)}}))
 
     ## Package zip file
-    output_file = ctx.actions.declare_file(basename + ".zip")
+    output_file = ctx.actions.declare_file(basename)
     zipper_args = ["cC", output_file.path, "-m", manifest_file.path]
     zipper_args += ["-s", ctx.attr.shebang] if ctx.attr.shebang else []
     ctx.actions.run(
@@ -89,13 +89,13 @@ def _py_zip_impl(ctx):
     )
 
     ## Output providers
-    out = depset(direct = [output_file, json_file])
     return [
         DefaultInfo(
-            files = out,
+            files = depset(direct = [output_file]),
         ),
         OutputGroupInfo(
-            all_files = out,
+            all = [output_file, json_file],
+            json = [json_file],
         ),
     ]
 
