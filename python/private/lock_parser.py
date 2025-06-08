@@ -1,3 +1,4 @@
+import logging
 import argparse
 import itertools
 import json
@@ -135,6 +136,30 @@ package(
 """
 
 
+def remove_cycles(packages):
+    """Graph DFS with path tracking.
+
+    Detect pip dependency cycles u->...->v...->w->v and remove edges w->v
+    """
+    graph = {node.name: node for node in packages}
+    visisted = set()
+    for start in graph:
+        stack = [[start, [start]]]
+
+        #[dep for dep in node.dependencies]
+        while stack:
+            u, path = stack.pop()
+            if u not in visisted:
+                visisted.add(u)
+
+                for v in [v for v in graph[u].dependencies if v in path]:
+                    logging.info(f"detected a cycle {' -> '.join(path)} -> {v}")
+
+                graph[u].dependencies = {v: markers for v, markers in graph[u].dependencies.items() if v in graph and v not in path}
+                for v in graph[u].dependencies:
+                    stack.append([v, path + [v]])
+
+
 def parse_poetry_lock(lock_file, platforms, generate_extras, project_root):
     # Collect packages
     with lock_file.open("rb") as lock_handle:
@@ -161,6 +186,9 @@ def parse_poetry_lock(lock_file, platforms, generate_extras, project_root):
                     files={},
                 )
             )
+
+    # Remove cyclic depedencies
+    remove_cycles(packages)
 
     # Print packages
     sys.stdout.write("".join(package.repr(platforms, generate_extras) for package in packages))
