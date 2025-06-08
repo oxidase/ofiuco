@@ -71,6 +71,7 @@ py_test(
     ],
     data = [
         # Update lock files: for d in sphinx torch ; poetry lock -C python/private/assets/$d ; end
+        "assets/airflow/poetry.lock",
         "assets/sphinx/poetry.lock",
         "assets/torch/poetry.lock",
     ],

@@ -2,6 +2,7 @@ import contextlib
 import io
 import json
 import os
+import re
 import tempfile
 import unittest
 
@@ -10,8 +11,8 @@ from python.private.lock_parser import main
 
 class TestInstallSubcommand(unittest.TestCase):
     tmpdir = os.environ.get("TEST_TMPDIR", tempfile.gettempdir())
-    sphinx_lock = "python/private/assets/sphinx/poetry.lock"
-    torch_lock = "python/private/assets/torch/poetry.lock"
+    assets = "python/private/assets/{}/poetry.lock"
+    sphinx_lock = assets.format("sphinx")
 
     def test_empty_args(self):
         with self.assertRaises(SystemExit):
@@ -47,7 +48,7 @@ class TestInstallSubcommand(unittest.TestCase):
 
     def test_torch_lock(self):
         with io.StringIO() as buffer, contextlib.redirect_stdout(buffer):
-            main([self.torch_lock])
+            main([self.assets.format("torch")])
             build_file = buffer.getvalue()
 
         assert build_file.count('name = "torch"') == 1
@@ -55,6 +56,25 @@ class TestInstallSubcommand(unittest.TestCase):
         assert build_file.count('name = "torch@2.7.0+cu118"') == 1
         assert build_file.count('":torch@2.7.0"') == 1
         assert build_file.count('":torch@2.7.0+cu118"') == 1
+
+    def test_airflow_lock(self):
+        """
+            //:test
+            @@ofiuco++poetry+poetry//:apache-airflow
+            @@ofiuco++poetry+poetry//:apache-airflow
+            @@ofiuco++poetry+poetry//:apache-airflow@3.0.1
+        .-> @@ofiuco++poetry+poetry//:apache-airflow-task-sdk
+        |   @@ofiuco++poetry+poetry//:apache-airflow-core
+        `-- @@ofiuco++poetry+poetry//:apache-airflow-task-sdk
+        """
+        with io.StringIO() as buffer, contextlib.redirect_stdout(buffer):
+            main([self.assets.format("airflow")])
+            build_file = buffer.getvalue()
+
+        assert re.search(r'deps\s*=\s*\[\s*":apache-airflow@2.7.2",\s*":apache-airflow@3.0.1",\s*]', build_file)
+        print(build_file.count(":apache-airflow-task-sdk"))
+        assert build_file.count(":apache-airflow-core") == 1, f"{build_file.count(':apache-airflow-core') = }"
+        assert build_file.count(":apache-airflow-task-sdk") == 2, f"{build_file.count(':apache-airflow-task-sdk') = }"
 
 
 if __name__ == "__main__":
