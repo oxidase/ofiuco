@@ -1,0 +1,13 @@
+[project]
+name = "example"
+version = "0.0.0"
+readme = "README.md"
+description = "example with circular dependencies"
+requires-python = ">=3.12,<4"
+license = "Apache-2.0"
+dependencies = [
+    "apache-airflow",
+]
+
+[tool.poetry.group.dev.dependencies]
+pytest = {version = "^7.2", "python" = ">=3.7"}

@@ -5,6 +5,7 @@ import os
 import re
 import sys
 import tomllib
+from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import StrEnum, auto
 from operator import attrgetter
@@ -135,6 +136,16 @@ package(
 """
 
 
+def remove_cycles(dependency_graph, path, u, removed_edges):
+    for v in dependency_graph[u]:
+        if v in removed_edges[u]:
+            pass
+        elif v in path:
+            removed_edges[u].add(v)
+        else:
+            remove_cycles(dependency_graph, path + [u], v, removed_edges)
+
+
 def parse_poetry_lock(lock_file, platforms, generate_extras, project_root):
     # Collect packages
     with lock_file.open("rb") as lock_handle:
@@ -161,6 +172,20 @@ def parse_poetry_lock(lock_file, platforms, generate_extras, project_root):
                     files={},
                 )
             )
+
+    # Find edges which form dependency cycles
+    removed_edges = defaultdict(set)
+    dependency_graph = {
+        package.name: sorted(set(package.dependencies.keys())) for package in sorted(packages, key=name_getter)
+    }
+    for start in dependency_graph:
+        remove_cycles(dependency_graph, [], start, removed_edges)
+
+    # Remove edges
+    for package in packages:
+        package.dependencies = {
+            name: attr for name, attr in package.dependencies.items() if name not in removed_edges[package.name]
+        }
 
     # Print packages
     sys.stdout.write("".join(package.repr(platforms, generate_extras) for package in packages))
