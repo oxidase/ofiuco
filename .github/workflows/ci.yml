@@ -13,11 +13,13 @@ jobs:
     timeout-minutes: 40
     strategy:
       matrix:
-        include: # TODO: windows-latest
+        include:
           - os: ubuntu-latest
             cache: ~/.cache/bazel
           - os: macos-latest
             cache: /private/var/tmp/_bazel_runner
+          - os: windows-latest
+            cache:  ~/.cache/bazel
 
     steps:
       - name: Mount bazel cache
