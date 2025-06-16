@@ -7,9 +7,13 @@ SKIP_SET = {Path("requirements.txt")}
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Create symbolic links in virtual environment to a package")
+    parser = argparse.ArgumentParser(
+        description="Create symbolic links in virtual environment to a package"
+    )
 
-    parser.add_argument("target", type=Path, help="output virtual environment directory")
+    parser.add_argument(
+        "target", type=Path, help="output virtual environment directory"
+    )
     parser.add_argument("path", type=Path, nargs="*", help="python package path")
 
     args = parser.parse_args(argv)

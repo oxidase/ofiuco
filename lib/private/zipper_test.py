@@ -60,7 +60,11 @@ class TestZipper(unittest.TestCase):
         assert os.path.exists(zip_path)
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
             file_list = [os.path.basename(path) for path in zip_ref.namelist()]
-            dir_list = [path for path in os.listdir(os.path.dirname(__file__)) if "__pycache__" not in path]
+            dir_list = [
+                path
+                for path in os.listdir(os.path.dirname(__file__))
+                if "__pycache__" not in path
+            ]
             assert sorted(file_list) == sorted(dir_list)
 
     def test_manifest(self):
@@ -92,7 +96,11 @@ class TestZipper(unittest.TestCase):
 
             result = subprocess.run([zip_path], capture_output=True)
             assert result.returncode == 0
-            assert not unzip or b"01-01-1980 00:00" in result.stdout or b"1980-01-01 00:00" in result.stdout
+            assert (
+                not unzip
+                or b"01-01-1980 00:00" in result.stdout
+                or b"1980-01-01 00:00" in result.stdout
+            )
             assert __file__.encode() in result.stdout
 
 

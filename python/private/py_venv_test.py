@@ -35,7 +35,9 @@ class TestInstallSubcommand(unittest.TestCase):
         venv_resolved_files = glob.glob(os.path.join(target, "**"), recursive=True)
         venv_files = [os.path.relpath(name, target) for name in venv_resolved_files]
 
-        assert all(os.path.islink(name) or os.path.isdir(name) for name in venv_resolved_files)
+        assert all(
+            os.path.islink(name) or os.path.isdir(name) for name in venv_resolved_files
+        )
         assert "test_file" in venv_files
         assert "test/test_file" in venv_files
         assert "requirements.txt" not in venv_files

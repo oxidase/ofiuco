@@ -1,7 +1,7 @@
-import logging
 import argparse
 import itertools
 import json
+import logging
 import os
 import re
 import sys
@@ -52,12 +52,24 @@ class Package:
 
     def __post_init__(self):
         assert self.name
-        self.constraint = f"{self.name}=={self.version.split('+')[0]}" if self.version is not None else None
+        self.constraint = (
+            f"{self.name}=={self.version.split('+')[0]}"
+            if self.version is not None
+            else None
+        )
 
     @property
     def semver(self) -> tuple[int, int, int, int]:
-        if self.version is not None and (m := re.match(SEMVER_REGEXP, self.version)) is not None:
-            return (int(m["major"]), int(m["minor"] or 0), int(m["patch"] or 0), int(m["rev"] or 0))
+        if (
+            self.version is not None
+            and (m := re.match(SEMVER_REGEXP, self.version)) is not None
+        ):
+            return (
+                int(m["major"]),
+                int(m["minor"] or 0),
+                int(m["patch"] or 0),
+                int(m["rev"] or 0),
+            )
         return (0, 0, 0, 0)
 
     @staticmethod
@@ -66,12 +78,22 @@ class Package:
 
     @staticmethod
     def _normalize(dep_name):
-        return dep_name.strip().strip('"').strip("'").replace("_", "-").replace(".", "-").lower()
+        return (
+            dep_name.strip()
+            .strip('"')
+            .strip("'")
+            .replace("_", "-")
+            .replace(".", "-")
+            .lower()
+        )
 
     @staticmethod
     def from_lock(package: dict[str, Any], project_root: Path):
         source = package.get("source", {})
-        dependencies = {Package._normalize(name): attr for name, attr in package.get("dependencies", {}).items()}
+        dependencies = {
+            Package._normalize(name): attr
+            for name, attr in package.get("dependencies", {}).items()
+        }
 
         if source.get("type") == SourceType.directory:
             # Resolve relative paths to system local paths (remote cache poisoning alert)
@@ -99,30 +121,68 @@ py_library(
 )
 """
             for name, extra_deps in self.extras.items()
-            if (deps := ", ".join([f'":{dep}"' for dep in {self._normalize(dep.split(" ")[0]) for dep in extra_deps}]))
+            if (
+                deps := ", ".join(
+                    [
+                        f'":{dep}"'
+                        for dep in {
+                            self._normalize(dep.split(" ")[0]) for dep in extra_deps
+                        }
+                    ]
+                )
+            )
         )
 
     def repr(self, platforms, generate_extras):
         sep = "\n  "
         attr_sep = "," + sep
-        markers = {name: attr["markers"] for name, attr in self.dependencies.items() if "markers" in attr}
+        markers = {
+            name: attr["markers"]
+            for name, attr in self.dependencies.items()
+            if "markers" in attr
+        }
 
         attrs = {
             "constraint": [f'"{self.constraint}"'] if self.constraint else [],
             "description": [f'"""{self.description}"""'] if self.description else [],
             "files": (
-                ["{", *(f'  "{name}": "{value}",' for name, value in self.files.items()), "}"] if self.files else []
+                [
+                    "{",
+                    *(f'  "{name}": "{value}",' for name, value in self.files.items()),
+                    "}",
+                ]
+                if self.files
+                else []
             ),
             "deps": (
-                ["[", *(f'  ":{name}",' for name in sorted(set(self.dependencies))), "]"] if self.dependencies else []
+                [
+                    "[",
+                    *(f'  ":{name}",' for name in sorted(set(self.dependencies))),
+                    "]",
+                ]
+                if self.dependencies
+                else []
             ),
-            "markers": [f'"""{self._escape(json.dumps(markers))}"""'] if markers else [],
+            "markers": (
+                [f'"""{self._escape(json.dumps(markers))}"""'] if markers else []
+            ),
             "platforms": (
-                ["{", *(f"""  "{name}": '''{value}''',""" for name, value in platforms.items()), "}"]
+                [
+                    "{",
+                    *(
+                        f"""  "{name}": '''{value}''',"""
+                        for name, value in platforms.items()
+                    ),
+                    "}",
+                ]
                 if platforms
                 else []
             ),
-            "source": [f'"""{self._escape(json.dumps(self.source))}"""'] if self.source else [],
+            "source": (
+                [f'"""{self._escape(json.dumps(self.source))}"""']
+                if self.source
+                else []
+            ),
             "develop": ["True"] if self.develop else [],
         }
 
@@ -146,7 +206,7 @@ def remove_cycles(packages):
     for start in graph:
         stack = [[start, [start]]]
 
-        #[dep for dep in node.dependencies]
+        # [dep for dep in node.dependencies]
         while stack:
             u, path = stack.pop()
             if u not in visisted:
@@ -155,7 +215,11 @@ def remove_cycles(packages):
                 for v in [v for v in graph[u].dependencies if v in path]:
                     logging.info(f"detected a cycle {' -> '.join(path)} -> {v}")
 
-                graph[u].dependencies = {v: markers for v, markers in graph[u].dependencies.items() if v in graph and v not in path}
+                graph[u].dependencies = {
+                    v: markers
+                    for v, markers in graph[u].dependencies.items()
+                    if v in graph and v not in path
+                }
                 for v in graph[u].dependencies:
                     stack.append([v, path + [v]])
 
@@ -164,12 +228,16 @@ def parse_poetry_lock(lock_file, platforms, generate_extras, project_root):
     # Collect packages
     with lock_file.open("rb") as lock_handle:
         conf = tomllib.load(lock_handle)
-    locked_packages = [Package.from_lock(package, project_root) for package in conf.get("package", [])]
+    locked_packages = [
+        Package.from_lock(package, project_root) for package in conf.get("package", [])
+    ]
 
     # Process packages
     packages = []
     name_getter = attrgetter("name")
-    for name, group in itertools.groupby(sorted(locked_packages, key=name_getter), key=name_getter):
+    for name, group in itertools.groupby(
+        sorted(locked_packages, key=name_getter), key=name_getter
+    ):
         if len(named_group := list(group)) == 1:
             packages.extend(named_group)
         else:
@@ -182,32 +250,52 @@ def parse_poetry_lock(lock_file, platforms, generate_extras, project_root):
             packages.append(
                 Package(
                     name=name,
-                    dependencies={dep.name: {"markers": dep.markers} for dep in named_group},
+                    dependencies={
+                        dep.name: {"markers": dep.markers} for dep in named_group
+                    },
                     files={},
                 )
             )
 
-    # Remove cyclic depedencies
+    # Order lexicographical by name
+    packages = sorted(packages, key=name_getter)
+
+    # Remove cyclic depedencies in-place
     remove_cycles(packages)
 
     # Print packages
-    sys.stdout.write("".join(package.repr(platforms, generate_extras) for package in packages))
+    sys.stdout.write(
+        "".join(package.repr(platforms, generate_extras) for package in packages)
+    )
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Parse lock file and generate packages.")
+    parser = argparse.ArgumentParser(
+        description="Parse lock file and generate packages."
+    )
 
     parser.add_argument("input_file", type=Path, help="Path to the lock file")
-    parser.add_argument("platforms", nargs="?", type=json.loads, help="JSON string with platforms definitions")
-    parser.add_argument("--generate_extras", dest="generate_extras", action="store_true")
-    parser.add_argument("--nogenerate_extras", dest="generate_extras", action="store_false")
+    parser.add_argument(
+        "platforms",
+        nargs="?",
+        type=json.loads,
+        help="JSON string with platforms definitions",
+    )
+    parser.add_argument(
+        "--generate_extras", dest="generate_extras", action="store_true"
+    )
+    parser.add_argument(
+        "--nogenerate_extras", dest="generate_extras", action="store_false"
+    )
     parser.add_argument("--project_file", type=Path)
     parser.set_defaults(generate_extras=False)
 
     args = parser.parse_args(argv)
 
     project_root = args.project_file.resolve().parent if args.project_file else Path()
-    parse_poetry_lock(args.input_file, args.platforms, args.generate_extras, project_root)
+    parse_poetry_lock(
+        args.input_file, args.platforms, args.generate_extras, project_root
+    )
 
 
 if __name__ == "__main__":

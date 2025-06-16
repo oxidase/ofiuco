@@ -81,7 +81,9 @@ def install(args):
         pip_arguments, requirements_lines = [], []
         if source_type == "directory":
             url = source.get("url")
-            assert url, f"package.source.url is undefined in {args.input} for {source_type} type"
+            assert (
+                url
+            ), f"package.source.url is undefined in {args.input} for {source_type} type"
             requirements_lines = (
                 [
                     f"--editable={url}",
@@ -91,24 +93,34 @@ def install(args):
             )
         elif source_type == "git":
             url, reference = source.get("url"), source.get("resolved_reference")
-            assert url, f"package.source.url is undefined in {args.input} for {source_type} type"
-            assert reference, f"package.source.resolved_reference is undefined in {args.input} for {source_type} type"
+            assert (
+                url
+            ), f"package.source.url is undefined in {args.input} for {source_type} type"
+            assert (
+                reference
+            ), f"package.source.resolved_reference is undefined in {args.input} for {source_type} type"
             pip_arguments = ["--editable"] if args.develop else []
             requirements_lines = [f"git+{url}@{reference}"]
         elif source_type == "legacy":
             url = source.get("url")
-            assert url, f"package.source.url is undefined in {args.input} for {source_type} type"
+            assert (
+                url
+            ), f"package.source.url is undefined in {args.input} for {source_type} type"
             pip_arguments = [f"--extra-index-url={url}\n"]
             requirements_lines = [args.input]
         elif source_type == "url":
             url = source.get("url")
-            assert url, f"package.source.url is undefined in {args.input} for {source_type} type"
+            assert (
+                url
+            ), f"package.source.url is undefined in {args.input} for {source_type} type"
             requirements_lines = [url]
         else:
             requirements_lines = [args.input]
 
         requirements_lines += [f" --hash={value}" for value in package_files.values()]
-        requirements_fileobj.write("\n".join(pip_arguments + ["\\\n".join(requirements_lines)]))
+        requirements_fileobj.write(
+            "\n".join(pip_arguments + ["\\\n".join(requirements_lines)])
+        )
 
     install_args = [
         "-r",
@@ -122,7 +134,9 @@ def install(args):
         use_cache = False
 
     use_cache = False
-    install_args.append(f"--cache-dir={possible_cache}" if use_cache else "--no-cache-dir")
+    install_args.append(
+        f"--cache-dir={possible_cache}" if use_cache else "--no-cache-dir"
+    )
 
     install_args += [
         f"--target={output_path}",
@@ -164,20 +178,28 @@ def install(args):
 
         cpu_flags = cc_compiler_cpu_to_cflags.get(compiler, {}).get(cpu, [])
         asflags = cpu_flags + cc.get("ASFLAGS", [])
-        cflags = cpu_flags + filter_cxx_builtin_include_directories(cc.get("CFLAGS", []))
+        cflags = cpu_flags + filter_cxx_builtin_include_directories(
+            cc.get("CFLAGS", [])
+        )
         cxxflags = cpu_flags + cc.get("CXXFLAGS", [])
-        ldflags = ["-Wl,-rpath,{}".format(cc.get("dynamic_runtime_solib_dir", ""))] + cc.get("LDFLAGS", [])
+        ldflags = [
+            "-Wl,-rpath,{}".format(cc.get("dynamic_runtime_solib_dir", ""))
+        ] + cc.get("LDFLAGS", [])
         flags = dict(
             ASMFLAGS=join(asflags),
             ASFLAGS=join(asflags),
             CFLAGS=join(cflags),
             CXXFLAGS=join(cxxflags),
             LDFLAGS=join(ldflags),
-            CMAKE_ARGS=join(cc_cpu_to_cmake_args.get(cpu, []) + ["-DCMAKE_VERBOSE_MAKEFILE=ON"]),
+            CMAKE_ARGS=join(
+                cc_cpu_to_cmake_args.get(cpu, []) + ["-DCMAKE_VERBOSE_MAKEFILE=ON"]
+            ),
         )
 
         os.environ.update(flags)
-        os.environ.update({k: os.fspath(Path(cc[v]).resolve()) for k, v in paths.items() if v in cc})
+        os.environ.update(
+            {k: os.fspath(Path(cc[v]).resolve()) for k, v in paths.items() if v in cc}
+        )
 
     if retcode := install_command.main(install_args + get_platform_args(args)):
         logging.error(f"pip install returned {retcode}")
@@ -208,14 +230,20 @@ def install(args):
             with open(record_path) as record_file:
                 records = record_file.readlines()
             with open(record_path, "w") as record_file:
-                record_file.writelines(record for record in records if not record.startswith(direct_url_line))
+                record_file.writelines(
+                    record
+                    for record in records
+                    if not record.startswith(direct_url_line)
+                )
 
     if args.entry_points:
         # Ref: https://packaging.python.org/en/latest/specifications/entry-points/#file-format
         args.entry_points.parent.mkdir(parents=True, exist_ok=True)
         entry_points = list(output_path.glob("*.dist-info/entry_points.txt"))
         if entry_points:
-            args.entry_points.symlink_to(os.path.relpath(entry_points.pop(), args.entry_points.parent))
+            args.entry_points.symlink_to(
+                os.path.relpath(entry_points.pop(), args.entry_points.parent)
+            )
             assert not entry_points
         else:
             args.entry_points.touch()
@@ -224,20 +252,36 @@ def install(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Download and install a Poetry package")
+    parser = argparse.ArgumentParser(
+        description="Download and install a Poetry package"
+    )
     subparsers = parser.add_subparsers(required=True)
 
     parser_install = subparsers.add_parser("install")
     parser_install.set_defaults(func=install)
     parser_install.add_argument("input", type=str, help="wheel version constraint")
-    parser_install.add_argument("output", type=Path, default=Path(), help="package output directory")
-    parser_install.add_argument("--files", type=str, default="{}", help="files:hash  dictionary")
-    parser_install.add_argument("--python_version", type=str, default=None, help="python version")
-    parser_install.add_argument("--platform", type=str, nargs="*", action="extend", help="platform tag")
+    parser_install.add_argument(
+        "output", type=Path, default=Path(), help="package output directory"
+    )
+    parser_install.add_argument(
+        "--files", type=str, default="{}", help="files:hash  dictionary"
+    )
+    parser_install.add_argument(
+        "--python_version", type=str, default=None, help="python version"
+    )
+    parser_install.add_argument(
+        "--platform", type=str, nargs="*", action="extend", help="platform tag"
+    )
     parser_install.add_argument("--source", type=str, help="source JSON ")
-    parser_install.add_argument("--develop", action="store_true", help="Install develop package")
+    parser_install.add_argument(
+        "--develop", action="store_true", help="Install develop package"
+    )
     parser_install.add_argument("--cc_toolchain", type=str, help="CC toolchain")
-    parser_install.add_argument("--entry_points", type=Path, help="Add a symbolic link to .dist-info/entry_points.txt")
+    parser_install.add_argument(
+        "--entry_points",
+        type=Path,
+        help="Add a symbolic link to .dist-info/entry_points.txt",
+    )
 
     args = parser.parse_args()
     sys.exit(args.func(args))

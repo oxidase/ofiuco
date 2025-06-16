@@ -17,8 +17,12 @@ def test_multiple_repos_import():
 
 
 def test_order_in_sys_path():
-    first_repo_max = max([index for index, path in enumerate(sys.path) if first_repo in path])
-    second_repo_min = min([index for index, path in enumerate(sys.path) if second_repo in path])
+    first_repo_max = max(
+        [index for index, path in enumerate(sys.path) if first_repo in path]
+    )
+    second_repo_min = min(
+        [index for index, path in enumerate(sys.path) if second_repo in path]
+    )
     assert first_repo_max < second_repo_min
 
 

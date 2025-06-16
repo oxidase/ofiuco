@@ -2,8 +2,9 @@ import os
 import sys
 import tomllib
 
-import colorama
 import pytest
+
+import colorama
 import sample_package
 import torch
 import torchvision
@@ -18,12 +19,16 @@ def test_sample_package():
 def test_torch_version():
     with open(LOCK_FILE, "rb") as lock_file:
         dependencies = tomllib.load(lock_file)
-    locked_torch = [package for package in dependencies["package"] if package["name"] == "torch"]
+    locked_torch = [
+        package for package in dependencies["package"] if package["name"] == "torch"
+    ]
     assert len(locked_torch) == 2
     assert torch.__version__ in set(package["version"] for package in locked_torch)
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="torch+CUDA is installed only for linux")
+@pytest.mark.skipif(
+    sys.platform != "linux", reason="torch+CUDA is installed only for linux"
+)
 def test_cuda_libs_loaded():
     assert torch.backends.cudnn.enabled
     assert torch.backends.cudnn.version() > 8000
@@ -41,7 +46,8 @@ def test_torchvision_version():
     packages = [
         package
         for package in dependencies["package"]
-        if package["name"] == "torchvision" and eval(package.get("markers", ""), {}, {"sys_platform": sys.platform})
+        if package["name"] == "torchvision"
+        and eval(package.get("markers", ""), {}, {"sys_platform": sys.platform})
     ]
     assert len(packages) == 1
     assert torchvision.__version__ == packages[0]["version"]

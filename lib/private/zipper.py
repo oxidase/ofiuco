@@ -14,7 +14,9 @@ def get_external_attr(path: Path) -> int:
     return (stat.S_IRUSR | stat.S_IWUSR | (st.st_mode & stat.S_IXUSR)) << 16
 
 
-def compress(options: str, dir_path: Path, output_stream: io.BytesIO, file_paths: list[str]) -> None:
+def compress(
+    options: str, dir_path: Path, output_stream: io.BytesIO, file_paths: list[str]
+) -> None:
     """Create a zip archive.
 
     Args:
@@ -39,10 +41,13 @@ def compress(options: str, dir_path: Path, output_stream: io.BytesIO, file_paths
                 sorted_files_list = sorted(
                     globbed_file
                     for globbed_file in mayby_file_path.glob("**/*")
-                    if not globbed_file.is_dir() and "__pycache__" not in str(globbed_file)
+                    if not globbed_file.is_dir()
+                    and "__pycache__" not in str(globbed_file)
                 )
                 for globbed_file in sorted_files_list:
-                    relative_path = zip_path + str(globbed_file).removeprefix(str(mayby_file_path))
+                    relative_path = zip_path + str(globbed_file).removeprefix(
+                        str(mayby_file_path)
+                    )
                     file_data = Path(globbed_file).read_bytes()
                     file_info = zipfile.ZipInfo(relative_path)
                     file_info.external_attr = get_external_attr(globbed_file)
@@ -68,7 +73,9 @@ def main(argv=None):
 
     files = args.files
     if args.manifest is not None:
-        manifest_lines = [line for line in args.manifest.read_text().split("\n") if line]
+        manifest_lines = [
+            line for line in args.manifest.read_text().split("\n") if line
+        ]
         files.extend(manifest_lines)
 
     if args.command.startswith("c"):

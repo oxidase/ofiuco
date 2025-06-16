@@ -24,10 +24,13 @@ def populate_symlink_tree(source, target, skip_set=None):
             symlink_path = target_directory / file_name
             target_path = relative_directory / file_name
             if symlink_path.exists():
-                if not filecmp.cmp(symlink_path, Path(directory_path) / file_name, shallow=False):
+                if not filecmp.cmp(
+                    symlink_path, Path(directory_path) / file_name, shallow=False
+                ):
                     warnings.warn(
                         f"{symlink_path} already exists and points to {os.path.realpath(symlink_path)}\n"
-                        + f"Skip {target_path} which seems to have different contents", stacklevel=2
+                        + f"Skip {target_path} which seems to have different contents",
+                        stacklevel=2,
                     )
                 continue
 

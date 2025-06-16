@@ -11,12 +11,17 @@ import pytest
 from elftools.elf.elffile import ELFFile
 
 
-@pytest.mark.parametrize("zip_name, arch", [("deploy_linux_arm64.zip", "AArch64"), ("deploy_linux_x86_64.zip", "x64")])
+@pytest.mark.parametrize(
+    "zip_name, arch",
+    [("deploy_linux_arm64.zip", "AArch64"), ("deploy_linux_x86_64.zip", "x64")],
+)
 def test_elf_dynamic_libraries_in_deployment_zip(zip_name, arch):
     dynamic_libraries_re = re.compile(".*\\.so$")
     dynamic_libraries = []
     with zipfile.ZipFile(zip_name) as zip_file:
-        for dynamic_library_name in [name for name in zip_file.namelist() if dynamic_libraries_re.match(name)]:
+        for dynamic_library_name in [
+            name for name in zip_file.namelist() if dynamic_libraries_re.match(name)
+        ]:
             with zip_file.open(dynamic_library_name) as dynamic_library:
                 elf = ELFFile(dynamic_library)
                 assert elf.elfclass == 64
@@ -46,7 +51,10 @@ def test_elf_dynamic_libraries_in_deployment_zip(zip_name, arch):
 
 @pytest.mark.parametrize("name", ["deploy_linux_arm64", "deploy_linux_x86_64"])
 def test_python_path(name):
-    with zipfile.ZipFile(name + ".zip") as zip_file, open(name + ".zip.json") as json_file:
+    with (
+        zipfile.ZipFile(name + ".zip") as zip_file,
+        open(name + ".zip.json") as json_file,
+    ):
         zipped_names = zip_file.namelist()
         deployment_environment = json.load(json_file)
 
@@ -62,11 +70,16 @@ def test_python_path(name):
     assert "__main__.py" in zipped_names
 
 
-@pytest.mark.parametrize("zip_name", ["default.zip", "host.zip", f"deploy_{sys.platform}_{platform.machine()}.zip"])
+@pytest.mark.parametrize(
+    "zip_name",
+    ["default.zip", "host.zip", f"deploy_{sys.platform}_{platform.machine()}.zip"],
+)
 def test_python_zip(zip_name):
     zip_path = pathlib.Path(zip_name)
     if not zip_name.startswith("deploy_") or zip_path.exists():
-        result = subprocess.run([sys.executable, os.fspath(zip_path.resolve())], stdout=subprocess.PIPE)
+        result = subprocess.run(
+            [sys.executable, os.fspath(zip_path.resolve())], stdout=subprocess.PIPE
+        )
         assert result.returncode == 0
 
         stdout = result.stdout.decode()
