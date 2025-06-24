@@ -17,7 +17,7 @@ Minimum requirements:
 To import `ofiuco` in your project, you first need to add it to your `MODULE.bazel` file
 
 ```python
-bazel_dep(name = "rules_python", version = "1.4.0")
+bazel_dep(name = "rules_python", version = "1.4.1")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.13")

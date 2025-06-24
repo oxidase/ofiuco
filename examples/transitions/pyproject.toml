@@ -6,7 +6,7 @@ authors = []
 
 [tool.poetry.dependencies]
 python = "^3.11"
-numpy = "^1.24.3"
+numpy = "^2.3"
 pyelftools = "^0.29"
 
 [tool.poetry.group.dev.dependencies]
