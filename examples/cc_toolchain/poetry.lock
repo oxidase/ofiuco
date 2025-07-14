@@ -27,14 +27,14 @@ files = [
 
 [[package]]
 name = "evdev"
-version = "1.7.1"
+version = "1.9.2"
 description = "Bindings to the Linux input handling subsystem"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.8"
 groups = ["main"]
 markers = "sys_platform == \"linux\""
 files = [
-    {file = "evdev-1.7.1.tar.gz", hash = "sha256:0c72c370bda29d857e188d931019c32651a9c1ea977c08c8d939b1ced1637fde"},
+    {file = "evdev-1.9.2.tar.gz", hash = "sha256:5d3278892ce1f92a74d6bf888cc8525d9f68af85dbe336c95d1c87fb8f423069"},
 ]
 
 [[package]]
@@ -69,13 +69,13 @@ i18n = ["Babel (>=2.7)"]
 
 [[package]]
 name = "llama-cpp-python"
-version = "0.3.5"
+version = "0.3.12"
 description = "Python bindings for the llama.cpp library"
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
-    {file = "llama_cpp_python-0.3.5.tar.gz", hash = "sha256:f5ce47499d53d3973e28ca5bdaf2dfe820163fa3fb67e3050f98e2e9b58d2cf6"},
+    {file = "llama_cpp_python-0.3.12.tar.gz", hash = "sha256:0c977101a46ce6fa363e63a0b33413f29deab9772be24a6c551458fc386f4725"},
 ]
 
 [package.dependencies]
@@ -289,5 +289,5 @@ files = [
 
 [metadata]
 lock-version = "2.1"
-python-versions = "^3.11"
-content-hash = "abc42b7dfefda6f1601e83ed4eaec5d0758f01f3a09db842e19cf4c21dec5147"
+python-versions = "^3.12"
+content-hash = "ffbcea4519278fd7b113cf830e26d18e0ced0be5907439e162329aa6e94c699c"

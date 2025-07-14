@@ -72,7 +72,6 @@ class TestInstallSubcommand(unittest.TestCase):
             build_file = buffer.getvalue()
 
         assert re.search(r'deps\s*=\s*\[\s*":apache-airflow@2.7.2",\s*":apache-airflow@3.0.1",\s*]', build_file)
-        print(build_file.count(":apache-airflow-task-sdk"))
         assert build_file.count(":apache-airflow-core") == 1, f"{build_file.count(':apache-airflow-core') = }"
         assert build_file.count(":apache-airflow-task-sdk") == 2, f"{build_file.count(':apache-airflow-task-sdk') = }"
 

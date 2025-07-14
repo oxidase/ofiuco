@@ -19,7 +19,8 @@ def test_sys_path():
 
 def test_host_binary_path():
     def hash(path):
-        return hashlib.sha256(open(sys.executable, "rb").read()).hexdigest()
+        with open(sys.executable, "rb") as handle:
+            return hashlib.sha256(handle.read()).hexdigest()
 
     process_binary = Path(sys.executable)
     host_binary = shutil.which(process_binary.name)

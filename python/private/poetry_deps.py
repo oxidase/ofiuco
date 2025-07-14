@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+import string
 import sys
 import warnings
 from pathlib import Path
@@ -50,8 +51,8 @@ cc_cpu_to_cmake_args = {
 }
 
 
-def join(flags):
-    return " ".join([flag for flag in flags if flag])
+def join(flags, substitutions):
+    return string.Template(" ".join([flag for flag in flags if flag])).safe_substitute(substitutions)
 
 
 def filter_cxx_builtin_include_directories(flags):
@@ -127,7 +128,6 @@ def install(args):
     install_args += [
         f"--target={output_path}",
         "--prefer-binary",
-        "--no-compile",
         "--no-dependencies",
         "--disable-pip-version-check",
         "--use-pep517",
@@ -139,7 +139,6 @@ def install(args):
         ]
     else:
         install_args += [
-            # "--no-build-isolation",
             "--no-clean",
         ]
 
@@ -167,17 +166,26 @@ def install(args):
         cflags = cpu_flags + filter_cxx_builtin_include_directories(cc.get("CFLAGS", []))
         cxxflags = cpu_flags + cc.get("CXXFLAGS", [])
         ldflags = ["-Wl,-rpath,{}".format(cc.get("dynamic_runtime_solib_dir", ""))] + cc.get("LDFLAGS", [])
+        flags_substitution = {"PWD": os.getcwd()}
         flags = dict(
-            ASMFLAGS=join(asflags),
-            ASFLAGS=join(asflags),
-            CFLAGS=join(cflags),
-            CXXFLAGS=join(cxxflags),
-            LDFLAGS=join(ldflags),
-            CMAKE_ARGS=join(cc_cpu_to_cmake_args.get(cpu, []) + ["-DCMAKE_VERBOSE_MAKEFILE=ON"]),
+            ASMFLAGS=join(asflags, flags_substitution),
+            ASFLAGS=join(asflags, flags_substitution),
+            CFLAGS=join(cflags, flags_substitution),
+            CXXFLAGS=join(cxxflags, flags_substitution),
+            LDFLAGS=join(ldflags, flags_substitution),
+            CMAKE_ARGS=join(cc_cpu_to_cmake_args.get(cpu, []) + ["-DCMAKE_VERBOSE_MAKEFILE=ON"], flags_substitution),
         )
 
         os.environ.update(flags)
         os.environ.update({k: os.fspath(Path(cc[v]).resolve()) for k, v in paths.items() if v in cc})
+
+        # Add Python-specific variables defined in sysconfig
+        # python3 -c "import sysconfig; print(sysconfig, sysconfig.get_config_var('LDCXXSHARED'))"
+        os.environ["LDSHARED"] = f"{os.environ['LD']} {os.environ['LDFLAGS']}"
+        os.environ["LDCXXSHARED"] = f"{os.environ['LD']} {os.environ['LDFLAGS']}"
+
+    # Set temporary build directory to the current sandbox
+    os.environ["TMPDIR"] = os.getcwd()
 
     if retcode := install_command.main(install_args + get_platform_args(args)):
         logging.error(f"pip install returned {retcode}")

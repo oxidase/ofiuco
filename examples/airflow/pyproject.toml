@@ -7,7 +7,9 @@ requires-python = ">=3.11,<4"
 license = "Apache-2.0"
 dependencies = [
     "apache-airflow",
+    "types-requests",
 ]
 
 [tool.poetry.group.dev.dependencies]
 pytest = {version = "^7.2", "python" = ">=3.7"}
+google-re2 = {path = "re2/python", develop = false}

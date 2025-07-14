@@ -7,6 +7,7 @@ def _poetry_impl(module_ctx):
                 name = attr.name,
                 lock = attr.lock,
                 toml = attr.toml,
+                deps = attr.deps,
                 generate_extras = attr.generate_extras,
                 platforms = attr.platforms,
             )
@@ -19,6 +20,7 @@ poetry = module_extension(
                 "name": attr.string(mandatory = True),
                 "lock": attr.label(mandatory = True),
                 "toml": attr.label(),
+                "deps": attr.string_list_dict(),
                 "generate_extras": attr.bool(default = True),
                 "platforms": attr.string_dict(),
             },

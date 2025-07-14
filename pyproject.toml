@@ -1,32 +1,37 @@
 [project]
 name = "ofiuco"
 version = "0.5.0"
-maintainers = [{name = "Michael Krasnyk", email = "michael.krasnyk@gmail.com"}]
-readme = "README.md"
 description = "Bazel tools for Python and package managers"
-requires-python = ">=3.12,<4.0"
+readme = "README.md"
 license = "Apache-2.0"
+maintainers = [ { name = "Michael Krasnyk", email = "michael.krasnyk@gmail.com" } ]
+requires-python = ">=3.12,<4.0"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
 dependencies = [
-    "poetry",
+  "poetry",
 ]
 
 [tool.ruff]
 line-length = 120
+extend-exclude = [ "examples/airflow/re2" ]
 
-[tool.ruff.lint]
-select = [
-    "E", # pycodestyle
-    "F", # Pyflakes
-    "UP", # pyupgrade
-    "B", # flake8-bugbear
-    "SIM", # flake8-simplify
-    "I", # isort
+lint.select = [
+  "B",   # flake8-bugbear
+  "E",   # pycodestyle
+  "F",   # Pyflakes
+  "I",   # isort
+  "SIM", # flake8-simplify
+  "UP",  # pyupgrade
 ]
 
 [tool.isort]
 default_section = "FIRSTPARTY"
 include_trailing_comma = true
-known_first_party = []
+known_first_party = [  ]
 known_third_party = [
   "boto3",
   "elftools",
@@ -43,7 +48,3 @@ skip = [
   "bazel-out",
   "bazel-testlogs",
 ]
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"

@@ -1,13 +1,20 @@
 import sys
 import tomllib
 
+import pendulum
 import pytest
-from airflow.version import version
 from packaging.markers import Marker
+
+# Monkey-patch pendulum.tz.timezone to be a function for airflow v2 and a module for airflow v3
+UTC = pendulum.tz.timezone.UTC
+pendulum.tz.timezone = lambda _: UTC
+pendulum.tz.timezone.UTC = UTC
+
+from airflow.version import version  # noqa: E402
 
 
 def test_airflow_version():
-    with open("poetry.lock", "rb") as poetry_lock:
+    with open("lock/poetry.lock", "rb") as poetry_lock:
         dependencies = tomllib.load(poetry_lock)
     locked_version = next(
         (

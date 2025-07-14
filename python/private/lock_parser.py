@@ -46,6 +46,7 @@ class Package:
     files: list[str, str] = field(default_factory=list)
     markers: str = ""
     dependencies: dict[str, Any] = field(default_factory=dict)
+    extra_dependencies: list[str] = field(default_factory=list)
     extras: dict[str, list[str]] = field(default_factory=dict)
     source: Source | None = None
     develop: bool = False
@@ -75,7 +76,7 @@ class Package:
 
         if source.get("type") == SourceType.directory:
             # Resolve relative paths to system local paths (remote cache poisoning alert)
-            source["url"] = os.fspath(project_root / source["url"])
+            source["url"] = os.fspath((project_root / source["url"]).resolve())
 
         return Package(
             name=package.get("name"),
@@ -85,7 +86,7 @@ class Package:
             markers=package.get("markers", ""),
             files={entry["file"]: entry["hash"] for entry in package.get("files", [])},
             extras=package.get("extras", {}),
-            source=package.get("source", {}),
+            source=source,
             develop=package.get("develop", False),
         )
 
@@ -106,23 +107,32 @@ py_library(
         sep = "\n  "
         attr_sep = "," + sep
         markers = {name: attr["markers"] for name, attr in self.dependencies.items() if "markers" in attr}
+        dependencies = [f":{name}" for name in sorted(set(self.dependencies))] + sorted(set(self.extra_dependencies))
 
         attrs = {
             "constraint": [f'"{self.constraint}"'] if self.constraint else [],
             "description": [f'"""{self.description}"""'] if self.description else [],
             "files": (
-                ["{", *(f'  "{name}": "{value}",' for name, value in self.files.items()), "}"] if self.files else []
+                [
+                    "{",
+                    *(f'  "{name}": "{value}",' for name, value in self.files.items()),
+                    "}",
+                ]
+                if self.files
+                else []
             ),
-            "deps": (
-                ["[", *(f'  ":{name}",' for name in sorted(set(self.dependencies))), "]"] if self.dependencies else []
-            ),
-            "markers": [f'"""{self._escape(json.dumps(markers))}"""'] if markers else [],
+            "deps": (["[", *(f'  "{name}",' for name in dependencies), "]"] if dependencies else []),
+            "markers": ([f'"""{self._escape(json.dumps(markers))}"""'] if markers else []),
             "platforms": (
-                ["{", *(f"""  "{name}": '''{value}''',""" for name, value in platforms.items()), "}"]
+                [
+                    "{",
+                    *(f"""  "{name}": '''{value}''',""" for name, value in platforms.items()),
+                    "}",
+                ]
                 if platforms
                 else []
             ),
-            "source": [f'"""{self._escape(json.dumps(self.source))}"""'] if self.source else [],
+            "source": ([f'"""{self._escape(json.dumps(self.source))}"""'] if self.source else []),
             "develop": ["True"] if self.develop else [],
         }
 
@@ -146,25 +156,26 @@ def remove_cycles(dependency_graph, path, u, removed_edges):
             remove_cycles(dependency_graph, path + [u], v, removed_edges)
 
 
-def parse_poetry_lock(lock_file, platforms, generate_extras, project_root):
+def parse_poetry_lock(lock_file, platforms, generate_extras, extra_deps, project_root):
     # Collect packages
     with lock_file.open("rb") as lock_handle:
         conf = tomllib.load(lock_handle)
     locked_packages = [Package.from_lock(package, project_root) for package in conf.get("package", [])]
 
-    # Process packages
+    # Process packages by first grouping by package names
     packages = []
     name_getter = attrgetter("name")
     for name, group in itertools.groupby(sorted(locked_packages, key=name_getter), key=name_getter):
         if len(named_group := list(group)) == 1:
+            # If package name is unique then add package directly to the list
             packages.extend(named_group)
         else:
-            # Update packages names and add to packages list
+            # If package name is ambiguous then append to the package name the version and add package to the list
             for sub_package in named_group:
                 sub_package.name = f"{sub_package.name}@{sub_package.version}"
             packages.extend(named_group)
 
-            # Create a meta-package with the original name and dependencies list
+            # Create a meta-package with the original name and dependencies list with disambiguated names
             packages.append(
                 Package(
                     name=name,
@@ -173,7 +184,7 @@ def parse_poetry_lock(lock_file, platforms, generate_extras, project_root):
                 )
             )
 
-    # Find edges which form dependency cycles
+    # Find back edges which form dependency cycles
     removed_edges = defaultdict(set)
     dependency_graph = {
         package.name: sorted(set(package.dependencies.keys())) for package in sorted(packages, key=name_getter)
@@ -181,11 +192,22 @@ def parse_poetry_lock(lock_file, platforms, generate_extras, project_root):
     for start in dependency_graph:
         remove_cycles(dependency_graph, [], start, removed_edges)
 
-    # Remove edges
+    # Remove back edges to break dependency cycles
     for package in packages:
         package.dependencies = {
             name: attr for name, attr in package.dependencies.items() if name not in removed_edges[package.name]
         }
+
+    # Append extra dependencies to packages
+    for package in packages:
+        if extra_deps and (extra := extra_deps.get(package.name)):
+            if isinstance(extra, str):
+                package.extra_dependencies.append(extra)
+            elif isinstance(extra, list):
+                package.extra_dependencies.extend(extra)
+
+        if (type_shadow := f"types-{package.name}") in dependency_graph:
+            package.dependencies[type_shadow] = {}
 
     # Print packages
     sys.stdout.write("".join(package.repr(platforms, generate_extras) for package in packages))
@@ -196,6 +218,7 @@ def main(argv=None):
 
     parser.add_argument("input_file", type=Path, help="Path to the lock file")
     parser.add_argument("platforms", nargs="?", type=json.loads, help="JSON string with platforms definitions")
+    parser.add_argument("--deps", type=json.loads, help="JSON string of extra dependencies")
     parser.add_argument("--generate_extras", dest="generate_extras", action="store_true")
     parser.add_argument("--nogenerate_extras", dest="generate_extras", action="store_false")
     parser.add_argument("--project_file", type=Path)
@@ -204,7 +227,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     project_root = args.project_file.resolve().parent if args.project_file else Path()
-    parse_poetry_lock(args.input_file, args.platforms, args.generate_extras, project_root)
+    parse_poetry_lock(args.input_file, args.platforms, args.generate_extras, args.deps, project_root)
 
 
 if __name__ == "__main__":

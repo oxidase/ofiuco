@@ -78,8 +78,10 @@ class TestInstallSubcommand(unittest.TestCase):
     def test_wrong_python_version(self):
         args = InstallArgs()
         args.python_version = "x"
-        with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output, \
-             self.assertRaisesRegex(SystemExit, "^2$"):
+        with (
+            tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output,
+            self.assertRaisesRegex(SystemExit, "^2$"),
+        ):
             main.install(args)
 
     def test_no_download_with_source_url(self):
@@ -125,10 +127,12 @@ class TestInstallSubcommand(unittest.TestCase):
                 assert "torch==2.1.0.dev20230902" in requirements
                 assert "macosx_11_0_arm64" not in requirements
 
-        with patch("pip._internal.commands.install.InstallCommand", InstallCommand), \
-             tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output:
-                retcode = main.install(args)
-                self.assertEqual(retcode, 0)
+        with (
+            patch("pip._internal.commands.install.InstallCommand", InstallCommand),
+            tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output,
+        ):
+            retcode = main.install(args)
+            self.assertEqual(retcode, 0)
 
     def test_get_data(self):
         args = InstallArgs()
