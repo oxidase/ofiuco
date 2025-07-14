@@ -2,6 +2,7 @@ load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_skylib//lib:versions.bzl", "versions")
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@ofiuco_defs//:defs.bzl", _python_host_runtime = "python_host_runtime", _python_toolchain_prefix = "python_toolchain_prefix", _python_version = "python_version")
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@rules_python//python:defs.bzl", "PyInfo", "PyRuntimeInfo")
 load("@rules_python//python:versions.bzl", _MINOR_MAPPING = "MINOR_MAPPING")
 load("//python:markers.bzl", "evaluate", "parse")
@@ -17,15 +18,10 @@ load("//python:markers.bzl", "evaluate", "parse")
 # of CandidateEvaluator.compute_best_candidate.
 DEFAULT_PLATFORMS = {
     "aarch64-apple-darwin": """{"os_name": "posix", "platform_machine": "arm64", "platform_system": "Darwin", "platform_tags": ["macosx_11_0_arm64", "macosx_12_0_arm64", "macosx_13_0_arm64", "macosx_14_0_arm64"], "sys_platform": "darwin"}""",
-
     "aarch64-unknown-linux-gnu": """{"os_name": "posix", "platform_machine": "arm64", "platform_system": "Linux", "platform_tags": ["manylinux_2_17_arm64", "manylinux_2_17_aarch64", "manylinux_2_27_aarch64", "manylinux_2_28_aarch64"], "sys_platform": "linux"}""",
-
     "x86_64-apple-darwin": """{"os_name": "posix", "platform_machine": "x86_64", "platform_system": "Darwin", "platform_tags": ["macosx_10_13_x86_64", "macosx_10_15_x86_64"], "sys_platform": "darwin"}""",
-
     "x86_64-pc-windows-msvc": """{"os_name": "nt", "platform_machine": "x86_64", "platform_system": "Windows", "platform_tags": ["win_amd64"], "sys_platform": "win32"}""",
-
     "x86_64-unknown-linux-gnu": """{"os_name": "posix", "platform_machine": "x86_64", "platform_system": "Linux", "platform_tags": ["linux_x86_64", "manylinux2014_x86_64", "manylinux_2_12_x86_64", "manylinux_2_17_x86_64", "manylinux_2_27_x86_64", "manylinux_2_28_x86_64"], "sys_platform": "linux"}""",
-
     "x86_64-unknown-linux-musl": """{"os_name": "posix", "platform_machine": "x86_64", "platform_system": "Linux", "platform_tags": ["musllinux_1_2_x86_64"], "sys_platform": "linux"}""",
 }
 
@@ -91,6 +87,9 @@ def get_tool(ctx, cc_toolchain, feature_configuration, action_name):
     )
     return binary, flags
 
+def _format_library_link(lib):
+    return "-L$PWD/{} -l{}".format(paths.dirname(lib), paths.split_extension(paths.basename(lib))[0].removeprefix("lib"))
+
 def _package_impl(ctx):
     """
     Rule to install a Python package.
@@ -111,6 +110,9 @@ def _package_impl(ctx):
     Required toolchains:
          @bazel_tools//tools/python:toolchain_type
     """
+
+    # CC compilation arguments
+    static_linking = True
 
     # Get Python target toolchain and corresponding tags
     py_toolchain = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"]
@@ -166,6 +168,7 @@ def _package_impl(ctx):
     # Get CC target toolchain and propagate to the installation script
     cc_toolchain = ctx.toolchains["@bazel_tools//tools/cpp:toolchain_type"]
     if cc_toolchain and hasattr(cc_toolchain, "cc") and type(cc_toolchain.cc) != "string":
+        # Toolchain deps
         cc = cc_toolchain.cc
         feature_configuration = cc_common.configure_features(
             ctx = ctx,
@@ -180,21 +183,55 @@ def _package_impl(ctx):
         cc_attr["CC"], cc_attr["CFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.c_compile)
         cc_attr["CXX"], cc_attr["CXXFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.cpp_compile)
         cc_attr["LD"], cc_attr["LDFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.cpp_link_dynamic_library)
+
+        # CcInfo dependencies
+        cc_deps = [dep for dep in ctx.attr.deps if CcInfo in dep]
+
+        # Compilation context
+        cc_deps_headers = [dep[CcInfo].compilation_context.headers for dep in cc_deps]
+        cc_deps_cflags = \
+            ["-I$PWD/{}".format(path) for dep in cc_deps for path in dep[CcInfo].compilation_context.includes.to_list()] + \
+            ["-I$PWD/{}".format(path) for dep in cc_deps for path in dep[CcInfo].compilation_context.framework_includes.to_list()] + \
+            ["-I$PWD/{}".format(path) for dep in cc_deps for path in dep[CcInfo].compilation_context.framework_includes.to_list()] + \
+            ["-iquote $PWD/{}".format(path) for dep in cc_deps for path in dep[CcInfo].compilation_context.quote_includes.to_list()] + \
+            ["-isystem $PWD/{}".format(path) for dep in cc_deps for path in dep[CcInfo].compilation_context.system_includes.to_list()] + \
+            ["-D{}".format(define) for dep in cc_deps for define in dep[CcInfo].compilation_context.defines.to_list()]
+
+        # Linking context
+        cc_deps_linker_inputs = depset(transitive = [dep[CcInfo].linking_context.linker_inputs for dep in cc_deps], order = "topological")
+        cc_deps_libraries = \
+            [lib.dynamic_library or lib.static_library for inputs in cc_deps_linker_inputs.to_list() for lib in inputs.libraries] + \
+            [file for file in py_runtime_info.files.to_list() if paths.basename(file.path).startswith("libpython3") and not file.path.endswith("libpython3.so")]
+        cc_deps_ldflags = ["-Wl,-rpath,{} $PWD/{}".format(paths.dirname(file.short_path), file.path) for file in cc_deps_libraries if file]
+
+        # Add to flags tranitive dependencies
+        cc_attr["CFLAGS"] = cc_attr["CFLAGS"] + cc_deps_cflags
+        cc_attr["CXXFLAGS"] = cc_attr["CXXFLAGS"] + cc_deps_cflags
+        cc_attr["LDFLAGS"] = cc_attr["LDFLAGS"] + cc_deps_ldflags
+
+        # Pack transitive depenedencies
+        inputs = depset(cc_deps_libraries, transitive = [install_inputs, cc.all_files, py_runtime_info.files] + cc_deps_headers)
+
+        # Generates CC toolchain argument
         arguments.append("--cc_toolchain=" + json.encode(cc_attr))
 
-        install_inputs = depset(transitive = [install_inputs, cc.all_files])
+    # Execution requirements
+    execution_requirements = {
+        "requires-network": "",  # required for wheels downloading
+        "local": "",  # required for builds
+    }
 
     # Run wheel installation
     ctx.actions.run(
         outputs = [output, entry_points],
-        inputs = install_inputs,
+        inputs = inputs,
         mnemonic = "InstallWheel",
         progress_message = "Installing package {} ({}) for Python {} {}".format(ctx.label.name, ctx.attr.constraint, python_version, runtime_tag),
         arguments = arguments,
         use_default_shell_env = True,
         executable = poetry_deps_runtime_info.interpreter.path,
         tools = poetry_deps_runfiles,
-        execution_requirements = {"requires-network": ""},
+        execution_requirements = execution_requirements,
     )
 
     # Create output information providers

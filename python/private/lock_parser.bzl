@@ -10,14 +10,18 @@ def _parse_lock_impl(rctx):
     prefix = '''{header}\n\nload("{name}//python/private:poetry_deps.bzl", "package")'''.format(header = header, name = rules_repository)
 
     interpreter = rctx.path(rctx.attr._python_host)
+    rctx.watch(rctx.attr.lock)
+    rctx.watch(rctx.attr._lock_parser)
+
     exec_result = rctx.execute([
         interpreter,
         rctx.path(rctx.attr._lock_parser),
         rctx.path(rctx.attr.lock),
         json.encode(rctx.attr.platforms),
         "--{}generate_extras".format("" if rctx.attr.generate_extras else "no"),
-        "--project_file={}".format(rctx.path(rctx.attr.toml) if rctx.attr.toml else ""),
-    ])
+    ] + (["--deps={}".format(json.encode(rctx.attr.deps))] if rctx.attr.deps else [])
+      + (["--project_file={}".format(rctx.path(rctx.attr.toml))] if rctx.attr.toml else []))
+
     if exec_result.return_code:
         fail("Parsing {} failed with exit code {}\n{}\n".format(rctx.attr.lock, exec_result.return_code, exec_result.stderr))
 
@@ -33,6 +37,9 @@ parse_lock = repository_rule(
         "toml": attr.label(
             allow_single_file = True,
             doc = "pyproject file",
+        ),
+        "deps": attr.string_list_dict(
+            doc = "dictionary of extra dependency labels per Python package name",
         ),
         "generate_extras": attr.bool(
             default = True,

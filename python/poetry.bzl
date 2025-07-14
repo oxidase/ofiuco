@@ -44,6 +44,7 @@ if __name__ == "__main__":
     # TODO: make locker independent from user configuration
     # https://python-poetry.org/docs/configuration/#config-directory
     os.environ["POETRY_CONFIG_DIR"] = os.path.join(os.getcwd(), "pypoetry")
+    os.environ["PROJECT_ROOT"] = os.fspath(project_dir)
 
     lock_process = Process(target=lock, args=(project_dir, lock_file))
     lock_process.start()

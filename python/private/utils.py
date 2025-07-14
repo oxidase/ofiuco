@@ -12,10 +12,9 @@ def populate_symlink_tree(source, target, skip_set=None):
         in_package_directory = Path(os.path.relpath(directory_path, source))
         target_directory = target / in_package_directory
         target_directory.mkdir(parents=True, exist_ok=True)
-        if source.is_absolute():
-            relative_directory = Path(directory_path)
-        else:
-            relative_directory = Path(os.path.relpath(directory_path, target_directory))
+        relative_directory = (
+            Path(directory_path) if source.is_absolute() else Path(os.path.relpath(directory_path, target_directory))
+        )
 
         for file_name in file_names:
             if skip_set and in_package_directory / file_name in skip_set:
@@ -27,7 +26,8 @@ def populate_symlink_tree(source, target, skip_set=None):
                 if not filecmp.cmp(symlink_path, Path(directory_path) / file_name, shallow=False):
                     warnings.warn(
                         f"{symlink_path} already exists and points to {os.path.realpath(symlink_path)}\n"
-                        + f"Skip {target_path} which seems to have different contents", stacklevel=2
+                        + f"Skip {target_path} which seems to have different contents",
+                        stacklevel=2,
                     )
                 continue
 

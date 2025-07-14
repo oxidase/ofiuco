@@ -1,22 +1,24 @@
 load("@ofiuco//python:poetry.bzl", "poetry_update")
 load("@rules_python//python:defs.bzl", "py_test")
 
-
 [py_test(
     name = "test_{}".format(python_version),
     size = "large",
     srcs = ["test.py"],
+    data = ["lock/poetry.lock"],
     main = "test.py",
-    data = ["poetry.lock"],
+    python_version = python_version,
     deps = [
         "@poetry//:apache-airflow",
         "@poetry//:pytest",
     ],
-    python_version = python_version
-) for python_version in ["3.12"]]
+) for python_version in [
+    "3.12",
+    "3.13",
+]]
 
 poetry_update(
     name = "update_lock",
-    lock = "poetry.lock",
+    lock = "lock/poetry.lock",
     toml = "pyproject.toml",
 )
