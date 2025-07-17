@@ -218,7 +218,6 @@ def _package_impl(ctx):
     # Execution requirements
     execution_requirements = {
         "requires-network": "",  # required for wheels downloading
-        "local": "",  # required for builds
     }
 
     # Run wheel installation
