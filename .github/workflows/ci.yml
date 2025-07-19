@@ -16,8 +16,14 @@ jobs:
         include: # TODO: windows-latest
           - os: ubuntu-latest
             cache: ~/.cache/bazel
+            install: |
+              sudo apt-get update
+              sudo apt-get install -y postgresql postgresql-contrib
           - os: macos-latest
             cache: /private/var/tmp/_bazel_runner
+            install: |
+              brew update
+              brew install postgresql
 
     steps:
       - name: Mount bazel cache
@@ -26,6 +32,9 @@ jobs:
           path: ${{ matrix.cache }}
           key: bazel-${{ matrix.os }}
           restore-keys: bazel-${{ matrix.os }}
+
+      - name: Install dependencies
+        run: ${{ matrix.install }}
 
       - name: Checkout code
         uses: actions/checkout@v3

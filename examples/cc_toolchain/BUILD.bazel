@@ -8,6 +8,7 @@ py_test(
     data = ["poetry.lock"],
     deps = [
         "@poetry//:llama-cpp-python",
+        "@poetry//:psycopg",
         "@poetry//:pytest",
     ] + select({
         "@platforms//os:linux": ["@poetry//:evdev"],
