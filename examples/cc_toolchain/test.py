@@ -2,6 +2,7 @@ import sys
 import tomllib
 
 import llama_cpp
+import psycopg
 import pytest
 from llama_cpp.llama_cpp import _base_path as base_path
 from llama_cpp.llama_cpp import _lib as llama_lib
@@ -31,6 +32,10 @@ def test_evdev():
     import evdev
 
     assert evdev
+
+
+def test_psycopg():
+    assert psycopg
 
 
 if __name__ == "__main__":

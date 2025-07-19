@@ -1,7 +1,8 @@
 services:
   ofiuco:
-    # apt update && apt install -y python3 git
-    image: katre/bazelisk
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: ofiuco
     platform: linux/amd64
     cap_add:
@@ -16,5 +17,8 @@ services:
       - ${HOME}/.netrc:/home/fsw-dev/.netrc:ro
       - ${HOME}/.ssh:/home/fsw-dev/.ssh:ro
       - ${HOME}/foss:${HOME}/foss
+      - ofiuco-cache:/home/fsw-dev/.cache
     working_dir: ${PWD}
-    entrypoint: sleep infinity
+
+volumes:
+  ofiuco-cache:
