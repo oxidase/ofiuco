@@ -1,0 +1,52 @@
+bazel_dep(name = "bazel_skylib", version = "1.8.1")
+bazel_dep(name = "catch2", version = "3.10.0")
+bazel_dep(name = "fmt", version = "11.2.0.bcr.1")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_cc", version = "0.2.4")
+bazel_dep(name = "rules_python", version = "1.6.1")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(python_version = "3.13")
+use_repo(python, "python_3_13")
+
+bazel_dep(name = "ofiuco", version = "0.0.0")
+local_path_override(
+    module_name = "ofiuco",
+    path = "../..",
+)
+
+poetry = use_extension("@ofiuco//python:extensions.bzl", "poetry")
+poetry.parse(
+    name = "poetry",
+    lock = "//:poetry.lock",
+    toml = "pyproject.toml",
+    build_files = {
+        "numpy": """package(default_visibility = ["//visibility:public"])
+
+filegroup(
+    name="whl",
+    srcs = glob(["**/*"], exclude = ["target/**", "tests/**", "**/__pycache__/**", "*.egg-info/**"]),
+)
+
+cc_library(
+    name = "lib",
+    hdrs = glob(["numpy/_core/include/**"]),
+    includes = [
+        "numpy/_core/include",
+    ],
+)"""
+    })
+use_repo(poetry, "poetry")
+use_repo(poetry, "numpy-2.3.1-cp313-cp313-manylinux_2_28_aarch64")
+use_repo(poetry, "numpy-2.3.1-cp313-cp313-manylinux_2_28_x86_64")
+use_repo(poetry, "numpy-2.3.1-cp313-cp313-macosx_14_0_arm64")
+
+
+git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+git_repository(
+    name = "nanobind",
+    remote = "https://github.com/wjakob/nanobind",
+    commit = "953554ea1a32a42a9a98a76ea465a179af261bee",
+    build_file = "nanobind.BUILD.bazel",
+    recursive_init_submodules = True,
+)

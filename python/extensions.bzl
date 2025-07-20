@@ -1,8 +1,9 @@
 load("@ofiuco//python:lock_parser.bzl", "parse_lock")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@ofiuco_defs//:defs.bzl", _python_host = "python_host")
+load("@ofiuco//lib:defs.bzl", "lib")
 
 
 def _poetry_impl(mctx):
@@ -23,7 +24,7 @@ def _poetry_impl(mctx):
                 platforms = attr.platforms,
             )
 
-            # Create external repositories for Pyhton packages
+            # Create external repositories for Python packages
             interpreter = mctx.path(attr._python_host)
             result = mctx.execute([
                 interpreter,
@@ -37,28 +38,29 @@ def _poetry_impl(mctx):
 
 
             for file in json.decode(result.stdout):
-                if file["kind"] == "http_archive" or file["kind"] == "http_whl_package":
+                name = file["name"]
+                _, build_file = lib.prefix_lookup(attr.build_files, name, file["build_file"])
+                if file["kind"] == "http_archive":
                     http_archive(
-                        name = file["name"],
+                        name = name,
                         url = file["url"],
                         sha256 = file.get("sha256"),
                         strip_prefix = file.get("strip_prefix"),
-                        build_file_content = file["build_file"],
-                        # Ref: https://peps.python.org/pep-0427/
-                        type = "zip" if file["kind"] == "http_whl_package" else "",
+                        type = file.get("type"),
+                        build_file_content = build_file,
                     )
-                elif file["kind"] == "new_local_repository":
+                elif file["kind"] == "local_repository":
                     new_local_repository(
-                        name=file["name"],
+                        name=name,
                         path=file["path"],
-                        build_file_content=file["build_file"],
+                        build_file_content=build_file,
                     )
-                elif file["kind"] == "new_git_repository":
-                    new_git_repository(
-                        name=file["name"],
+                elif file["kind"] == "git_repository":
+                    git_repository(
+                        name=name,
                         remote=file["remote"],
                         commit=file["commit"],
-                        build_file_content=file["build_file"],
+                        build_file_content=build_file,
                     )
 
 

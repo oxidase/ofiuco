@@ -33,4 +33,4 @@ def test_airflow_version():
 
 
 if __name__ == "__main__":
-    sys.exit(pytest.main(sys.argv))
+    sys.exit(pytest.main(sys.argv + ["-W", "ignore::DeprecationWarning"]))

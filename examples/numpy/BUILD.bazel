@@ -1,0 +1,75 @@
+load("@bazel_skylib//lib:selects.bzl", "selects")
+load("@ofiuco//python:poetry.bzl", "poetry_update")
+load("@rules_python//python:defs.bzl", "py_test")
+load("@rules_cc//cc:defs.bzl", "cc_test")
+load("@ofiuco//python:cc_py_library.bzl", "cc_py_library")
+
+selects.config_setting_group(
+    name = "linux_aarch64",
+    match_all = [
+        "@platforms//os:linux",
+        "@platforms//cpu:aarch64",
+    ],
+)
+
+selects.config_setting_group(
+    name = "linux_x86_64",
+    match_all = [
+        "@platforms//os:linux",
+        "@platforms//cpu:x86_64",
+    ],
+)
+
+selects.config_setting_group(
+    name = "osx_aarch64",
+    match_all = [
+        "@platforms//os:osx",
+        "@platforms//cpu:aarch64",
+    ],
+)
+
+alias(
+    name =  "numpy",
+    actual = select({
+        ":linux_aarch64": "@numpy-2.3.1-cp313-cp313-manylinux_2_28_aarch64//:lib",
+        ":linux_x86_64": "@numpy-2.3.1-cp313-cp313-manylinux_2_28_x86_64//:lib",
+        ":osx_aarch64": "@numpy-2.3.1-cp313-cp313-macosx_14_0_arm64//:lib",
+    }),
+)
+
+cc_test(
+    name = "test",
+    srcs = ["test.cpp"],
+    deps = [
+        ":numpy",
+        "@catch2//:catch2_main",
+        "@poetry//:numpy",
+        "@rules_python//python/cc:current_py_cc_headers",
+        "@rules_python//python/cc:current_py_cc_libs",
+    ],
+)
+
+poetry_update(
+    name = "update_lock",
+    lock = "poetry.lock",
+    toml = "pyproject.toml",
+)
+
+cc_py_library(
+    name = "nanobind_example",
+    srcs = ["nanobind_example.cpp"],
+    deps = [
+        "@nanobind",
+        "@fmt",
+    ],
+)
+
+py_test(
+    name = "test_bindings",
+    srcs = ["test_bindings.py"],
+    deps = [
+        ":nanobind_example",
+        "@poetry//:numpy",
+        "@poetry//:pytest",
+    ]
+)

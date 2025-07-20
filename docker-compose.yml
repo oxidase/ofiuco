@@ -19,6 +19,7 @@ services:
       - ${HOME}/foss:${HOME}/foss
       - ofiuco-cache:/home/fsw-dev/.cache
     working_dir: ${PWD}
+    entrypoint: sleep infinity
 
 volumes:
   ofiuco-cache:

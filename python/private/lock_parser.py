@@ -206,7 +206,6 @@ class Package:
                 wheel_targets = {parts["platform"]: wheel_target for _, parts, wheel_target in wheels_list}
                 wheels[condition] = get_best_match(wheel_targets, glibc=(2, 31), musl=(1, 1))
 
-        sys.stdout.write(f"# {wheels = }\n")
         if any_platform := next((target for condition, target in wheels.items() if condition.endswith("any")), None):
             return [any_platform]
 
@@ -372,10 +371,10 @@ async def read_package_files(package):
     # Get files from a server with Simple API
     # Ref: https://packaging.python.org/en/latest/specifications/simple-repository-api/#
     index_url = "https://pypi.org/simple"
-    build_file = """filegroup(
+    build_file = """package(default_visibility = ["//visibility:public"])
+filegroup(
     name="{kind}",
     srcs = glob(["**/*"], exclude = ["target/**", "tests/**", "**/__pycache__/**", "*.egg-info/**"]),
-    visibility=["//visibility:public"],
 )"""
 
     urls = {}
@@ -394,7 +393,7 @@ async def read_package_files(package):
             case SourceType.directory:
                 return [
                     dict(
-                        kind="new_local_repository",
+                        kind="local_repository",
                         name=package.name,
                         path=package.source.url,
                         build_file=build_file.format(kind="pkg"),
@@ -404,7 +403,7 @@ async def read_package_files(package):
             case SourceType.git:
                 return [
                     dict(
-                        kind="new_git_repository",
+                        kind="git_repository",
                         name=package.name,
                         remote=package.source.url,
                         commit=package.source.resolved_reference or package.source.reference,
@@ -427,11 +426,12 @@ async def read_package_files(package):
     repositories = [
         # Binary wheels
         dict(
-            kind="http_whl_package",
+            kind="http_archive",
             name=name,
             url=urls[sha256],
             sha256=sha256,
             build_file=build_file.format(kind="whl"),
+            type="zip",  # Ref: https://peps.python.org/pep-0427/
         )
         for name, sha256 in package.wheels.items()
     ] + [
