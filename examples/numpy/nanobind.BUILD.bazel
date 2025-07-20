@@ -1,0 +1,12 @@
+package(default_visibility = ["//visibility:public"])
+
+cc_library(
+    name = "nanobind",
+    srcs = glob(["src/**/*.cpp", "src/**/*.h", "ext/robin_map/include/tsl/*.h"], exclude=["src/nb_combined.cpp"]),
+    hdrs = glob(["include/nanobind/**"]),
+    includes = ["include", "src", "ext/robin_map/include"],
+    deps = [
+        "@rules_python//python/cc:current_py_cc_headers",
+        "@rules_python//python/cc:current_py_cc_libs",
+    ]
+)

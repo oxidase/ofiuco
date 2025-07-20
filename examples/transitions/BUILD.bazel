@@ -1,4 +1,4 @@
-load("@ofiuco//lib:defs.bzl", "py_zip")
+load("@ofiuco//lib:defs.bzl", "lib")
 load("@rules_python//python:defs.bzl", "py_binary", "py_test")
 load(":cc_toolchain_config.bzl", "cc_toolchain_config")
 load(":transitions.bzl", "py_binary_linux_x86_64")
@@ -77,18 +77,18 @@ py_binary(
     ],
 )
 
-py_zip(
+lib.py_zip(
     name = "default.zip",
     target = ":app",
 )
 
-py_zip(
+lib.py_zip(
     name = "deploy_darwin_arm64.zip",
     platform = ":darwin_arm64",
     target = ":app",
 )
 
-py_zip(
+lib.py_zip(
     name = "deploy_linux_arm64.zip",
     platform = ":linux_arm64",
     target = ":app",
@@ -111,7 +111,7 @@ py_binary_linux_x86_64(
     binary = ":app",
 )
 
-py_zip(
+lib.py_zip(
     name = "deploy_linux_x86_64.zip",
     target = ":app_linux_x86_64",
 )

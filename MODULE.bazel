@@ -1,16 +1,16 @@
 module(
     name = "ofiuco",
     version = "0",
-    bazel_compatibility = [">=7.0.0"],
+    bazel_compatibility = [">=8.0.0"],
     compatibility_level = 1,
 )
 
 bazel_dep(name = "bazel_skylib", version = "1.8.1")
 bazel_dep(name = "platforms", version = "1.0.0")
-bazel_dep(name = "rules_cc", version = "0.2.2")
-bazel_dep(name = "rules_python", version = "1.5.1")
+bazel_dep(name = "rules_cc", version = "0.2.4")
+bazel_dep(name = "rules_python", version = "1.6.1")
 bazel_dep(name = "rules_shell", version = "0.6.0")
-bazel_dep(name = "rules_rust", version = "0.63.0")
+bazel_dep(name = "rules_rust", version = "0.64.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.defaults(python_version = "3.13")
