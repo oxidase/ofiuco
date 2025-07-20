@@ -82,15 +82,15 @@ internal_definitions_repo = repository_rule(
     },
 )
 
-def install_dependencies(toolchain_prefix, python_version, auth_patterns = {}, netrc = ""):
+def install_dependencies(python_host, python_version, auth_patterns = {}, netrc = ""):
     prefix = "ofiuco_"
 
     internal_definitions_repo(
         name = prefix + "defs",
         # Ref: https://github.com/bazelbuild/rules_python/blob/084b877c/python/repositories.bzl#L653-L658
-        python_host = "@{name}_host//:python".format(name = toolchain_prefix),
+        python_host = python_host,
         python_version = python_version,
-        python_toolchain_prefix = toolchain_prefix.split("_3_")[0],
+        python_toolchain_prefix = python_host.strip("@").split("_3_")[0],
     )
 
     for (name, url, sha256, patches) in _INTERNAL_DEPS:
@@ -125,7 +125,7 @@ py_library(
     poetry_deps_repo(
         name = prefix + "poetry_deps",
         output = "site-packages",
-        python_host = "@{name}_host//:python".format(name = toolchain_prefix),
+        python_host = python_host,
         deps = [
             "@{}pip//:BUILD.bazel".format(prefix),
         ],
