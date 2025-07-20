@@ -34,7 +34,7 @@ local_repository(
 
 load("@ofiuco//python:repositories.bzl", install_poetry_dependencies = "install_dependencies")
 
-install_poetry_dependencies("copperhead_3_13", "3.13")
+install_poetry_dependencies("@copperhead_3_13_host//:python", "3.13")
 
 load("@ofiuco//python:lock_parser.bzl", "parse_lock")
 

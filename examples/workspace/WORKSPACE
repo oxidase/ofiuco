@@ -21,7 +21,7 @@ local_repository(
 
 load("@ofiuco//python:repositories.bzl", install_poetry_dependencies = "install_dependencies")
 
-install_poetry_dependencies("black_mamba", "3.11")
+install_poetry_dependencies("@black_mamba_host//:python", "3.11")
 
 load("@ofiuco//python:lock_parser.bzl", "parse_lock")
 
