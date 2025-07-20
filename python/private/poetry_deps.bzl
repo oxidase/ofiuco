@@ -185,7 +185,7 @@ def _package_impl(ctx):
         cc_attr["LD"], cc_attr["LDFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.cpp_link_dynamic_library)
 
         # CcInfo dependencies
-        cc_deps = [dep for dep in ctx.attr.deps if CcInfo in dep]
+        cc_deps = [dep for dep in ctx.attr.deps if CcInfo in dep] + [ctx.attr._libpython]
 
         # Compilation context
         cc_deps_headers = [dep[CcInfo].compilation_context.headers for dep in cc_deps]
@@ -199,9 +199,7 @@ def _package_impl(ctx):
 
         # Linking context
         cc_deps_linker_inputs = depset(transitive = [dep[CcInfo].linking_context.linker_inputs for dep in cc_deps], order = "topological")
-        cc_deps_libraries = \
-            [lib.dynamic_library or lib.static_library for inputs in cc_deps_linker_inputs.to_list() for lib in inputs.libraries] + \
-            [file for file in py_runtime_info.files.to_list() if paths.basename(file.path).startswith("libpython3") and not file.path.endswith("libpython3.so")]
+        cc_deps_libraries =[lib.dynamic_library or lib.static_library for inputs in cc_deps_linker_inputs.to_list() for lib in inputs.libraries]
         cc_deps_ldflags = ["-Wl,-rpath,{} $PWD/{}".format(paths.dirname(file.short_path), file.path) for file in cc_deps_libraries if file]
 
         # Add to flags tranitive dependencies
@@ -233,14 +231,26 @@ def _package_impl(ctx):
         execution_requirements = execution_requirements,
     )
 
-    # Create output information providers
+    # Create output information providers CcInfo and PyInfo
     deps = [dep for dep in ctx.attr.deps if include_dep(dep, ctx.attr.markers, tags)]
+
+    # PyInfo
     transitive_imports = [get_imports(dep) for dep in deps]
     transitive_depsets = [get_transitive_sources(dep) for dep in deps]
     files = depset([output], transitive = transitive_depsets)
     imports = depset([output.short_path.replace("../", "")], transitive = transitive_imports)
+
+    # CcInfo
+    compilation_context = cc_common.create_compilation_context(
+        headers = files,
+        includes = depset([
+            paths.join(output.path, "numpy/_core/include"),
+        ]),
+    )
+
     return [
         DefaultInfo(files = depset([output, entry_points]), runfiles = ctx.runfiles(transitive_files = files)),
+        CcInfo(compilation_context = compilation_context),
         PyInfo(transitive_sources = files, imports = imports),
     ]
 
@@ -262,6 +272,7 @@ package = rule(
                   "https://github.com/bazelbuild/rules_python/blob/23cf6b66/python/versions.bzl#L231-L277",
         ),
         "system_platform": attr.string(doc = "The system platform environment markers as a JSON string"),
+        "_libpython": attr.label(default = "@rules_python//python/cc:current_py_cc_libs"),
         "_poetry_deps": attr.label(default = ":poetry_deps", cfg = "exec", executable = True),
         "_python_host": attr.label(default = _python_host_runtime),
     },
