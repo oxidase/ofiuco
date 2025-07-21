@@ -4,6 +4,7 @@ import tomllib
 import llama_cpp
 import psycopg
 import pytest
+import radix
 from llama_cpp.llama_cpp import _base_path as base_path
 from llama_cpp.llama_cpp import _lib as llama_lib
 from llama_cpp.llama_cpp import _lib_base_name as lib_base_name
@@ -36,6 +37,14 @@ def test_evdev():
 
 def test_psycopg():
     assert psycopg
+
+
+def test_radix():
+    rtree = radix.Radix()
+    rnode = rtree.add("10.0.0.0/8")
+    rnode.data["blah"] = "whatever you want"
+
+    assert rtree.search_exact("10.0.0.0/8").data["blah"] == "whatever you want"
 
 
 if __name__ == "__main__":
