@@ -10,6 +10,7 @@ py_test(
         "@poetry//:llama-cpp-python",
         "@poetry//:psycopg",
         "@poetry//:pytest",
+        "@poetry//:py-radix",
     ] + select({
         "@platforms//os:linux": ["@poetry//:evdev"],
         "//conditions:default": [],

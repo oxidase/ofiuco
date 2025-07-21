@@ -11,6 +11,7 @@ evdev = [
   { platform = "linux", version = "^1.7.1" },
 ]
 psycopg = { extras = [ "c" ], version = "^3.2.9" }
+py-radix = "^0.10.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = { version = "^7.2", "python" = ">=3.7" }

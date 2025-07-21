@@ -5,4 +5,5 @@ build --deleted_packages=examples/simple,examples/torch,examples/transitions,exa
 build --enable_runfiles
 build --incompatible_default_to_explicit_init_py
 build --incompatible_autoload_externally=
+build --incompatible_no_implicit_file_export
 test --test_output=errors
