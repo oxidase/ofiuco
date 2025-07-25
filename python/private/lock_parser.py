@@ -156,6 +156,14 @@ def remove_cycles(dependency_graph, path, u, removed_edges):
             remove_cycles(dependency_graph, path + [u], v, removed_edges)
 
 
+def find_unique_name(names, suffix):
+    possible_collisions = {name for name in names if name.endswith(suffix)}
+    name = suffix
+    while name in possible_collisions:
+        name = "_" + name
+    return name
+
+
 def parse_poetry_lock(lock_file, platforms, generate_extras, extra_deps, project_root):
     # Collect packages
     with lock_file.open("rb") as lock_handle:
@@ -208,6 +216,16 @@ def parse_poetry_lock(lock_file, platforms, generate_extras, extra_deps, project
 
         if (type_shadow := f"types-{package.name}") in dependency_graph:
             package.dependencies[type_shadow] = {}
+
+    # Generate synthetic targets
+    # :_*all contains all packages unconditionally
+    all_packages = [package.name for package in packages if "@" not in package.name]
+    packages.append(
+        Package(
+            name=find_unique_name(all_packages, "all"),
+            dependencies={package: {} for package in all_packages},
+        )
+    )
 
     # Print packages
     sys.stdout.write("".join(package.repr(platforms, generate_extras) for package in packages))
