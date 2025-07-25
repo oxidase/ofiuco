@@ -6,7 +6,7 @@ import re
 import tempfile
 import unittest
 
-from python.private.lock_parser import main
+from python.private.lock_parser import find_unique_name, main
 
 
 class TestInstallSubcommand(unittest.TestCase):
@@ -72,8 +72,13 @@ class TestInstallSubcommand(unittest.TestCase):
             build_file = buffer.getvalue()
 
         assert re.search(r'deps\s*=\s*\[\s*":apache-airflow@2.7.2",\s*":apache-airflow@3.0.1",\s*]', build_file)
-        assert build_file.count(":apache-airflow-core") == 1, f"{build_file.count(':apache-airflow-core') = }"
-        assert build_file.count(":apache-airflow-task-sdk") == 2, f"{build_file.count(':apache-airflow-task-sdk') = }"
+        assert build_file.count(":apache-airflow-core") == 2, f"{build_file.count(':apache-airflow-core') = }"
+        assert build_file.count(":apache-airflow-task-sdk") == 3, f"{build_file.count(':apache-airflow-task-sdk') = }"
+
+    def test_find_unique_name(self):
+        assert find_unique_name(["a", "b", "b", "c"], "d") == "d"
+        assert find_unique_name(["a", "b", "b", "c"], "b") == "_b"
+        assert find_unique_name(["a", "b", "_b", "c"], "_b") == "__b"
 
 
 if __name__ == "__main__":

@@ -40,10 +40,23 @@ py_library(
     name = "mylib",
     srcs = ["mylib.py"],
     deps = [
-        "@poetry//:package"
+        "@poetry//:package1",
+        "@poetry//:package2",
     ]
 )
 ```
+or to include all Python dependencies you can use `:all` synthetic target as
+```python
+py_library(
+    name = "mylib",
+    srcs = ["mylib.py"],
+    deps = [
+        "@poetry//:all",
+    ]
+)
+```
+
+If `all` is a legit package name then the synthetic target will have one or more underscores to disambiguate names.
 
 
 ### Update lock files
