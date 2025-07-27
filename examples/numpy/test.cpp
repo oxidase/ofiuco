@@ -3,8 +3,38 @@
 #include <numpy/arrayobject.h>
 #include <iostream>
 
-int main() {
-  Py_Initialize();
+
+void init_python(void)
+{
+    PyStatus status;
+
+    PyConfig config;
+    PyConfig_InitIsolatedConfig(&config);
+
+    /* Set the program name. Implicitly preinitialize Python. */
+    status = PyConfig_SetString(&config, &config.program_name, PYTHONHOME);
+    if (PyStatus_Exception(status)) {
+        goto exception;
+    }
+
+    status = Py_InitializeFromConfig(&config);
+    if (PyStatus_Exception(status)) {
+        goto exception;
+    }
+    PyConfig_Clear(&config);
+    return;
+
+exception:
+    PyConfig_Clear(&config);
+    Py_ExitStatusException(status);
+}
+
+int main()
+{
+  char cwd[PATH_MAX];
+  printf("Current working directory: %s\n",   getcwd(cwd, sizeof(cwd)));
+  init_python();
+
     // import_array();  // Required to use NumPy C API
 
     // // Create a 2x2 matrix: [[1, 2], [2, 1]]
@@ -60,6 +90,6 @@ int main() {
     // Py_DECREF(linalg);
     // Py_DECREF(array);
 
-  //Py_Finalize();
-    return 0;
+  Py_Finalize();
+  return 0;
 }

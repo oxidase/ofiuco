@@ -120,6 +120,7 @@ def _package_impl(ctx):
     runtime_tag, tags = derive_environment_markers(py_runtime_info.interpreter.path, ctx.attr.platforms, ctx.attr.system_platform)
     python_version = tags["python_version"]
     platform_tags = tags["platform_tags"]
+    python_home = paths.join(paths.dirname(py_runtime_info.interpreter.short_path), "..", "lib", "python{version}".format(version=python_version))
 
     if not ctx.attr.constraint:
         # Virtual package does not require installation and only by-passes selected transitive dependencies
@@ -195,7 +196,8 @@ def _package_impl(ctx):
             ["-I$PWD/{}".format(path) for dep in cc_deps for path in dep[CcInfo].compilation_context.framework_includes.to_list()] + \
             ["-iquote $PWD/{}".format(path) for dep in cc_deps for path in dep[CcInfo].compilation_context.quote_includes.to_list()] + \
             ["-isystem $PWD/{}".format(path) for dep in cc_deps for path in dep[CcInfo].compilation_context.system_includes.to_list()] + \
-            ["-D{}".format(define) for dep in cc_deps for define in dep[CcInfo].compilation_context.defines.to_list()]
+            ["-D{}".format(define) for dep in cc_deps for define in dep[CcInfo].compilation_context.defines.to_list()] + \
+            ["-DPYTHONHOME={}".format(python_home)]
 
         # Linking context
         cc_deps_linker_inputs = depset(transitive = [dep[CcInfo].linking_context.linker_inputs for dep in cc_deps], order = "topological")
@@ -237,15 +239,18 @@ def _package_impl(ctx):
     # PyInfo
     transitive_imports = [get_imports(dep) for dep in deps]
     transitive_depsets = [get_transitive_sources(dep) for dep in deps]
-    files = depset([output], transitive = transitive_depsets)
+    files = depset([output], transitive = transitive_depsets + [py_runtime_info.files])
     imports = depset([output.short_path.replace("../", "")], transitive = transitive_imports)
 
     # CcInfo
+    print(imports)
+    print(dir(py_runtime_info.files))
     compilation_context = cc_common.create_compilation_context(
         headers = files,
         includes = depset([
             paths.join(output.path, "numpy/_core/include"),
         ]),
+        defines = depset(['PYTHONHOME=L"{}"'.format(python_home)],)
     )
 
     return [
