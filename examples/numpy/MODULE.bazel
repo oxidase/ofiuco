@@ -1,0 +1,22 @@
+bazel_dep(name = "rules_python", version = "1.5.1")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(python_version = "3.13")
+use_repo(python, "python_3_13")
+
+bazel_dep(name = "ofiuco", version = "0.0.0")
+local_path_override(
+    module_name = "ofiuco",
+    path = "../..",
+)
+
+poetry = use_extension("@ofiuco//python:extensions.bzl", "poetry")
+poetry.parse(
+    name = "poetry",
+    lock = "//:poetry.lock",
+    toml = "pyproject.toml",
+)
+use_repo(poetry, "poetry")
+
+bazel_dep(name = "rules_cc", version = "0.1.4")
+bazel_dep(name = "catch2", version = "3.8.1")
