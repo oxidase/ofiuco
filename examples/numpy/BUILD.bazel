@@ -2,11 +2,43 @@ load("@ofiuco//python:poetry.bzl", "poetry_update")
 load("@rules_python//python:defs.bzl", "py_test")
 load("@rules_cc//cc:defs.bzl", "cc_test")
 
+
+filegroup(
+    name = "numpy_c_sources",
+    srcs = [
+        "@poetry//:numpy",
+    ],
+
+    #     glob([
+    #     "**/*.c",
+    #     "**/*.h",
+    # ]),
+    visibility = ["//visibility:private"],
+)
+
+
+cc_library(
+    name = "numpy",
+    hdrs = [
+        "@poetry//:numpy",
+
+    ],
+    includes = [
+        "numpy/_core/include",
+    ],
+    deps = [
+        "@poetry//:numpy",
+        "@rules_python//python/cc:current_py_cc_headers",
+        "@rules_python//python/cc:current_py_cc_libs",
+    ],
+)
+
 cc_test(
     name = "test",
     srcs = ["test.cpp"],
     deps = [
-        "@poetry//:numpy",
+        "@catch2",
+        ":numpy",
         "@rules_python//python/cc:current_py_cc_headers",
         "@rules_python//python/cc:current_py_cc_libs",
     ],

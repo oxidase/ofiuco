@@ -19,3 +19,4 @@ poetry.parse(
 use_repo(poetry, "poetry")
 
 bazel_dep(name = "rules_cc", version = "0.1.4")
+bazel_dep(name = "catch2", version = "3.8.1")

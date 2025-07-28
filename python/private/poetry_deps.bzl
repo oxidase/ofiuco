@@ -120,7 +120,6 @@ def _package_impl(ctx):
     runtime_tag, tags = derive_environment_markers(py_runtime_info.interpreter.path, ctx.attr.platforms, ctx.attr.system_platform)
     python_version = tags["python_version"]
     platform_tags = tags["platform_tags"]
-    python_home = paths.join(paths.dirname(py_runtime_info.interpreter.short_path), "..", "lib", "python{version}".format(version=python_version))
 
     if not ctx.attr.constraint:
         # Virtual package does not require installation and only by-passes selected transitive dependencies
@@ -186,7 +185,7 @@ def _package_impl(ctx):
         cc_attr["LD"], cc_attr["LDFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.cpp_link_dynamic_library)
 
         # CcInfo dependencies
-        cc_deps = [dep for dep in ctx.attr.deps if CcInfo in dep] + [ctx.attr._libpython]
+        cc_deps = [dep for dep in ctx.attr.deps if CcInfo in dep] + ctx.attr._libpython
 
         # Compilation context
         cc_deps_headers = [dep[CcInfo].compilation_context.headers for dep in cc_deps]
@@ -196,8 +195,7 @@ def _package_impl(ctx):
             ["-I$PWD/{}".format(path) for dep in cc_deps for path in dep[CcInfo].compilation_context.framework_includes.to_list()] + \
             ["-iquote $PWD/{}".format(path) for dep in cc_deps for path in dep[CcInfo].compilation_context.quote_includes.to_list()] + \
             ["-isystem $PWD/{}".format(path) for dep in cc_deps for path in dep[CcInfo].compilation_context.system_includes.to_list()] + \
-            ["-D{}".format(define) for dep in cc_deps for define in dep[CcInfo].compilation_context.defines.to_list()] + \
-            ["-DPYTHONHOME={}".format(python_home)]
+            ["-D{}".format(define) for dep in cc_deps for define in dep[CcInfo].compilation_context.defines.to_list()]
 
         # Linking context
         cc_deps_linker_inputs = depset(transitive = [dep[CcInfo].linking_context.linker_inputs for dep in cc_deps], order = "topological")
@@ -243,14 +241,15 @@ def _package_impl(ctx):
     imports = depset([output.short_path.replace("../", "")], transitive = transitive_imports)
 
     # CcInfo
-    print(imports)
-    print(dir(py_runtime_info.files))
     compilation_context = cc_common.create_compilation_context(
         headers = files,
         includes = depset([
             paths.join(output.path, "numpy/_core/include"),
         ]),
-        defines = depset(['PYTHONHOME=L"{}"'.format(python_home)],)
+        defines = depset([
+            'PYTHON_PROGRAM_NAME=L"{}"'.format(py_runtime_info.interpreter.short_path),
+            'PYTHON_PATH=L"{}"'.format(":".join(["../" + path for path in imports.to_list()]))
+        ])
     )
 
     return [
@@ -277,7 +276,10 @@ package = rule(
                   "https://github.com/bazelbuild/rules_python/blob/23cf6b66/python/versions.bzl#L231-L277",
         ),
         "system_platform": attr.string(doc = "The system platform environment markers as a JSON string"),
-        "_libpython": attr.label(default = "@rules_python//python/cc:current_py_cc_libs"),
+        "_libpython": attr.label_list(default = [
+            "@rules_python//python/cc:current_py_cc_headers",
+            "@rules_python//python/cc:current_py_cc_libs",
+        ]),
         "_poetry_deps": attr.label(default = ":poetry_deps", cfg = "exec", executable = True),
         "_python_host": attr.label(default = _python_host_runtime),
     },
