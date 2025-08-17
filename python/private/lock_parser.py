@@ -1,21 +1,127 @@
 import argparse
+import asyncio
+import html.parser
 import itertools
 import json
 import os
 import re
 import sys
 import tomllib
+import urllib
+import urllib.parse
+import urllib.request
 from collections import defaultdict
 from dataclasses import dataclass, field
 from enum import StrEnum, auto
-from operator import attrgetter
+from operator import attrgetter, itemgetter
 from pathlib import Path
 from typing import Any
 
+NEW_ISSUE_URL = "https://github.com/oxidase/ofiuco/issues/new"
+TODO_MESSAGE = f"TODO: raise new issue at {NEW_ISSUE_URL} for adding support of {{}}"
 VISIBILITY = """visibility = ["//visibility:public"]"""
-SEMVER_REGEXP = re.compile(
-    r"^(?P<major>\d+)(?:\.(?P<minor>\d+))?(?:\.(?P<patch>\d+))?(?:\.(?P<rev>\d+))?(?:(?P<pre>[0-9A-Za-z\-.]+))?(?:\+(?P<build>[0-9A-Za-z\-.]+))?$"
+
+# Python Versioning
+# References:
+# [Versioning](https://packaging.python.org/en/latest/discussions/versioning/)
+SEMVER_RE = re.compile(
+    r"^(?P<major>\d+)"
+    r"(?:\.(?P<minor>\d+))?"
+    r"(?:\.(?P<patch>\d+))?"
+    r"(?:\.(?P<rev>\d+))?"
+    r"(?:(?P<pre>[0-9A-Za-z\-.]+))?"
+    r"(?:\+(?P<build>[0-9A-Za-z\-.]+))?$"
 )
+
+# Binary distribution format file name convention
+# References:
+# [Binary distribution format](https://packaging.python.org/en/latest/specifications/binary-distribution-format/#file-name-convention)
+# [PEP 425 – Compatibility Tags for Built Distributions](https://peps.python.org/pep-0425/)
+# [PEP 427 – The Wheel Binary Package Format 1.0](https://peps.python.org/pep-0427/)
+WHEEL_RE = re.compile(
+    r"^(?P<distribution>[^-]+)"
+    r"-(?P<version>[^-]+)"
+    r"(?:-(?P<build_tag>[^-]+))?"
+    r"-(?P<python_tag>[^-]+)"
+    r"-(?P<abi_tag>[^-]+)-"
+    r"(?P<platform>.+)?$"
+)
+
+WHEEL_PLATFORM_MACOSX_RE = re.compile(r"^macosx_(?P<major>\d+)_(?P<minor>\d+)_(?P<arch>.+)$")
+WHEEL_PLATFORM_MUSLLINUX_RE = re.compile(r"^musllinux_(?P<major>\d+)_(?P<minor>\d+)_(?P<arch>.+)$")
+WHEEL_PLATFORM_MANYLINUX_RE = re.compile(
+    r"^manylinux(?:(?P<legacy>\d+))?(?:_(?P<major>\d+)_(?P<minor>\d+))?_(?P<arch>[^.]+)$"
+)
+WHEEL_PLATFORM_RE = re.compile(
+    r"^(?P<os>(linux|manylinux|musllinux|macosx|ios|win))"
+    r"(?P<version>(.+))"
+    r"(?P<arch>(aarch(32|64)|arm(64(_32|e)?|v[0-9]l?)?|cortex-r(52|82)|i[36]86|mips64|ppc(32|64([bl]e)?)?|riscv(32|64)|s390x|x86_(32|64)))$"
+)
+
+MACOSX_VERSIONS = [
+    (10, 9),  # Mavericks
+    (10, 10),  # Yosemite
+    (10, 11),  # El Capitan
+    (10, 12),  # Sierra
+    (10, 13),  # High Sierra
+    (10, 14),  # Mojave
+    (10, 15),  # Catalina
+    (11, 0),  # Big Sur
+    (12, 0),  # Monterey
+    (13, 0),  # Ventura
+    (14, 0),  # Sonoma
+    (15, 0),  # Sequoia
+    (16, 0),  # Tahoe
+]
+
+
+def normalize(name):
+    return re.sub(r"[^A-Za-z0-9._-]", "-", urllib.parse.unquote(name))
+
+
+def get_select_condition(parts):
+    if m := WHEEL_PLATFORM_RE.match(parts["platform"]):
+        arch2cpu = {"armv7l": "armv7", "i686": "x86_32"}
+        cpu = arch2cpu.get(m["arch"], m["arch"])
+        match m["os"]:
+            case "linux" | "manylinux":
+                return "{python_tag}-{abi_tag}-linux-{cpu}-glibc".format(**parts, cpu=cpu)
+            case "musllinux":
+                return "{python_tag}-{abi_tag}-linux-{cpu}-musl".format(**parts, cpu=cpu)
+
+    return "{python_tag}-{abi_tag}-{platform}".format(**parts)
+
+
+def get_best_match(wheel_targets, *, glibc, musl):
+    # Check for musllinux
+    parsed = [
+        (WHEEL_PLATFORM_MUSLLINUX_RE.match(platform), target)
+        for platforms, target in wheel_targets.items()
+        for platform in platforms.split(".")
+    ]
+    if all(m for m, _ in parsed) and len(set(m["arch"] for m, _ in parsed)) == 1:
+        versions = sorted(((int(m["major"]), int(m["minor"])), target) for m, target in parsed)
+        filtered = [target for version, target in versions if musl >= version]
+        return filtered[-1] if filtered else versions[0][1]
+
+    # Check for manylinux
+    parsed = [
+        (WHEEL_PLATFORM_MANYLINUX_RE.match(platform), target)
+        for platforms, target in wheel_targets.items()
+        for platform in platforms.split(".")
+    ]
+    if all(m for m, _ in parsed) and len(set(m["arch"] for m, _ in parsed)) == 1:
+
+        def get_glibc(d):
+            if d["legacy"]:
+                return {"2010": (2, 12), "2014": (2, 17)}.get(d["legacy"], (2, 5))
+            return (int(d["major"]), int(d["minor"]))
+
+        versions = sorted((get_glibc(m.groupdict()), target) for m, target in parsed)
+        filtered = [target for version, target in versions if glibc >= version]
+        return filtered[-1] if filtered else versions[0][1]
+
+    raise RuntimeError(TODO_MESSAGE.format(f"{wheel_targets = }"))
 
 
 class SourceType(StrEnum):
@@ -32,10 +138,10 @@ class SourceType(StrEnum):
 @dataclass
 class Source:
     type: SourceType
-    url: str
-    reference: str
-    resolved_reference: str
-    subdirectory: str
+    url: str | None = None
+    reference: str | None = None
+    resolved_reference: str | None = None
+    subdirectory: str | None = None
 
 
 @dataclass
@@ -43,7 +149,7 @@ class Package:
     name: str
     version: str | None = None
     description: str = ""
-    files: list[str, str] = field(default_factory=list)
+    files: dict[str, str] = field(default_factory=dict)
     markers: str = ""
     dependencies: dict[str, Any] = field(default_factory=dict)
     extra_dependencies: list[str] = field(default_factory=list)
@@ -51,15 +157,73 @@ class Package:
     source: Source | None = None
     develop: bool = False
 
-    def __post_init__(self):
-        assert self.name
-        self.constraint = f"{self.name}=={self.version.split('+')[0]}" if self.version is not None else None
-
     @property
     def semver(self) -> tuple[int, int, int, int]:
-        if self.version is not None and (m := re.match(SEMVER_REGEXP, self.version)) is not None:
+        if self.version is not None and (m := re.match(SEMVER_RE, self.version)) is not None:
             return (int(m["major"]), int(m["minor"] or 0), int(m["patch"] or 0), int(m["rev"] or 0))
         return (0, 0, 0, 0)
+
+    @property
+    def wheels(self) -> dict[str, str]:
+        return {k.removesuffix(".whl"): v for k, v in self.files.items() if k.endswith(".whl")}
+
+    @property
+    def sdist(self) -> dict[str, str]:
+        return {k.removesuffix(".tar.gz"): v for k, v in self.files.items() if k.endswith(".tar.gz")}
+
+    @property
+    def select(self) -> dict[str, str]:
+        if self.source and self.source.type not in {SourceType.legacy, SourceType.url}:
+            return [f'"@{self.name}//:pkg"']
+
+        # Collect wheel tags and corresponding targets
+        wheels = {}
+        condition_getter = itemgetter(0)
+        for condition, wheels_group in itertools.groupby(
+            sorted(
+                (
+                    (get_select_condition(m.groupdict()), m.groupdict(), f'"@{wheel}//:whl"')
+                    for wheel in self.wheels
+                    if (m := re.match(WHEEL_RE, wheel))
+                    and (m["python_tag"].startswith("cp") or ("py3" in m["python_tag"].split(".")))
+                ),
+                key=condition_getter,
+            ),
+            key=condition_getter,
+        ):
+            if len(wheels_list := list(wheels_group)) == 1:
+                _, parts, wheel_target = wheels_list.pop()
+                if m := WHEEL_PLATFORM_MACOSX_RE.match(parts["platform"]):
+                    # Add back-compatible select conditions for MacOS platforms
+                    minimum_major, minimum_minor, arch = int(m["major"]), int(m["minor"]), m["arch"]
+                    for major, minor in MACOSX_VERSIONS:
+                        if major > minimum_major or major == minimum_major and minor >= minimum_minor:
+                            back_compatible = f"{parts['python_tag']}-{parts['abi_tag']}-macosx_{major}_{minor}_{arch}"
+                            wheels[back_compatible] = wheel_target
+                else:
+                    wheels[condition] = wheel_target
+            else:
+                wheel_targets = {parts["platform"]: wheel_target for _, parts, wheel_target in wheels_list}
+                wheels[condition] = get_best_match(wheel_targets, glibc=(2, 31), musl=(1, 1))
+
+        sys.stdout.write(f"# {wheels = }\n")
+        if any_platform := next((target for condition, target in wheels.items() if condition.endswith("any")), None):
+            return [any_platform]
+
+        # Source distribution fallback
+        sdist = next(iter(self.sdist), None)
+        if not wheels and not sdist:
+            raise NotImplementedError(TODO_MESSAGE.format(self))
+
+        # Convert to a Starlark list of selection pairs
+        conditions = [
+            (f'"@ofiuco//python/platforms:{condition}"', wheel_target) for condition, wheel_target in wheels.items()
+        ] + [('"//conditions:default"', f'"@{sdist}//:sdist"' if sdist else None)]
+
+        if len(conditions) == 1:
+            return [conditions[0][1]]
+
+        return ["select({", *[f"  {condition}: {target}," for condition, target in conditions], "})"]
 
     @staticmethod
     def _escape(s):
@@ -71,12 +235,14 @@ class Package:
 
     @staticmethod
     def from_lock(package: dict[str, Any], project_root: Path):
-        source = package.get("source", {})
         dependencies = {Package._normalize(name): attr for name, attr in package.get("dependencies", {}).items()}
 
-        if source.get("type") == SourceType.directory:
-            # Resolve relative paths to system local paths (remote cache poisoning alert)
-            source["url"] = os.fspath((project_root / source["url"]).resolve())
+        if (source_dict := package.get("source")) is not None:
+            source = Source(**source_dict)
+            if source.type in {SourceType.directory, SourceType.file}:
+                source.url = os.fspath((project_root / source.url).resolve())
+        else:
+            source = None
 
         return Package(
             name=package.get("name"),
@@ -84,7 +250,11 @@ class Package:
             description=package.get("description", ""),
             dependencies=dependencies,
             markers=package.get("markers", ""),
-            files={entry["file"]: entry["hash"] for entry in package.get("files", [])},
+            files={
+                normalize(entry["file"]): entry["hash"].removeprefix("sha256:")
+                for entry in package.get("files", [])
+                if entry["hash"].startswith("sha256:")
+            },
             extras=package.get("extras", {}),
             source=source,
             develop=package.get("develop", False),
@@ -110,17 +280,8 @@ py_library(
         dependencies = [f":{name}" for name in sorted(set(self.dependencies))] + sorted(set(self.extra_dependencies))
 
         attrs = {
-            "constraint": [f'"{self.constraint}"'] if self.constraint else [],
             "description": [f'"""{self.description}"""'] if self.description else [],
-            "files": (
-                [
-                    "{",
-                    *(f'  "{name}": "{value}",' for name, value in self.files.items()),
-                    "}",
-                ]
-                if self.files
-                else []
-            ),
+            "package": self.select if self.version else [],
             "deps": (["[", *(f'  "{name}",' for name in dependencies), "]"] if dependencies else []),
             "markers": ([f'"""{self._escape(json.dumps(markers))}"""'] if markers else []),
             "platforms": (
@@ -132,7 +293,6 @@ py_library(
                 if platforms
                 else []
             ),
-            "source": ([f'"""{self._escape(json.dumps(self.source))}"""'] if self.source else []),
             "develop": ["True"] if self.develop else [],
         }
 
@@ -164,12 +324,140 @@ def find_unique_name(names, suffix):
     return name
 
 
-def parse_poetry_lock(lock_file, platforms, generate_extras, extra_deps, project_root):
+# Load packages from a lock file
+def load_locked_packages(lock_file, project_root):
     # Collect packages
     with lock_file.open("rb") as lock_handle:
         conf = tomllib.load(lock_handle)
-    locked_packages = [Package.from_lock(package, project_root) for package in conf.get("package", [])]
+    return [Package.from_lock(package, project_root) for package in conf.get("package", [])]
 
+
+async def get_simple_index(name, index_url):
+    """Legacy (PEP 503) and JSON-based (PEP 691) index parser."""
+    package_index_url = f"{index_url}/{name}/"
+
+    def fetch():
+        pypi_simple_mime_type = "application/vnd.pypi.simple.v1+json"
+        request = urllib.request.Request(package_index_url, headers={"Accept": pypi_simple_mime_type})
+        with urllib.request.urlopen(request) as response:
+            if response.getcode() != 200:
+                raise RuntimeError(f"Unexpected status code: {response.getcode()} for {package_index_url}")
+
+            if response.headers.get_content_type() == pypi_simple_mime_type:
+                return {
+                    sha256: url
+                    for e in json.loads(response.read()).get("files", [])
+                    if (sha256 := e.get("hashes", {}).get("sha256")) is not None and (url := e.get("url")) is not None
+                }
+
+            # Fallback to HTML index
+            urls = {}
+
+            class LinkParser(html.parser.HTMLParser):
+                SHA256_FRAGMENT_RE = re.compile(r"#sha256=([0-9a-fA-F]{64})")
+
+                def handle_starttag(self, tag, attrs):
+                    if tag == "a" and (href := dict(attrs).get("href")) and (m := self.SHA256_FRAGMENT_RE.search(href)):
+                        urls[m.group(1)] = urllib.parse.urljoin(response.geturl(), href)
+
+            html_data = response.read().decode()
+            LinkParser().feed(html_data)
+            return urls
+
+    loop = asyncio.get_running_loop()
+    return await loop.run_in_executor(None, fetch)
+
+
+async def read_package_files(package):
+    # Get files from a server with Simple API
+    # Ref: https://packaging.python.org/en/latest/specifications/simple-repository-api/#
+    index_url = "https://pypi.org/simple"
+    build_file = """filegroup(
+    name="{kind}",
+    srcs = glob(["**/*"], exclude = ["target/**", "tests/**", "**/__pycache__/**", "*.egg-info/**"]),
+    visibility=["//visibility:public"],
+)"""
+
+    urls = {}
+    if package.source is not None:
+        match package.source.type:
+            case SourceType.file:
+                return [
+                    dict(
+                        kind="http_archive",
+                        name=package.name,
+                        url=f"file://{package.source.url}",
+                        build_file=build_file.format(kind="pkg"),
+                    )
+                ]
+
+            case SourceType.directory:
+                return [
+                    dict(
+                        kind="new_local_repository",
+                        name=package.name,
+                        path=package.source.url,
+                        build_file=build_file.format(kind="pkg"),
+                    )
+                ]
+
+            case SourceType.git:
+                return [
+                    dict(
+                        kind="new_git_repository",
+                        name=package.name,
+                        remote=package.source.url,
+                        commit=package.source.resolved_reference or package.source.reference,
+                        build_file=build_file.format(kind="pkg"),
+                    )
+                ]
+
+            case SourceType.url:
+                urls = {package.files[normalize(os.path.basename(package.source.url))]: package.source.url}
+
+            case SourceType.legacy:
+                index_url = package.source.url
+
+            case _:
+                raise NotImplementedError(TODO_MESSAGE.format(package.source))
+
+    # Python packagesindex index
+    urls = urls or await get_simple_index(package.name, index_url)
+
+    repositories = [
+        # Binary wheels
+        dict(
+            kind="http_whl_package",
+            name=name,
+            url=urls[sha256],
+            sha256=sha256,
+            build_file=build_file.format(kind="whl"),
+        )
+        for name, sha256 in package.wheels.items()
+    ] + [
+        # Source distribution
+        dict(
+            kind="http_archive",
+            name=name,
+            url=urls[sha256],
+            sha256=sha256,
+            strip_prefix=name,
+            build_file=build_file.format(kind="sdist"),
+        )
+        for name, sha256 in package.sdist.items()
+    ]
+
+    return repositories
+
+
+def generate_files(locked_packages):
+    loop = asyncio.new_event_loop()
+    tasks = [loop.create_task(read_package_files(package)) for package in locked_packages]
+    repositories = [repo for result in loop.run_until_complete(asyncio.gather(*tasks)) for repo in result]
+    return json.dumps(repositories, indent=2)
+
+
+def generate_packages(locked_packages, platforms, generate_extras, extra_deps):
     # Process packages by first grouping by package names
     packages = []
     name_getter = attrgetter("name")
@@ -188,7 +476,6 @@ def parse_poetry_lock(lock_file, platforms, generate_extras, extra_deps, project
                 Package(
                     name=name,
                     dependencies={dep.name: {"markers": dep.markers} for dep in named_group},
-                    files={},
                 )
             )
 
@@ -228,7 +515,7 @@ def parse_poetry_lock(lock_file, platforms, generate_extras, extra_deps, project
     )
 
     # Print packages
-    sys.stdout.write("".join(package.repr(platforms, generate_extras) for package in packages))
+    return "".join(package.repr(platforms, generate_extras) for package in packages)
 
 
 def main(argv=None):
@@ -240,12 +527,23 @@ def main(argv=None):
     parser.add_argument("--generate_extras", dest="generate_extras", action="store_true")
     parser.add_argument("--nogenerate_extras", dest="generate_extras", action="store_false")
     parser.add_argument("--project_file", type=Path)
+    parser.add_argument("--output", type=str.lower, choices=["packages", "files"])
     parser.set_defaults(generate_extras=False)
 
     args = parser.parse_args(argv)
 
+    # Load locked data
     project_root = args.project_file.resolve().parent if args.project_file else Path()
-    parse_poetry_lock(args.input_file, args.platforms, args.generate_extras, args.deps, project_root)
+    locked_packages = load_locked_packages(args.input_file, project_root)
+
+    # Process data
+    if args.output == "files":
+        output = generate_files(locked_packages)
+    else:
+        output = generate_packages(locked_packages, args.platforms, args.generate_extras, args.deps)
+
+    # Print output
+    sys.stdout.write(output)
 
 
 if __name__ == "__main__":

@@ -1,22 +1,31 @@
+[build-system]
+build-backend = "poetry.core.masonry.api"
+requires = [ "poetry-core" ]
+
 [project]
 name = "ofiuco"
 version = "0.5.0"
-maintainers = [{name = "Michael Krasnyk", email = "michael.krasnyk@gmail.com"}]
-readme = "README.md"
 description = "Bazel tools for Python and package managers"
-requires-python = ">=3.12,<4.0"
+readme = "README.md"
 license = "Apache-2.0"
+maintainers = [ { name = "Michael Krasnyk", email = "michael.krasnyk@gmail.com" } ]
+requires-python = ">=3.12,<4.0"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
 dependencies = [
-    "myst-parser",
-    "poetry",
-    "pydantic",
-    "pytest",
-    "pyyaml",
-    "sphinx",
-    "sphinx-autobuild @ file:///Users/michael/foss/sphinx-autobuild",
-    "sphinxawesome-theme",
-    "sphinxcontrib-images @ git+https://github.com/sphinx-contrib/images",
-    "types-pyyaml",
+  "myst-parser",
+  "poetry",
+  "pydantic",
+  "pytest",
+  "pyyaml",
+  "sphinx",
+  "sphinx-autobuild",
+  "sphinxawesome-theme",
+  "sphinxcontrib-images @ git+https://github.com/sphinx-contrib/images",
+  "types-pyyaml",
 ]
 
 [tool.black]
@@ -29,7 +38,7 @@ line-length = 120
 [tool.isort]
 default_section = "FIRSTPARTY"
 include_trailing_comma = true
-known_first_party = []
+known_first_party = [  ]
 known_third_party = [
   "boto3",
   "elftools",
@@ -46,7 +55,3 @@ skip = [
   "bazel-out",
   "bazel-testlogs",
 ]
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"

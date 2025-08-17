@@ -16,19 +16,14 @@ def get_python_version():
     return ".".join(python_version_tuple()[:2])
 
 
-# TODO: add mocking six download
 class InstallArgs:
     input = "python/private/assets/six-1.16.0-py2.py3-none-any.whl"
     output = None
     platform = None
     python_version = get_python_version()
-    files = (
-        """{"six-1.16.0-py2.py3-none-any.whl": """
-        + """"sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"}"""
-    )
-    source = ""
     develop = False
     cc_toolchain = None
+    rust_toolchain = None
     entry_points = None
 
 
@@ -59,22 +54,6 @@ class TestInstallSubcommand(unittest.TestCase):
             wheels = glob.glob(f"{args.output}/six*")
             self.assertGreater(len(wheels), 0)
 
-    def test_wrong_files_hash(self):
-        args = InstallArgs()
-        files = list(json.loads(args.files).keys())
-        args.input = "six==1.16.0"
-        args.files = f"""{{"{files.pop()}":"sha256:invalid_hash"}}"""
-        with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output:
-            assert main.install(args) != 0
-
-    def test_wrong_files_keys(self):
-        args = InstallArgs()
-        list(json.loads(args.files).keys())
-        args.input = "six==1.16.0"
-        args.files = """{"x":"sha256:8abb2f1d86890a2dfb989f9a77cfcfd3e47c2a354b01111771326f8aa26e0254"}"""
-        with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output:
-            assert main.install(args) == 0
-
     def test_wrong_python_version(self):
         args = InstallArgs()
         args.python_version = "x"
@@ -104,37 +83,7 @@ class TestInstallSubcommand(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output:
             assert main.install(args) != 0
 
-    def test_source_urls(self):
-        args = InstallArgs()
-        args.input = "torch==2.1.0.dev20230902"
-        args.platform = ["linux_x86_64"]
-        args.index = ["https://download.pytorch.org/whl/cu118"]
-        args.python_version = "3.11"
-        args.source_url = [
-            "https://download.pytorch.org/whl/nightly/cpu/torch-2.1.0.dev20230902-cp311-none-macosx_11_0_arm64.whl",
-            "https://download.pytorch.org/whl/nightly/cu121/torch-2.1.0.dev20230902%2Bcu121-cp311-cp311-linux_x86_64.whl",
-        ]
-
-        class InstallCommand:
-            def __init__(self, *args, **kwargs):
-                pass
-
-            def main(self, args):
-                requirements_file = args[args.index("-r") + 1]
-                with open(requirements_file) as requirements_obj:
-                    requirements = requirements_obj.read()
-                print(requirements)
-                assert "torch==2.1.0.dev20230902" in requirements
-                assert "macosx_11_0_arm64" not in requirements
-
-        with (
-            patch("pip._internal.commands.install.InstallCommand", InstallCommand),
-            tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as args.output,
-        ):
-            retcode = main.install(args)
-            self.assertEqual(retcode, 0)
-
-    def test_get_data(self):
+    def test_cc_toolchain(self):
         args = InstallArgs()
         args.cc_toolchain = json.dumps(
             dict(
@@ -206,6 +155,40 @@ class TestInstallSubcommand(unittest.TestCase):
             '-D__TIME__="redacted"',
         ]
         self.assertEqual(len(main.filter_cxx_builtin_include_directories(cflags)), len(cflags) - 1)
+
+    def test_rust_toolchain(self):
+        args = InstallArgs()
+        rust_sysroot = "bazel-out/darwin_arm64-fastbuild-ST-a5529f9cc24b/bin/external/rules_rust++rust/rust_toolchain"
+        args.rust_toolchain = json.dumps(
+            dict(
+                CARGO=f"{rust_sysroot}/bin/cargo",
+                RUSTC=f"{rust_sysroot}/bin/rustc",
+                RUSTDOC=f"{rust_sysroot}/bin/rustdoc",
+                RUSTFMT=f"{rust_sysroot}/bin/rustfmt",
+                RUST_DEFAULT_EDITION="2021",
+                RUST_SYSROOT=rust_sysroot,
+                RUST_SYSROOT_SHORT="../rules_rust++rust+rust_macos_aarch64__aarch64-apple-darwin__stable_tools/rust_toolchain",
+            )
+        )
+
+        class InstallCommand:
+            def __init__(self, *args, **kwargs):
+                pass
+
+            def main(self, args):
+                assert "PATH" in os.environ
+                assert "CARGO_HOME" in os.environ
+                assert "RUSTUP_HOME" in os.environ
+
+                assert f"{rust_sysroot}/bin" in os.environ["PATH"]
+                return 111
+
+        with tempfile.TemporaryDirectory(prefix=f"{TEST_TMPDIR}/") as output_dir:
+            args.output = Path(output_dir)
+
+            with patch("pip._internal.commands.install.InstallCommand", InstallCommand):
+                retcode = main.install(args)
+                self.assertEqual(retcode, 111)
 
 
 if __name__ == "__main__":

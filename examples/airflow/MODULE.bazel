@@ -1,4 +1,5 @@
 bazel_dep(name = "rules_python", version = "1.5.1")
+bazel_dep(name = "rules_rust", version = "0.63.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.12")
@@ -28,7 +29,7 @@ poetry.parse(
 use_repo(poetry, "poetry")
 
 # google-re2 cc dependencies
-bazel_dep(name = "re2", version = "2025-06-26")
+bazel_dep(name = "re2", version = "2025-08-12")
 bazel_dep(name = "abseil-cpp", version = "20250512.1")
 bazel_dep(name = "pybind11_bazel", version = "2.13.6")
 

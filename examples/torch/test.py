@@ -4,15 +4,10 @@ import tomllib
 
 import colorama
 import pytest
-import sample_package
 import torch
 import torchvision
 
 LOCK_FILE = "gen/poetry.lock"
-
-
-def test_sample_package():
-    assert "Hello" in sample_package.hello()
 
 
 def test_torch_version():
@@ -49,6 +44,21 @@ def test_torchvision_version():
 
 def test_colorama_version():
     assert "dev" in colorama.__version__
+
+
+def test_sample_packages():
+    import sample_package
+
+    assert "Hello" in sample_package.hello()
+
+    print(sys.path)
+    import sample_package_flit
+
+    assert "Hello" in sample_package_flit.hello()
+
+    import sample_package_hatchling
+
+    assert "Hello" in sample_package_hatchling.hello()
 
 
 if __name__ == "__main__":

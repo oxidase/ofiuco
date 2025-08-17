@@ -1,9 +1,15 @@
 startup --windows_enable_symlinks
 common --enable_bzlmod
-query --deleted_packages=examples/simple,examples/torch,examples/transitions,examples/markers,examples/aspect_rules_py,examples/cc_toolchain,examples/workspace,examples/workspace_multi,examples/airflow
-build --deleted_packages=examples/simple,examples/torch,examples/transitions,examples/markers,examples/aspect_rules_py,examples/cc_toolchain,examples/workspace,examples/workspace_multi,examples/airflow
+query --deleted_packages=examples/simple,examples/torch,examples/transitions,examples/markers,examples/aspect_rules_py,examples/cc_toolchain,examples/airflow
+build --deleted_packages=examples/simple,examples/torch,examples/transitions,examples/markers,examples/aspect_rules_py,examples/cc_toolchain,examples/airflow
 build --enable_runfiles
+test --test_output=errors
+
+build --nolegacy_external_runfiles
 build --incompatible_default_to_explicit_init_py
 build --incompatible_autoload_externally=
 build --incompatible_no_implicit_file_export
-test --test_output=errors
+build --incompatible_config_setting_private_default_visibility
+build --incompatible_disable_starlark_host_transitions
+build --incompatible_disable_native_repo_rules
+build --incompatible_disable_autoloads_in_main_repo

@@ -39,6 +39,23 @@ class TestInstallSubcommand(unittest.TestCase):
         assert "test_file" in venv_files
         assert "test/test_file" in venv_files
         assert "requirements.txt" not in venv_files
+        assert all(file not in venv_files for file in SKIP_SET)
+
+    def test_prefix(self):
+        tmpdir = os.environ.get("TEST_TMPDIR", tempfile.gettempdir())
+        target = os.path.join(tmpdir, "venv_with_prefix")
+        prefix = os.path.join(tmpdir, "some_prefix")
+        test_package = "test_prefix"
+        os.makedirs(os.path.join(prefix, test_package, "test"))
+        with open(os.path.join(prefix, test_package, "test_file"), "w") as f:
+            f.write("test")
+
+        with self.assertRaisesRegex(RuntimeError, expected_regex=test_package):
+            main([target, test_package])
+
+        main([target, test_package, f"--prefix={prefix}"])
+        assert os.path.isdir(os.path.join(target, "test"))
+        assert os.path.islink(os.path.join(target, "test_file"))
 
 
 if __name__ == "__main__":

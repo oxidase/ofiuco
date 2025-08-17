@@ -23,14 +23,14 @@ def _py_venv_impl(ctx):
     transitive_deps = [item for dep in transitive_depsets for item in dep.to_list()]
 
     import_depsets = depset(transitive = [_get_imports(dep) for dep in deps])
-    import_paths = ["{}/external/{}".format(ctx.bin_dir.path, path) for path in import_depsets.to_list()]
+    import_paths = ["external/{}".format(path) for path in import_depsets.to_list()]
 
     ctx.actions.run(
         outputs = [output],
         inputs = transitive_deps,
         mnemonic = "CreateVenv",
         progress_message = "Creating venv {}".format(ctx.label.name),
-        arguments = [output.path] + import_paths,
+        arguments = ["--prefix={}".format(ctx.bin_dir.path), output.path] + import_paths,
         use_default_shell_env = True,
         executable = ctx.executable._py_venv,
     )

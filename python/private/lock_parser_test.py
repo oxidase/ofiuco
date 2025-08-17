@@ -6,7 +6,7 @@ import re
 import tempfile
 import unittest
 
-from python.private.lock_parser import find_unique_name, main
+from python.private.lock_parser import WHEEL_RE, find_unique_name, get_best_match, get_select_condition, main
 
 
 class TestInstallSubcommand(unittest.TestCase):
@@ -18,17 +18,23 @@ class TestInstallSubcommand(unittest.TestCase):
         with self.assertRaises(SystemExit):
             main([])
 
-    def test_sphinx_lock(self):
+    def test_sphinx_files(self):
         with io.StringIO() as buffer, contextlib.redirect_stdout(buffer):
-            main([self.sphinx_lock, "--nogenerate_extras", f"--project_file={self.sphinx_lock}"])
-            build_file = buffer.getvalue()
-
-        assert r'constraint = "zstandard==0.23.0"' in build_file
+            main([self.sphinx_lock, "--nogenerate_extras", f"--project_file={self.sphinx_lock}", "--output=files"])
+            repositories = buffer.getvalue()
         assert (
             r"zstandard-0.23.0-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl"
-            in build_file
+            in repositories
         )
-        assert r"sha256:53dd9d5e3d29f95acd5de6802e909ada8d8d8cfa37a3ac64836f3bc4bc5512db" in build_file
+        assert r"53dd9d5e3d29f95acd5de6802e909ada8d8d8cfa37a3ac64836f3bc4bc5512db" in repositories
+
+    def test_sphinx_lock(self):
+        with io.StringIO() as buffer, contextlib.redirect_stdout(buffer):
+            main([self.sphinx_lock, "--nogenerate_extras", f"--project_file={self.sphinx_lock}", "--output=packages"])
+            build_file = buffer.getvalue()
+
+        assert r"py2.py3-none-any" in build_file
+        assert r"zstandard-0.23.0-cp310-cp310-macosx_10_9_x86_64//:whl" in build_file
         assert r'{"cffi": "platform_python_implementation == \\\"PyPy\\\""}' in build_file
 
     def test_sphinx_platforms(self):
@@ -79,6 +85,75 @@ class TestInstallSubcommand(unittest.TestCase):
         assert find_unique_name(["a", "b", "b", "c"], "d") == "d"
         assert find_unique_name(["a", "b", "b", "c"], "b") == "_b"
         assert find_unique_name(["a", "b", "_b", "c"], "_b") == "__b"
+
+    def test_platform_parsing(self):
+        """Test against 'bazel query //python/platforms/...'"""
+        tests = [
+            ("MarkupSafe-3.0.2-cp310-cp310-win32", {"platform": "win32"}, "cp310-cp310-win32"),
+            ("websockets-15.0.1-cp39-cp39-win_amd64", {"platform": "win_amd64"}, "cp39-cp39-win_amd64"),
+            ("yarl-1.20.1-cp39-cp39-macosx_11_0_arm64", {}, "cp39-cp39-macosx_11_0_arm64"),
+            ("charset_normalizer-3.4.3-cp310-cp310-macosx_10_9_universal2", {}, "cp310-cp310-macosx_10_9_universal2"),
+            ("grpcio-1.74.0-cp310-cp310-linux_armv7l", {"platform": "linux_armv7l"}, "cp310-cp310-linux-armv7-glibc"),
+            ("g-1-cp39-cp39-musllinux_1_1_i686", {"platform": "musllinux_1_1_i686"}, "cp39-cp39-linux-x86_32-musl"),
+            ("nv_cu-12-py3-none-manylinux1_x86_64", {"platform": "manylinux1_x86_64"}, "py3-none-linux-x86_64-glibc"),
+            ("x-1-cp36-cp36m-manylinux2010_x86_64.manylinux_2_12_x86_64", {}, "cp36-cp36m-linux-x86_64-glibc"),
+            ("pillow-11.3.0-cp313-cp313-ios_13_0_arm64_iphoneos", {}, "cp313-cp313-ios_13_0_arm64_iphoneos"),
+        ]
+
+        for test, parts, expected in tests:
+            assert (m := WHEEL_RE.fullmatch(test)), f"{test = } does not match wheel regular expression"
+            assert parts.items() <= m.groupdict().items(), f"{parts} ⊄ {m.groupdict()}"
+            assert (actual := get_select_condition(m.groupdict())) == expected, f"'{actual}' ≠ '{expected}'"
+
+    def test_best_package(self):
+        tests = [
+            ({"musllinux_1_1_aarch64": "a", "musllinux_1_2_aarch64": "b"}, {"glibc": (2, 27), "musl": (1, 2)}, "b"),
+            (
+                {"musllinux_1_1_aarch64.musllinux_1_2_aarch64": "a", "musllinux_1_3_aarch64": "b"},
+                {"glibc": (2, 27), "musl": (1, 2)},
+                "a",
+            ),
+            (
+                {"musllinux_1_1_aarch64.musllinux_1_2_aarch64": "a", "musllinux_1_3_aarch64": "b"},
+                {"glibc": (2, 27), "musl": (1, 4)},
+                "b",
+            ),
+            (
+                {"musllinux_1_1_aarch64.musllinux_1_2_aarch64": "a", "musllinux_1_3_aarch64": "b"},
+                {"glibc": (2, 27), "musl": (1, 0)},
+                "a",
+            ),
+            (
+                {"manylinux_2_28_x86_64": "a", "manylinux2010_x86_64.manylinux_2_12_x86_64.manylinux_2_17_x86_64": "b"},
+                {"glibc": (2, 27), "musl": (1, 2)},
+                "b",
+            ),
+            ({"manylinux1_x86_64.manylinux2012_x86_64": "a"}, {"glibc": (2, 27), "musl": (1, 2)}, "a"),
+            ({"manylinux1_x86_64.manylinux1_x86_64": "a"}, {"glibc": (2, 1), "musl": (1, 2)}, "a"),
+            (
+                {"manylinux_2_28_x86_64": "a", "manylinux2014_x86_64": "b", "manylinux_2_34_x86_64": "c"},
+                {"glibc": (2, 31), "musl": (1, 2)},
+                "a",
+            ),
+            (
+                {"manylinux_2_28_x86_64": "a", "manylinux2014_x86_64": "b", "manylinux_2_34_x86_64": "c"},
+                {"glibc": (2, 14), "musl": (1, 2)},
+                "b",
+            ),
+            (
+                {"manylinux_2_28_x86_64": "a", "manylinux2014_x86_64": "b", "manylinux_2_34_x86_64": "c"},
+                {"glibc": (2, 27), "musl": (1, 2)},
+                "b",
+            ),
+            (
+                {"manylinux_2_28_x86_64": "a", "manylinux2014_x86_64": "b", "manylinux_2_34_x86_64": "c"},
+                {"glibc": (2, 34), "musl": (1, 2)},
+                "c",
+            ),
+        ]
+
+        for index, (test, kwargs, expected) in enumerate(tests):
+            assert (actual := get_best_match(test, **kwargs)) == expected, f"{actual} ≠ {expected} for {index}"
 
 
 if __name__ == "__main__":

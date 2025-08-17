@@ -26,6 +26,12 @@ jobs:
               brew install postgresql
 
     steps:
+      - name: "node-cleanup"
+        run: |
+          df -h
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h
+
       - name: Mount bazel cache
         uses: actions/cache@v4
         with:

@@ -111,9 +111,6 @@ def _package_impl(ctx):
          @bazel_tools//tools/python:toolchain_type
     """
 
-    # CC compilation arguments
-    static_linking = True
-
     # Get Python target toolchain and corresponding tags
     py_toolchain = ctx.toolchains["@bazel_tools//tools/python:toolchain_type"]
     py_runtime_info = py_toolchain.py3_runtime
@@ -121,15 +118,25 @@ def _package_impl(ctx):
     python_version = tags["python_version"]
     platform_tags = tags["platform_tags"]
 
-    if not ctx.attr.constraint:
-        # Virtual package does not require installation and only by-passes selected transitive dependencies
+    # Find the package build file
+    package_files = ctx.attr.package.files.to_list() if ctx.attr.package else []
+    package_build_file = None
+    if package_files:
+        package_build_files = [file for file in package_files if paths.basename(file.path).endswith("BUILD.bazel")]
+        package_build_file = sorted(package_build_files, reverse=True).pop()
+
+    if not ctx.attr.package or ctx.attr.package.label.name == "whl":
+        # Virtual packages or binary packages do not require installation and only by-passes to selected transitive dependencies and package files
         deps = [dep for dep in ctx.attr.deps if include_dep(dep, ctx.attr.markers, tags)]
         transitive_imports = [get_imports(dep) for dep in deps]
         transitive_depsets = [get_transitive_sources(dep) for dep in deps]
-        files = depset(transitive = transitive_depsets)
-        imports = depset([], transitive = transitive_imports)
+        files = depset(package_files, transitive = transitive_depsets)
+
+        import_path = [paths.dirname(package_build_file.short_path).replace("../", "")] if package_build_file else None
+        imports = depset(direct = import_path, transitive = transitive_imports)
+
         return [
-            DefaultInfo(runfiles = ctx.runfiles(transitive_files = files)),
+            DefaultInfo(files = depset(package_files), runfiles = ctx.runfiles(transitive_files = files)),
             PyInfo(transitive_sources = files, imports = imports),
         ]
 
@@ -139,7 +146,7 @@ def _package_impl(ctx):
     poetry_deps_runfiles = poetry_deps_info.default_runfiles.files
     poetry_deps_runtime_info = ctx.attr._python_host[PyRuntimeInfo]
 
-    install_inputs = depset(transitive = [poetry_deps_info.files, poetry_deps_runtime_info.files])
+    transitive_deps = [py_runtime_info.files, poetry_deps_info.files, poetry_deps_runtime_info.files]
 
     # Declare package output directory
     output = ctx.actions.declare_directory("{}/{}/{}".format(python_version, runtime_tag, ctx.label.name))
@@ -150,16 +157,13 @@ def _package_impl(ctx):
         "-B",
         poetry_deps_binary.path,
         "install",
-        ctx.attr.constraint,
+        paths.dirname(package_build_file.path),
         output.path,
-        "--files",
-        json.encode(ctx.attr.files),
         "--python_version",
         python_version,
         "--entry_points",
         entry_points.path,
     ]
-    arguments += ["--source={}".format(ctx.attr.source)] if ctx.attr.source else []
     arguments += ["--develop"] if ctx.attr.develop else []
 
     for platform in platform_tags:
@@ -202,22 +206,32 @@ def _package_impl(ctx):
         cc_deps_libraries = \
             [lib.dynamic_library or lib.static_library for inputs in cc_deps_linker_inputs.to_list() for lib in inputs.libraries] + \
             [file for file in py_runtime_info.files.to_list() if paths.basename(file.path).startswith("libpython3") and not file.path.endswith("libpython3.so")]
-        cc_deps_ldflags = ["-Wl,-rpath,{} $PWD/{}".format(paths.dirname(file.short_path), file.path) for file in cc_deps_libraries if file]
+        cc_deps_ldflags = ["-Wl,-rpath,{} -L$PWD/{} $PWD/{}".format(paths.dirname(file.short_path), paths.dirname(file.path), file.path) for file in cc_deps_libraries if file]
 
         # Add to flags tranitive dependencies
         cc_attr["CFLAGS"] = cc_attr["CFLAGS"] + cc_deps_cflags
         cc_attr["CXXFLAGS"] = cc_attr["CXXFLAGS"] + cc_deps_cflags
         cc_attr["LDFLAGS"] = cc_attr["LDFLAGS"] + cc_deps_ldflags
 
-        # Pack transitive depenedencies
-        inputs = depset(cc_deps_libraries, transitive = [install_inputs, cc.all_files, py_runtime_info.files] + cc_deps_headers)
+        transitive_deps += [depset(cc_deps_libraries, transitive = [cc.all_files] + cc_deps_headers)]
 
         # Generates CC toolchain argument
         arguments.append("--cc_toolchain=" + json.encode(cc_attr))
 
+    # Get Rust target toolchain and propagate to the installation script
+    rust_toolchain = ctx.toolchains["@rules_rust//rust:toolchain_type"]
+    if rust_toolchain:
+        # Generates Rust toolchain argument
+        arguments.append("--rust_toolchain=" + json.encode(rust_toolchain.make_variables.variables))
+
+        transitive_deps += [depset(transitive = [rust_toolchain.all_files])]
+
+    # Pack transitive depenedencies
+    inputs = depset(package_files, transitive = transitive_deps)
+
     # Execution requirements
     execution_requirements = {
-        "requires-network": "",  # required for wheels downloading
+        "requires-network": "",  # required for build environment setup
     }
 
     # Run wheel installation
@@ -225,7 +239,7 @@ def _package_impl(ctx):
         outputs = [output, entry_points],
         inputs = inputs,
         mnemonic = "InstallWheel",
-        progress_message = "Installing package {} ({}) for Python {} {}".format(ctx.label.name, ctx.attr.constraint, python_version, runtime_tag),
+        progress_message = "Installing package {} for Python {} {}".format(ctx.label.name, python_version, runtime_tag),
         arguments = arguments,
         use_default_shell_env = True,
         executable = poetry_deps_runtime_info.interpreter.path,
@@ -244,15 +258,16 @@ def _package_impl(ctx):
         PyInfo(transitive_sources = files, imports = imports),
     ]
 
+
+
 package = rule(
     implementation = _package_impl,
     provides = [PyInfo],
     attrs = {
-        "constraint": attr.string(doc = "The package version constraint string"),
         "deps": attr.label_list(doc = "The package dependencies list"),
+        "data": attr.label_list(doc = "The package dependencies list"),
         "description": attr.string(doc = "The package description"),
-        "files": attr.string_dict(doc = "The package resolved files"),
-        "source": attr.string(doc = "The source JSON struct"),
+        "package": attr.label(doc = "The package sdist target"),
         "develop": attr.bool(),
         "markers": attr.string(doc = "The JSON string with a dictionary of dependency markers accordingly to PEP 508"),
         "platforms": attr.string_dict(
@@ -267,7 +282,8 @@ package = rule(
     },
     toolchains = [
         "@bazel_tools//tools/python:toolchain_type",
-        "@bazel_tools//tools/cpp:toolchain_type",
+        config_common.toolchain_type("@bazel_tools//tools/cpp:toolchain_type", mandatory = False),
+        config_common.toolchain_type("@rules_rust//rust:toolchain_type", mandatory = False),
     ],
     fragments = ["cpp"],
 )
