@@ -1,11 +1,22 @@
 [project]
-name = "Sample_Package"
+name = "sample-package"
 version = "1.2.3"
-dependencies = []
-
+description = "Sample package"
 # As an example use poetry backend which won't be hermetic
 # To make builds hermetic the build system must be added explicitly as dependencies
 # and "--no-build-isolation" has to be added to the pip.install call
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+
+# poetry-core resolves symlinks which leads to errors like
+# ValueError: '.../ofiuco/examples/torch/sample/sample_package/__init__.py' is not in the subpath of '/private/var/tmp/_bazel_.../46f137403d5800ca8b96e3179c849c65/sandbox/.../_main/external/ofiuco++poetry+sample-package'
+# [build-system]
+# requires = ["poetry-core>=2.0.0"]
+# build-backend = "poetry.core.masonry.api"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
+dependencies = [  ]

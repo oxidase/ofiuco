@@ -1,9 +1,13 @@
+import os
 import sys
 import tomllib
 
 import pendulum
 import pytest
 from packaging.markers import Marker
+
+base_dir = os.environ.get("TEST_TMPDIR", "/tmp")
+os.environ["AIRFLOW__LOGGING__BASE_LOG_FOLDER"] = base_dir
 
 # Monkey-patch pendulum.tz.timezone to be a function for airflow v2 and a module for airflow v3
 UTC = pendulum.tz.timezone.UTC

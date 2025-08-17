@@ -11,6 +11,7 @@ RUN --mount=type=cache,target=/var/lib/apt,id=$CACHE_ID/var/lib/apt \
     curl \
     git \
     gnupg \
+    libpq-dev \
     postgresql \
     postgresql-contrib \
     python3 \

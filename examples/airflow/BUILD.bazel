@@ -1,5 +1,13 @@
 load("@ofiuco//python:poetry.bzl", "poetry_update")
+load("@ofiuco//python:py_venv.bzl", "py_venv")
 load("@rules_python//python:defs.bzl", "py_test")
+
+py_venv(
+    name = "airflow",
+    deps = [
+        "@poetry//:apache-airflow",
+    ],
+)
 
 [py_test(
     name = "test_{}".format(python_version),
@@ -9,7 +17,7 @@ load("@rules_python//python:defs.bzl", "py_test")
     main = "test.py",
     python_version = python_version,
     deps = [
-        "@poetry//:apache-airflow",
+        ":airflow",
         "@poetry//:pytest",
     ],
 ) for python_version in [

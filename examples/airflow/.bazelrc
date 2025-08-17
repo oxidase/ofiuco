@@ -1,3 +1,9 @@
 build --sandbox_default_allow_network=false
 build --nolegacy_external_runfiles
+build --incompatible_default_to_explicit_init_py
 build --incompatible_autoload_externally=
+build --incompatible_no_implicit_file_export
+build --incompatible_config_setting_private_default_visibility
+build --incompatible_disable_starlark_host_transitions
+build --incompatible_disable_native_repo_rules
+build --incompatible_disable_autoloads_in_main_repo

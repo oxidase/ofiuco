@@ -7,11 +7,13 @@ def _parse_lock_impl(rctx):
     rules_repository = self.split("/", 1)[0]
     rules_repository = ("@@" if "~" in rules_repository else "@") + rules_repository
     rules_repository = rules_repository.split("+")[0]
-    prefix = '''{header}\n\nload("{name}//python/private:poetry_deps.bzl", "package")'''.format(header = header, name = rules_repository)
+    prefix = '''load("{name}//python/private:poetry_deps.bzl", "package")'''.format(name = rules_repository)
 
     interpreter = rctx.path(rctx.attr._python_host)
     rctx.watch(rctx.attr.lock)
     rctx.watch(rctx.attr._lock_parser)
+    if rctx.attr.toml:
+        rctx.watch(rctx.attr.toml)
 
     exec_result = rctx.execute([
         interpreter,
@@ -22,11 +24,13 @@ def _parse_lock_impl(rctx):
     ] + (["--deps={}".format(json.encode(rctx.attr.deps))] if rctx.attr.deps else [])
       + (["--project_file={}".format(rctx.path(rctx.attr.toml))] if rctx.attr.toml else []))
 
+
     if exec_result.return_code:
         fail("Parsing {} failed with exit code {}\n{}\n".format(rctx.attr.lock, exec_result.return_code, exec_result.stderr))
 
-    rctx.file("BUILD.bazel", "{}\n\n{}".format(prefix, exec_result.stdout))
-    rctx.file("WORKSPACE")
+    rctx.file("BUILD.bazel", "{}\n\n{}\n\n{}".format(header, prefix, exec_result.stdout))
+
+
 
 parse_lock = repository_rule(
     attrs = {

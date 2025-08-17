@@ -3,7 +3,7 @@ name = "torch with CUDA example"
 version = "0.0.0"
 description = ""
 readme = "README.md"
-authors = []
+authors = [  ]
 
 [[tool.poetry.source]]
 name = "pypi"
@@ -15,18 +15,20 @@ url = "https://download.pytorch.org/whl/cu121/"
 priority = "explicit"
 
 [tool.poetry.dependencies]
-colorama = {git = "https://github.com/tartley/colorama"}
+colorama = { git = "https://github.com/tartley/colorama" }
 numpy = "^1.26.0"
 python = ">=3.12"
-sample_package = {path = "sample", develop= true}
+sample_package = { path = "sample", develop = true }
+sample_package_hatchling = { path = "sample_hatchling", develop = false }
+sample_package_flit = { path = "sample_flit.tar.xz", develop = true } # tar cvfJ sample_flit.tar.xz --disable-copyfile -C x .
 torch = [
-  {platform = "darwin", version = "2.2.1", source="pypi"},
-  {platform = "linux", url = "https://download.pytorch.org/whl/cu121/torch-2.2.1%2Bcu121-cp312-cp312-linux_x86_64.whl"},
+  { platform = "darwin", version = "2.2.1", source = "pypi" },
+  { platform = "linux", url = "https://download.pytorch.org/whl/cu121/torch-2.2.1%2Bcu121-cp312-cp312-linux_x86_64.whl" },
 ]
 torchvision = [
-   {version = "0.17.1"},
-   {platform = "linux", version = "0.17.1", source="pytorch"},
+  { version = "0.17.1" },
+  { platform = "linux", version = "0.17.1", source = "pytorch" },
 ]
 
 [tool.poetry.group.dev.dependencies]
-pytest = {version = "^7.2", "python" = ">=3.7"}
+pytest = { version = "^7.2", "python" = ">=3.7" }

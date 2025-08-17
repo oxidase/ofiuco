@@ -8,7 +8,7 @@ This allows to use platform information of resolved Python toolchains and build 
 
 Minimum requirements:
 
-* Bazel 7.x and rules_python with registered Python >= 3.11 toolchain.
+* Bazel 8.x and rules_python with registered Python >= 3.11 toolchain.
 
 ## Getting started
 
@@ -23,7 +23,7 @@ python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.13")
 use_repo(python, "python_3_13")
 
-bazel_dep(name = "ofiuco", version = "0.5.2")
+bazel_dep(name = "ofiuco", version = "0.5.3")
 
 poetry = use_extension("@ofiuco//python:extensions.bzl", "poetry")
 poetry.parse(
@@ -80,22 +80,3 @@ poetry_update(
 ```
 
 In both cases the host interpreter is used in the latter case poetry package with dependencies is installed as an external repository.
-
-
-## Use in a pre-bzlmod setup
-
-Minimal example which uses the system Python run-time could be as in [examples/workspace/WORKSPACE](./examples/workspace/WORKSPACE).
-
-Multi-version and multi-repository example which uses Python interpreters is in [examples/workspace_multi](./examples/workspace_multi/WORKSPACE) directory.
-The test [`test_multiple_repos_import`](./examples/workspace_multi/test.py) checks the modules imports priority which is defined by the order of dependencies in `deps` section.
-For example, in the following case
-```
-            [
-                "@repo2//:pytest",
-                "@repo1//:pytest",
-            ],
-```
-`pytest` will be loaded from the `repo2` repository.
-
-> **Note**
-> Mixing different repositories in one `deps` block may lead to side-effects related to using incompatible versions of transitive dependencies.

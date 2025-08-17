@@ -28,9 +28,12 @@ py_test(
         "@poetry//:numpy",
         "@poetry//:pytest",
         "@poetry//:sample-package",
+        "@poetry//:sample-package-flit",
+        "@poetry//:sample-package-hatchling",
     ],
 )
 
+# poetry lock && mv poetry.lock gen
 poetry_update(
     name = "update_lock",
     lock = "gen/poetry.lock",

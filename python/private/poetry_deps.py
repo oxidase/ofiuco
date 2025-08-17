@@ -70,50 +70,13 @@ def filter_cxx_builtin_include_directories(flags):
 
 def install(args):
     output_path = Path(args.output)
+    output_path.mkdir(parents=True, exist_ok=True)
 
-    # Install wheel
+    # Install wheel from sdist
     install_command = create_command("install")
 
-    package_files = json.loads(args.files) if args.files else {}
-    source = json.loads(args.source) if args.source else {}
-    source_type = source.get("type")
-    requirements_file = output_path / "requirements.txt"
-    with requirements_file.open("wt") as requirements_fileobj:
-        pip_arguments, requirements_lines = [], []
-        if source_type == "directory":
-            url = source.get("url")
-            assert url, f"package.source.url is undefined in {args.input} for {source_type} type"
-            requirements_lines = (
-                [
-                    f"--editable={url}",
-                ]
-                if args.develop
-                else [url]
-            )
-        elif source_type == "git":
-            url, reference = source.get("url"), source.get("resolved_reference")
-            assert url, f"package.source.url is undefined in {args.input} for {source_type} type"
-            assert reference, f"package.source.resolved_reference is undefined in {args.input} for {source_type} type"
-            pip_arguments = ["--editable"] if args.develop else []
-            requirements_lines = [f"git+{url}@{reference}"]
-        elif source_type == "legacy":
-            url = source.get("url")
-            assert url, f"package.source.url is undefined in {args.input} for {source_type} type"
-            pip_arguments = [f"--extra-index-url={url}\n"]
-            requirements_lines = [args.input]
-        elif source_type == "url":
-            url = source.get("url")
-            assert url, f"package.source.url is undefined in {args.input} for {source_type} type"
-            requirements_lines = [url]
-        else:
-            requirements_lines = [args.input]
-
-        requirements_lines += [f" --hash={value}" for value in package_files.values()]
-        requirements_fileobj.write("\n".join(pip_arguments + ["\\\n".join(requirements_lines)]))
-
     install_args = [
-        "-r",
-        os.fspath(requirements_file),
+        args.input,
     ]
 
     try:
@@ -142,6 +105,11 @@ def install(args):
             "--no-clean",
         ]
 
+    # Set temporary build directory to the current sandbox
+    tmp_directory = output_path.resolve() / "tmp"
+    tmp_directory.mkdir()
+    os.environ["TMPDIR"] = os.fspath(tmp_directory)
+
     if args.cc_toolchain is not None:
         cc = json.loads(args.cc_toolchain)
         compiler = cc.get("compiler")
@@ -152,7 +120,6 @@ def install(args):
             CC="CC",
             CXX="CXX",
             LD="LD",
-            AR="ar_executable",
             CPP="preprocessor_executable",
             GCOV="gcov_executable",
             NM="nm_executable",
@@ -184,8 +151,11 @@ def install(args):
         os.environ["LDSHARED"] = f"{os.environ['LD']} {os.environ['LDFLAGS']}"
         os.environ["LDCXXSHARED"] = f"{os.environ['LD']} {os.environ['LDFLAGS']}"
 
-    # Set temporary build directory to the current sandbox
-    os.environ["TMPDIR"] = os.getcwd()
+    if args.rust_toolchain is not None:
+        rust_toolchain = json.loads(args.rust_toolchain)
+        os.environ["PATH"] = f"{os.getcwd()}/{rust_toolchain.get('RUST_SYSROOT')}/bin:{os.environ['PATH']}"
+        os.environ["RUSTUP_HOME"] = os.fspath(output_path)
+        os.environ["CARGO_HOME"] = os.fspath(output_path)
 
     if retcode := install_command.main(install_args + get_platform_args(args)):
         logging.error(f"pip install returned {retcode}")
@@ -237,14 +207,14 @@ if __name__ == "__main__":
 
     parser_install = subparsers.add_parser("install")
     parser_install.set_defaults(func=install)
-    parser_install.add_argument("input", type=str, help="wheel version constraint")
+    parser_install.add_argument("input", type=str, help="Source distribution path")
     parser_install.add_argument("output", type=Path, default=Path(), help="package output directory")
-    parser_install.add_argument("--files", type=str, default="{}", help="files:hash  dictionary")
     parser_install.add_argument("--python_version", type=str, default=None, help="python version")
     parser_install.add_argument("--platform", type=str, nargs="*", action="extend", help="platform tag")
     parser_install.add_argument("--source", type=str, help="source JSON ")
     parser_install.add_argument("--develop", action="store_true", help="Install develop package")
     parser_install.add_argument("--cc_toolchain", type=str, help="CC toolchain")
+    parser_install.add_argument("--rust_toolchain", type=str, help="Rust toolchain")
     parser_install.add_argument("--entry_points", type=Path, help="Add a symbolic link to .dist-info/entry_points.txt")
 
     args = parser.parse_args()
