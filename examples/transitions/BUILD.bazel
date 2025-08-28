@@ -83,12 +83,6 @@ py_zip(
 )
 
 py_zip(
-    name = "host.zip",
-    platform = "@local_config_platform//:host",
-    target = ":app",
-)
-
-py_zip(
     name = "deploy_darwin_arm64.zip",
     platform = ":darwin_arm64",
     target = ":app",
@@ -138,7 +132,6 @@ py_test(
         ":deploy_linux_arm64",
         ":deploy_linux_x86_64",
         # ":deploy_win32_x86_64.zip",
-        ":host.zip",
     ],
     deps = [
         "@poetry//:pyelftools",
