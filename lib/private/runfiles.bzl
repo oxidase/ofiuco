@@ -1,4 +1,4 @@
-load("//lib:globstar.bzl", _globstar = "globstar")
+load("//lib/private:globstar.bzl", _globstar = "globstar")
 
 def matches(text, patterns, path_separator = "/"):
     for pattern in patterns:

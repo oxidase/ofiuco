@@ -1,11 +1,11 @@
-"""unit tests for globstar match algorithm
+"""Unit tests for globstar match algorithm.
 
 Ref: https://github.com/aspect-build/bazel-lib/blob/1df2becc7a2cc06b76ca4f7e/lib/tests/glob_match_test.bzl
 """
 
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest")
-load("//lib:globstar.bzl", "globstar")
+load("//lib/private:globstar.bzl", "globstar")
 
 def _globstar_test(ctx, expr, matches, non_matches, mps_matches = None, mps_non_matches = None):
     """`mps sands for `match path segment`

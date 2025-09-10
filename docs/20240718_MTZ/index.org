@@ -192,7 +192,7 @@ Challenges:
 
 * Platform transitions
 
-The rule =load("@ofiuco//lib:py_zip.bzl", "py_zip")= has an attribute which is used as a transition
+The rule =load("@ofiuco//lib:defs.bzl", "py_zip")= has an attribute which is used as a transition
 configuration for =target=:
 
 #+begin_src python
@@ -349,6 +349,3 @@ Steps: 100, Sampler: DPM++ SDE, Schedule type: Karras, CFG scale: 7, Seed: 43453
 # Local Variables:
 # org-html-metadata-timestamp-format: "%B %e, %Y"
 # End:
-
-
-
