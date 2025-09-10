@@ -80,3 +80,12 @@ poetry_update(
 ```
 
 In both cases the host interpreter is used in the latter case poetry package with dependencies is installed as an external repository.
+
+### Update uv.lock.json
+
+```
+cargo install --git https://github.com/bazel-contrib/multitool
+fish_add_path $HOME/.cargo/bin
+
+multitool --lockfile python/private/uv.lock.json update
+```
