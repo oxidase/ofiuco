@@ -3,7 +3,7 @@
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//lib:unittest.bzl", "analysistest", "asserts")
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
-load("//lib:py_zip.bzl", "py_zip")
+load("//lib/private:py_zip.bzl", "py_zip")
 
 EXCLUDE = ["**/*.dist-info/*", "**__*__???", "**_vendor**", "**.typed", "**poetry_pip/*"]
 

@@ -73,6 +73,7 @@ poetry = module_extension(
                 "deps": attr.string_list_dict(),
                 "generate_extras": attr.bool(default = False),
                 "platforms": attr.string_dict(),
+                "build_files": attr.string_dict(),
                 "_lock_parser": attr.label(
                     allow_single_file = True,
                     default = "//python/private:lock_parser.py",
