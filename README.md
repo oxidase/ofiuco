@@ -25,12 +25,12 @@ use_repo(python, "python_3_13")
 
 bazel_dep(name = "ofiuco", version = "0.5.3")
 
-poetry = use_extension("@ofiuco//python:extensions.bzl", "poetry")
-poetry.parse(
+parse = use_extension("@ofiuco//python:extensions.bzl", "parse")
+parse.lock(
     name = "poetry",
     lock = "@//path/to:poetry.lock",
 )
-use_repo(poetry, "poetry")
+use_repo(parse, "poetry")
 ```
 
 and Python dependencies can be used as
@@ -70,10 +70,10 @@ poetry update
 
 or using a pre-defined target
 ```
-load("@ofiuco//python:poetry.bzl", "poetry_update")
+load("@ofiuco//python:poetry.bzl", "poetry_lock")
 
-poetry_update(
-    name = "update_lock",
+poetry_lock(
+    name = "poetry",
     toml = "pyproject.toml",
     lock = "poetry.lock",
 )

@@ -1,8 +1,8 @@
 load("@ofiuco_defs//:defs.bzl", _python_host_runtime = "python_host_runtime")
 load("@rules_python//python:defs.bzl", "PyRuntimeInfo")
-load("//python/private:poetry_deps.bzl", _get_imports = "get_imports")
+load("//python/private:package_deps.bzl", _get_imports = "get_imports")
 
-def _poetry_update_impl(ctx):
+def _poetry_lock_impl(ctx):
     interpreter = ctx.attr._python_host
     runtime_info = interpreter[PyRuntimeInfo]
 
@@ -67,8 +67,8 @@ if __name__ == "__main__":
         DefaultInfo(executable = output, runfiles = runfiles),
     ]
 
-poetry_update = rule(
-    implementation = _poetry_update_impl,
+poetry_lock = rule(
+    implementation = _poetry_lock_impl,
     executable = True,
     attrs = {
         "toml": attr.label(allow_single_file = [".toml"]),

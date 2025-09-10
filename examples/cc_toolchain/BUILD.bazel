@@ -1,4 +1,4 @@
-load("@ofiuco//python:poetry.bzl", "poetry_update")
+load("@ofiuco//python:poetry.bzl", "poetry_lock")
 load("@rules_python//python:defs.bzl", "py_test")
 
 py_test(
@@ -17,8 +17,8 @@ py_test(
     }),
 )
 
-poetry_update(
-    name = "update_lock",
+poetry_lock(
+    name = "poetry",
     lock = "poetry.lock",
     toml = "pyproject.toml",
 )

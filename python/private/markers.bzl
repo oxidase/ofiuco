@@ -117,7 +117,7 @@ def parse(text, environment):
         elif token == "VARIABLE":
             if value not in environment:
                 fail("missing key '{}' in environment {}".format(value, environment) +
-                     "\nPlease provide platforms attribute which contains the missing key to poetry.parse function")
+                     "\nPlease provide platforms attribute which contains the missing key to parse.lock function")
             output_queue.append(environment[value])
         elif token == "QUOTED_STRING":
             output_queue.append(value[1:-1])

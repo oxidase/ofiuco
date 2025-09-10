@@ -7,7 +7,7 @@ def _parse_lock_impl(rctx):
     rules_repository = self.split("/", 1)[0]
     rules_repository = ("@@" if "~" in rules_repository else "@") + rules_repository
     rules_repository = rules_repository.split("+")[0]
-    prefix = '''load("{name}//python/private:poetry_deps.bzl", "package")'''.format(name = rules_repository)
+    prefix = '''load("{name}//python/private:package_deps.bzl", "package")'''.format(name = rules_repository)
 
     interpreter = rctx.path(rctx.attr._python_host)
     rctx.watch(rctx.attr.lock)
@@ -36,7 +36,7 @@ parse_lock = repository_rule(
     attrs = {
         "lock": attr.label(
             allow_single_file = True,
-            doc = "Poetry lock file",
+            doc = "Lock file",
         ),
         "toml": attr.label(
             allow_single_file = True,
@@ -65,6 +65,6 @@ parse_lock = repository_rule(
             default = ":lock_parser.bzl",
         ),
     },
-    doc = """Process Poetry lock file.""",
+    doc = """Process lock file.""",
     implementation = _parse_lock_impl,
 )

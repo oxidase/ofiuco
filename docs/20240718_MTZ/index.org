@@ -103,12 +103,12 @@ torchvision = [
 
 - Add =poetry.lock= file parsing to =MODULE.bazel= as
 #+begin_src python
-poetry = use_extension("@ofiuco//python:extensions.bzl", "poetry")
-poetry.parse(
+parse = use_extension("@ofiuco//python:extensions.bzl", "parse")
+parse.lock(
     name = "poetry",
     lock = "@//tools/build_rules:poetry.lock",
 )
-use_repo(poetry, "poetry")
+use_repo(parse, "poetry")
 #+end_src
 
 

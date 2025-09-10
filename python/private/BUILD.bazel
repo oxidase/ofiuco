@@ -1,14 +1,14 @@
 load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
 load(":markers_test.bzl", "markers_test_suite")
-load(":poetry_deps_test.bzl", "poetry_deps_test_suite")
+load(":package_deps_test.bzl", "package_deps_test_suite")
 
 markers_test_suite()
 
-poetry_deps_test_suite()
+package_deps_test_suite()
 
 py_binary(
-    name = "poetry_deps",
-    srcs = ["poetry_deps.py"],
+    name = "package_deps",
+    srcs = ["package_deps.py"],
     visibility = ["//python:__subpackages__"],
     deps = [
         ":utils",
@@ -17,15 +17,15 @@ py_binary(
 )
 
 py_test(
-    name = "poetry_deps_test",
+    name = "package_deps_test",
     srcs = [
-        "poetry_deps_test.py",
+        "package_deps_test.py",
     ],
     data = [
         "assets/six-1.16.0-py2.py3-none-any.whl",
     ],
     deps = [
-        ":poetry_deps",
+        ":package_deps",
     ],
 )
 

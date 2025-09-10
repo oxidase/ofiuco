@@ -1,8 +1,8 @@
-"""unit tests for globstar poetry_parse repository rule"""
+"""Unit tests for package deps rule"""
 
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest")
-load("//python/private:poetry_deps.bzl", "DEFAULT_PLATFORMS", "derive_environment_markers")
+load("//python/private:package_deps.bzl", "DEFAULT_PLATFORMS", "derive_environment_markers")
 
 def _derive_environment_markers_test_impl(ctx):
     env = unittest.begin(ctx)
@@ -44,9 +44,9 @@ def _derive_environment_markers_host_test_impl(ctx):
 derive_environment_markers_test = unittest.make(_derive_environment_markers_test_impl)
 derive_environment_markers_host_test = unittest.make(_derive_environment_markers_host_test_impl)
 
-def poetry_deps_test_suite():
+def package_deps_test_suite():
     unittest.suite(
-        "poetry_deps_bzl_test",
+        "package_deps_bzl_test",
         partial.make(derive_environment_markers_test),
         partial.make(derive_environment_markers_host_test),
     )

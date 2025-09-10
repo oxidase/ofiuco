@@ -1,5 +1,5 @@
 load("@bazel_skylib//lib:selects.bzl", "selects")
-load("@ofiuco//python:poetry.bzl", "poetry_update")
+load("@ofiuco//python:poetry.bzl", "poetry_lock")
 load("@rules_python//python:defs.bzl", "py_test")
 load("@rules_cc//cc:defs.bzl", "cc_test")
 load("@ofiuco//python:cc_py_library.bzl", "cc_py_library")
@@ -49,8 +49,8 @@ cc_test(
     ],
 )
 
-poetry_update(
-    name = "update_lock",
+poetry_lock(
+    name = "poetry",
     lock = "poetry.lock",
     toml = "pyproject.toml",
 )
