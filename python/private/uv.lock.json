@@ -1,0 +1,55 @@
+{
+  "$schema": "https://raw.githubusercontent.com/theoremlp/rules_multitool/main/lockfile.schema.json",
+  "uv": {
+    "binaries": [
+      {
+        "kind": "archive",
+        "url": "https://github.com/astral-sh/uv/releases/download/0.8.16/uv-aarch64-unknown-linux-musl.tar.gz",
+        "file": "uv-aarch64-unknown-linux-musl/uv",
+        "sha256": "6bd6a11c384f07353c3c7eec9bde094f89b92a12dc09caea9df40c424afebea5",
+        "os": "linux",
+        "cpu": "arm64"
+      },
+      {
+        "kind": "archive",
+        "url": "https://github.com/astral-sh/uv/releases/download/0.8.16/uv-x86_64-unknown-linux-gnu.tar.gz",
+        "file": "uv-x86_64-unknown-linux-gnu/uv",
+        "sha256": "fc94e50e8ef93a97d723b83faa42888e7710c4443a5b8a1af3aac2cda5390f3a",
+        "os": "linux",
+        "cpu": "x86_64"
+      },
+      {
+        "kind": "archive",
+        "url": "https://github.com/astral-sh/uv/releases/download/0.8.16/uv-aarch64-apple-darwin.tar.gz",
+        "file": "uv-aarch64-apple-darwin/uv",
+        "sha256": "87e4b51b735e8445f6c445c7b4c0398273e40d34cd192bad8158736653600cd6",
+        "os": "macos",
+        "cpu": "arm64"
+      },
+      {
+        "kind": "archive",
+        "url": "https://github.com/astral-sh/uv/releases/download/0.8.16/uv-x86_64-apple-darwin.tar.gz",
+        "file": "uv-x86_64-apple-darwin/uv",
+        "sha256": "07491a998fd741090501df9bbfe538f85568901a3a66c9e0368636509158727a",
+        "os": "macos",
+        "cpu": "x86_64"
+      },
+      {
+        "kind": "archive",
+        "url": "https://github.com/astral-sh/uv/releases/download/0.8.16/uv-aarch64-pc-windows-msvc.zip",
+        "file": "uv.exe",
+        "sha256": "392acca957d8d7cccafbb68ce6c4ba29b2ff00c8b0d4744a2136918d3a7bf765",
+        "os": "windows",
+        "cpu": "arm64"
+      },
+      {
+        "kind": "archive",
+        "url": "https://github.com/astral-sh/uv/releases/download/0.8.16/uv-x86_64-pc-windows-msvc.zip",
+        "file": "uv.exe",
+        "sha256": "97fb93678eca3b4f731ea3879ae2e78787976e03f38c9c6fb744ab28bc3aec1b",
+        "os": "windows",
+        "cpu": "x86_64"
+      }
+    ]
+  }
+}
