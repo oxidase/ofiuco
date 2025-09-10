@@ -1,4 +1,4 @@
-load("@ofiuco//python:poetry.bzl", "poetry_update")
+load("@ofiuco//python:poetry.bzl", "poetry_lock")
 load("@ofiuco//python:py_venv.bzl", "py_venv")
 load("@rules_python//python:defs.bzl", "py_test")
 
@@ -25,8 +25,8 @@ py_venv(
     "3.13",
 ]]
 
-poetry_update(
-    name = "update_lock",
+poetry_lock(
+    name = "poetry",
     lock = "lock/poetry.lock",
     toml = "pyproject.toml",
 )

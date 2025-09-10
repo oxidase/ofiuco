@@ -1,4 +1,4 @@
-load("@ofiuco//python:lock_parser.bzl", "parse_lock")
+load("@ofiuco//python/private:lock_parser.bzl", "parse_lock")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
@@ -6,9 +6,9 @@ load("@ofiuco_defs//:defs.bzl", _python_host = "python_host")
 load("@ofiuco//lib:defs.bzl", "lib")
 
 
-def _poetry_impl(mctx):
+def _parse_impl(mctx):
     for mod in mctx.modules:
-        for attr in mod.tags.parse:
+        for attr in mod.tags.lock:
             # Files watchers
             mctx.watch(attr.lock)
             if attr.toml:
@@ -64,10 +64,10 @@ def _poetry_impl(mctx):
                     )
 
 
-poetry = module_extension(
-    implementation = _poetry_impl,
+parse = module_extension(
+    implementation = _parse_impl,
     tag_classes = {
-        "parse": tag_class(
+        "lock": tag_class(
             attrs = {
                 "name": attr.string(mandatory = True),
                 "lock": attr.label(mandatory = True),

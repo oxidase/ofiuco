@@ -202,7 +202,7 @@ def install(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Download and install a Poetry package")
+    parser = argparse.ArgumentParser(description="Download and install a Python package")
     subparsers = parser.add_subparsers(required=True)
 
     parser_install = subparsers.add_parser("install")

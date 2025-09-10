@@ -15,8 +15,8 @@ local_path_override(
     path = "../..",
 )
 
-poetry = use_extension("@ofiuco//python:extensions.bzl", "poetry")
-poetry.parse(
+parse = use_extension("@ofiuco//python:extensions.bzl", "parse")
+parse.lock(
     name = "poetry",
     lock = "//:poetry.lock",
     toml = "pyproject.toml",
@@ -36,10 +36,10 @@ cc_library(
     ],
 )"""
     })
-use_repo(poetry, "poetry")
-use_repo(poetry, "numpy-2.3.1-cp313-cp313-manylinux_2_28_aarch64")
-use_repo(poetry, "numpy-2.3.1-cp313-cp313-manylinux_2_28_x86_64")
-use_repo(poetry, "numpy-2.3.1-cp313-cp313-macosx_14_0_arm64")
+use_repo(parse, "poetry")
+use_repo(parse, "numpy-2.3.1-cp313-cp313-manylinux_2_28_aarch64")
+use_repo(parse, "numpy-2.3.1-cp313-cp313-manylinux_2_28_x86_64")
+use_repo(parse, "numpy-2.3.1-cp313-cp313-macosx_14_0_arm64")
 
 
 git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")

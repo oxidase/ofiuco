@@ -102,10 +102,10 @@ def _package_impl(ctx):
         markers: string The JSON string with markers accordingly to PEP 508 – Dependency specification for Python Software Packages.
 
     Private attributes:
-        _poetry_deps:
+        _package_deps:
 
     Returns:
-        The providers list or a tuple with a Poetry package.
+        The providers list or a tuple with a Python package.
 
     Required toolchains:
          @bazel_tools//tools/python:toolchain_type
@@ -132,12 +132,12 @@ def _package_impl(ctx):
     # Call "pip install" for the sdist or local packages
     if ctx.attr.package and ctx.attr.package.label.name in ["pkg", "sdist"]:
         # Get Python tooling toolchain and runfiles dependencies
-        poetry_deps_info = ctx.attr._poetry_deps[DefaultInfo]
-        poetry_deps_binary = poetry_deps_info.files_to_run.executable
-        poetry_deps_runfiles = poetry_deps_info.default_runfiles.files
-        poetry_deps_runtime_info = ctx.attr._python_host[PyRuntimeInfo]
+        package_deps_info = ctx.attr._package_deps[DefaultInfo]
+        package_deps_binary = package_deps_info.files_to_run.executable
+        package_deps_runfiles = package_deps_info.default_runfiles.files
+        package_deps_runtime_info = ctx.attr._python_host[PyRuntimeInfo]
 
-        build_transitive_deps = [py_runtime_info.files, poetry_deps_info.files, poetry_deps_runtime_info.files]
+        build_transitive_deps = [py_runtime_info.files, package_deps_info.files, package_deps_runtime_info.files]
 
         # Declare package output directory
         output = ctx.actions.declare_directory("{}/{}/{}".format(python_version, runtime_tag, ctx.label.name))
@@ -148,7 +148,7 @@ def _package_impl(ctx):
         # Collect installation tool arguments
         arguments = [
             "-B",
-            poetry_deps_binary.path,
+            package_deps_binary.path,
             "install",
             package_directory,
             output.path,
@@ -235,8 +235,8 @@ def _package_impl(ctx):
             progress_message = "Installing package {} for Python {} {}".format(ctx.label.name, python_version, runtime_tag),
             arguments = arguments,
             use_default_shell_env = True,
-            executable = poetry_deps_runtime_info.interpreter.path,
-            tools = poetry_deps_runfiles,
+            executable = package_deps_runtime_info.interpreter.path,
+            tools = package_deps_runfiles,
             execution_requirements = execution_requirements,
         )
 
@@ -286,7 +286,7 @@ package = rule(
             "@rules_python//python/cc:current_py_cc_headers",
             "@rules_python//python/cc:current_py_cc_libs",
         ]),
-        "_poetry_deps": attr.label(default = ":poetry_deps", cfg = "exec", executable = True),
+        "_package_deps": attr.label(default = ":package_deps", cfg = "exec", executable = True),
         "_python_host": attr.label(default = _python_host_runtime),
     },
     toolchains = [

@@ -7,7 +7,7 @@ from pathlib import Path
 from platform import python_version_tuple
 from unittest.mock import patch
 
-import python.private.poetry_deps as main
+import python.private.package_deps as main
 
 TEST_TMPDIR = os.environ.get("TEST_TMPDIR", "/tmp")
 
