@@ -18,7 +18,7 @@ py_test(
 )
 
 poetry_lock(
-    name = "poetry",
+    name = "lock",
     lock = "poetry.lock",
     toml = "pyproject.toml",
 )

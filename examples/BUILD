@@ -10,7 +10,9 @@ load("@rules_shell//shell:sh_test.bzl", "sh_test")
     "aspect_rules_py",
     "cc_toolchain",
     "markers",
+    "numpy",
     "simple",
     "torch",
     "transitions",
+    "uv",
 ]]

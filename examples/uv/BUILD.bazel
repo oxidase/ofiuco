@@ -1,0 +1,22 @@
+load("@ofiuco//python:uv.bzl", "uv_lock")
+load("@rules_python//python:defs.bzl", "py_test")
+
+py_test(
+    name = "test",
+    size = "large",
+    srcs = ["test.py"],
+    data = ["uv.lock"],
+    deps = [
+        "@uv//:boto3",
+        "@uv//:pip",
+        "@uv//:setuptools",
+        "@uv//:sphinxcontrib-images",
+        "@uv//:pytest",
+    ],
+)
+
+uv_lock(
+    name = "lock",
+    lock = "uv.lock",
+    toml = "pyproject.toml",
+)

@@ -73,7 +73,7 @@ or using a pre-defined target
 load("@ofiuco//python:poetry.bzl", "poetry_lock")
 
 poetry_lock(
-    name = "poetry",
+    name = "lock",
     toml = "pyproject.toml",
     lock = "poetry.lock",
 )

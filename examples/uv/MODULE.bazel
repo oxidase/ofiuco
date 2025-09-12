@@ -1,0 +1,16 @@
+bazel_dep(name = "rules_python", version = "1.6.1")
+bazel_dep(name = "rules_uv", version = "0.88.0")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(python_version = "3.14")
+use_repo(python, "python_3_14")
+
+bazel_dep(name = "ofiuco", version = "0.0.0")
+local_path_override(
+    module_name = "ofiuco",
+    path = "../..",
+)
+
+parse = use_extension("@ofiuco//python:extensions.bzl", "parse")
+parse.lock(name = "uv", lock = "//:uv.lock", toml = "//:pyproject.toml")
+use_repo(parse, "uv")
