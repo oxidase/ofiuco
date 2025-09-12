@@ -407,7 +407,7 @@ async def get_simple_index(name, index_url):
     """Legacy (PEP 503) and JSON-based (PEP 691) index parser."""
     package_index_url = f"{index_url}/{name}/"
 
-    def fetch():
+    async def fetch():
         pypi_simple_mime_type = "application/vnd.pypi.simple.v1+json"
         request = urllib.request.Request(package_index_url, headers={"Accept": pypi_simple_mime_type})
         with urllib.request.urlopen(request) as response:
@@ -435,8 +435,7 @@ async def get_simple_index(name, index_url):
             LinkParser().feed(html_data)
             return urls
 
-    loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, fetch)
+    return await fetch()
 
 
 async def read_package_files(package):
@@ -524,9 +523,12 @@ filegroup(
 
 
 def generate_files(locked_packages):
-    loop = asyncio.new_event_loop()
-    tasks = [loop.create_task(read_package_files(package)) for package in locked_packages]
-    repositories = [repo for result in loop.run_until_complete(asyncio.gather(*tasks)) for repo in result]
+    async def _inner():
+        tasks = [asyncio.create_task(read_package_files(package)) for package in locked_packages]
+        results = await asyncio.gather(*tasks)
+        return [repo for result in results for repo in result]
+
+    repositories = asyncio.run(_inner())
     return json.dumps(repositories, indent=2)
 
 
