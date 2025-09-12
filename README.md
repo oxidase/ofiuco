@@ -12,53 +12,6 @@ Minimum requirements:
 
 ## Getting started
 
-### Import `ofiuco` as a module
-
-To import `ofiuco` in your project, you first need to add it to your `MODULE.bazel` file
-
-```python
-bazel_dep(name = "rules_python", version = "1.6.1")
-
-python = use_extension("@rules_python//python/extensions:python.bzl", "python")
-python.toolchain(python_version = "3.13")
-use_repo(python, "python_3_13")
-
-bazel_dep(name = "ofiuco", version = "0.5.3")
-
-parse = use_extension("@ofiuco//python:extensions.bzl", "parse")
-parse.lock(
-    name = "poetry",
-    lock = "@//path/to:poetry.lock",
-)
-use_repo(parse, "poetry")
-```
-
-and Python dependencies can be used as
-
-```python
-py_library(
-    name = "mylib",
-    srcs = ["mylib.py"],
-    deps = [
-        "@poetry//:package1",
-        "@poetry//:package2",
-    ]
-)
-```
-or to include all Python dependencies you can use `:all` synthetic target as
-```python
-py_library(
-    name = "mylib",
-    srcs = ["mylib.py"],
-    deps = [
-        "@poetry//:all",
-    ]
-)
-```
-
-If `all` is a legit package name then the synthetic target will have one or more underscores to disambiguate names.
-
-
 ### Update lock files
 
 A lock file in the workspace can be updated using a host Python interpreter as
@@ -80,6 +33,54 @@ poetry_lock(
 ```
 
 In both cases the host interpreter is used in the latter case poetry package with dependencies is installed as an external repository.
+
+### Import `ofiuco` as a module
+
+To import `ofiuco` in your project, you first need to add it to your `MODULE.bazel` file
+
+```python
+bazel_dep(name = "rules_python", version = "1.6.1")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(python_version = "3.13")
+use_repo(python, "python_3_13")
+
+bazel_dep(name = "ofiuco", version = "0.6.0")
+
+parse = use_extension("@ofiuco//python:extensions.bzl", "parse")
+parse.lock(
+    name = "python",
+    lock = "@//path/to:poetry_or_uv.lock",
+    toml = "@//path/to:pyproject.toml",
+)
+use_repo(parse, "python")
+```
+
+and Python dependencies can be used as
+
+```python
+py_library(
+    name = "mylib",
+    srcs = ["mylib.py"],
+    deps = [
+        "@python//:package1",
+        "@python//:package2",
+    ]
+)
+```
+or to include all Python dependencies you can use `:all` synthetic target as
+```python
+py_library(
+    name = "mylib",
+    srcs = ["mylib.py"],
+    deps = [
+        "@python//:all",
+    ]
+)
+```
+
+If `all` is a legit package name then the synthetic target will have one or more underscores to disambiguate names.
+
 
 ### Update uv.lock.json
 
