@@ -19,7 +19,6 @@ from typing import Any
 
 NEW_ISSUE_URL = "https://github.com/oxidase/ofiuco/issues/new"
 TODO_MESSAGE = f"TODO: raise new issue at {NEW_ISSUE_URL} for adding support of {{}}"
-VISIBILITY = """visibility = ["//visibility:public"]"""
 
 # Python Versioning
 # References:
@@ -321,7 +320,7 @@ class Package:
 py_library(
   name = "{self.name}[{name}]",
   deps = [{deps}],
-  {VISIBILITY},
+  visibility = ["//visibility:public"],
 )
 """
             for name, extra_deps in self.extras.items()
@@ -357,13 +356,13 @@ py_library(
                 else []
             ),
             "develop": ["True"] if self.develop else [],
+            "visibility": ['["//visibility:public"]'],
         }
 
         return f"""
 package(
   name = "{self.name}",
   {attr_sep.join((attr + " = " + sep.join(value)) for attr, value in attrs.items() if value)},
-  {VISIBILITY},
 )
 {self.repr_extras() if generate_extras and self.extras else ""}
 """
