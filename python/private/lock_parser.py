@@ -75,8 +75,12 @@ MACOSX_VERSIONS = [
 ]
 
 
-def normalize(name):
-    return re.sub(r"[^A-Za-z0-9._-]", "-", urllib.parse.unquote(name))
+def normalize_basename(name):
+    return re.sub(r"[^A-Za-z0-9._-]", "-", urllib.parse.unquote(os.path.basename(name)))
+
+
+def normalize_target_name(name):
+    return name.strip().strip('"').strip("'").replace("_", "-").replace(".", "-").lower()
 
 
 def get_select_condition(parts):
@@ -143,6 +147,40 @@ class Source:
     resolved_reference: str | None = None
     subdirectory: str | None = None
 
+    @property
+    def is_whl(self):
+        return self.type == SourceType.file and self.url.endswith(".whl")
+
+    @staticmethod
+    def from_poetry_lock(project_root: Path, **kwargs):
+        source = Source(**kwargs)
+
+        if source.type in {SourceType.directory, SourceType.file}:
+            source.url = os.fspath((project_root / source.url).resolve())
+
+        return source
+
+    @staticmethod
+    def from_uv_lock(project_root: Path, **kwargs):
+        if url := kwargs.get("url"):
+            return Source(type=SourceType.url, url=url)
+
+        if url := kwargs.get("registry"):
+            return Source(type=SourceType.legacy, url=url)
+
+        if url := kwargs.get("git"):
+            parsed = urllib.parse.urlparse(url)
+            url = urllib.parse.urlunparse(parsed._replace(fragment=""))
+            return Source(type=SourceType.git, url=url, resolved_reference=parsed.fragment)
+
+        if url := kwargs.get("editable", kwargs.get("virtual")):
+            return Source(type=SourceType.directory, url=os.fspath((project_root / url).resolve()))
+
+        if url := kwargs.get("path"):
+            return Source(type=SourceType.file, url=os.fspath((project_root / url).resolve()))
+
+        raise NotImplementedError(f"for {project_root = } and {kwargs = }")
+
 
 @dataclass
 class Package:
@@ -150,6 +188,7 @@ class Package:
     version: str | None = None
     description: str = ""
     files: dict[str, str] = field(default_factory=dict)
+    urls: dict[str, str] = field(default_factory=dict)
     markers: str = ""
     dependencies: dict[str, Any] = field(default_factory=dict)
     extra_dependencies: list[str] = field(default_factory=list)
@@ -174,7 +213,8 @@ class Package:
     @property
     def select(self) -> dict[str, str]:
         if self.source and self.source.type not in {SourceType.legacy, SourceType.url}:
-            return [f'"@{self.name}//:pkg"']
+            kind = "whl" if self.source.is_whl else "pkg"
+            return [f'"@{self.name}//:{kind}"']
 
         # Collect wheel tags and corresponding targets
         wheels = {}
@@ -229,19 +269,14 @@ class Package:
         return s.replace(r"\"", r"\\\"")
 
     @staticmethod
-    def _normalize(dep_name):
-        return dep_name.strip().strip('"').strip("'").replace("_", "-").replace(".", "-").lower()
-
-    @staticmethod
-    def from_lock(package: dict[str, Any], project_root: Path):
-        dependencies = {Package._normalize(name): attr for name, attr in package.get("dependencies", {}).items()}
-
-        if (source_dict := package.get("source")) is not None:
-            source = Source(**source_dict)
-            if source.type in {SourceType.directory, SourceType.file}:
-                source.url = os.fspath((project_root / source.url).resolve())
-        else:
-            source = None
+    def from_poetry_lock(package: dict[str, Any], project_root: Path):
+        dependencies = {
+            normalize_target_name(name): attr if isinstance(attr, dict) else {}
+            for name, attr in package.get("dependencies", {}).items()
+        }
+        source = (
+            Source.from_poetry_lock(project_root, **source_dict) if (source_dict := package.get("source")) else None
+        )
 
         return Package(
             name=package.get("name"),
@@ -250,13 +285,34 @@ class Package:
             dependencies=dependencies,
             markers=package.get("markers", ""),
             files={
-                normalize(entry["file"]): entry["hash"].removeprefix("sha256:")
+                normalize_basename(entry["file"]): entry["hash"].removeprefix("sha256:")
                 for entry in package.get("files", [])
                 if entry["hash"].startswith("sha256:")
             },
             extras=package.get("extras", {}),
             source=source,
             develop=package.get("develop", False),
+        )
+
+    @staticmethod
+    def from_uv_lock(package: dict[str, Any], project_root: Path):
+        dependencies = {normalize_target_name(attr["name"]): attr for attr in package.get("dependencies", [])}
+        source = Source.from_uv_lock(project_root, **source_dict) if (source_dict := package.get("source")) else None
+        files = package.get("wheels", []) + ([sdist] if (sdist := package.get("sdist")) else [])
+        files = [{"url": source.url} | entry for entry in files]
+        urls = {
+            entry["hash"].removeprefix("sha256:"): entry["url"]
+            for entry in files
+            if entry["hash"].startswith("sha256:")
+        }
+
+        return Package(
+            name=package.get("name"),
+            version=package.get("version"),
+            dependencies=dependencies,
+            source=source,
+            urls=urls,
+            files={normalize_basename(url): hsh for hsh, url in urls.items()},
         )
 
     def repr_extras(self):
@@ -269,13 +325,21 @@ py_library(
 )
 """
             for name, extra_deps in self.extras.items()
-            if (deps := ", ".join([f'":{dep}"' for dep in {self._normalize(dep.split(" ")[0]) for dep in extra_deps}]))
+            if (
+                deps := ", ".join(
+                    [f'":{dep}"' for dep in {normalize_target_name(dep.split(" ")[0]) for dep in extra_deps}]
+                )
+            )
         )
 
     def repr(self, platforms, generate_extras):
         sep = "\n  "
         attr_sep = "," + sep
-        markers = {name: attr["markers"] for name, attr in self.dependencies.items() if "markers" in attr}
+        markers = {
+            name: marker
+            for name, attr in self.dependencies.items()
+            if (marker := attr.get("markers", attr.get("marker")))
+        }
         dependencies = [f":{name}" for name in sorted(set(self.dependencies))] + sorted(set(self.extra_dependencies))
 
         attrs = {
@@ -323,12 +387,20 @@ def find_unique_name(names, suffix):
     return name
 
 
-# Load packages from a lock file
-def load_locked_packages(lock_file, project_root):
+# Load packages from a Poetry lock file
+def load_poetry_locked_packages(lock_file, project_root):
     # Collect packages
     with lock_file.open("rb") as lock_handle:
         conf = tomllib.load(lock_handle)
-    return [Package.from_lock(package, project_root) for package in conf.get("package", [])]
+    return [Package.from_poetry_lock(package, project_root) for package in conf.get("package", [])]
+
+
+# Load packages from a uv lock file
+def load_uv_locked_packages(lock_file, project_root):
+    # Collect packages
+    with lock_file.open("rb") as lock_handle:
+        conf = tomllib.load(lock_handle)
+    return [Package.from_uv_lock(package, project_root) for package in conf.get("package", [])]
 
 
 async def get_simple_index(name, index_url):
@@ -386,7 +458,8 @@ filegroup(
                         kind="http_archive",
                         name=package.name,
                         url=f"file://{package.source.url}",
-                        build_file=build_file.format(kind="pkg"),
+                        # TODO: add sha256 if exists in lock file
+                        build_file=build_file.format(kind="whl" if package.source.is_whl else "pkg"),
                     )
                 ]
 
@@ -412,7 +485,7 @@ filegroup(
                 ]
 
             case SourceType.url:
-                urls = {package.files[normalize(os.path.basename(package.source.url))]: package.source.url}
+                urls = {package.files[normalize_basename(package.source.url)]: package.source.url}
 
             case SourceType.legacy:
                 index_url = package.source.url
@@ -421,7 +494,7 @@ filegroup(
                 raise NotImplementedError(TODO_MESSAGE.format(package.source))
 
     # Python packagesindex index
-    urls = urls or await get_simple_index(package.name, index_url)
+    urls = urls or package.urls or await get_simple_index(package.name, index_url)
 
     repositories = [
         # Binary wheels
@@ -534,7 +607,12 @@ def main(argv=None):
 
     # Load locked data
     project_root = args.project_file.resolve().parent if args.project_file else Path()
-    locked_packages = load_locked_packages(args.input_file, project_root)
+    if args.input_file.name == "poetry.lock":
+        locked_packages = load_poetry_locked_packages(args.input_file, project_root)
+    elif args.input_file.name == "uv.lock":
+        locked_packages = load_uv_locked_packages(args.input_file, project_root)
+    else:
+        raise RuntimeError(f"unknown input type {args.input_file.name}")
 
     # Process data
     if args.output == "files":

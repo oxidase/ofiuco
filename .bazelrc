@@ -1,7 +1,7 @@
 startup --windows_enable_symlinks
 common --enable_bzlmod
-query --deleted_packages=examples/simple,examples/torch,examples/transitions,examples/markers,examples/aspect_rules_py,examples/cc_toolchain,examples/airflow,examples/numpy
-build --deleted_packages=examples/simple,examples/torch,examples/transitions,examples/markers,examples/aspect_rules_py,examples/cc_toolchain,examples/airflow,examples/numpy
+query --deleted_packages=examples/simple,examples/torch,examples/transitions,examples/markers,examples/aspect_rules_py,examples/cc_toolchain,examples/airflow,examples/numpy,examples/uv
+build --deleted_packages=examples/simple,examples/torch,examples/transitions,examples/markers,examples/aspect_rules_py,examples/cc_toolchain,examples/airflow,examples/numpy,examples/uv
 build --enable_runfiles
 test --test_output=errors
 

@@ -9,7 +9,7 @@ import unittest
 from python.private.lock_parser import WHEEL_RE, find_unique_name, get_best_match, get_select_condition, main
 
 
-class TestInstallSubcommand(unittest.TestCase):
+class TestPoetryInstallSubcommand(unittest.TestCase):
     tmpdir = os.environ.get("TEST_TMPDIR", tempfile.gettempdir())
     assets = "python/private/assets/{}/poetry.lock"
     sphinx_lock = assets.format("sphinx")
@@ -154,6 +154,22 @@ class TestInstallSubcommand(unittest.TestCase):
 
         for index, (test, kwargs, expected) in enumerate(tests):
             assert (actual := get_best_match(test, **kwargs)) == expected, f"{actual} ≠ {expected} for {index}"
+
+
+class TestUvInstallSubcommand(unittest.TestCase):
+    tmpdir = os.environ.get("TEST_TMPDIR", tempfile.gettempdir())
+    assets = "python/private/assets/{}/uv.lock"
+    sphinx_lock = assets.format("sphinx")
+
+    def test_sphinx_files(self):
+        with io.StringIO() as buffer, contextlib.redirect_stdout(buffer):
+            main([self.sphinx_lock, "--nogenerate_extras", f"--project_file={self.sphinx_lock}", "--output=files"])
+            repositories = buffer.getvalue()
+        assert (
+            r"zstandard-0.24.0-cp312-cp312-manylinux2010_i686.manylinux2014_i686.manylinux_2_12_i686.manylinux_2_17_i686.whl"
+            in repositories
+        ), repositories
+        assert r"d2b3b4bda1a025b10fe0269369475f420177f2cb06e0f9d32c95b4873c9f80b8" in repositories, repositories
 
 
 if __name__ == "__main__":

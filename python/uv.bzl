@@ -7,6 +7,7 @@ def _uv_lock_impl(ctx):
 
     script = """#!{python}
 
+import os
 import subprocess
 import sys
 from itertools import dropwhile
@@ -27,9 +28,9 @@ if __name__ == "__main__":
 
     argv = sys.argv[1:]
     right = list(dropwhile(lambda x: x != "--", argv))[1:]
-    argv = right if right else ["lock", "--project", project_dir] + argv
+    argv = right if right else ["lock", "--project", os.fspath(project_dir)] + argv
 
-    result = subprocess.run(["{uv}"] + argv, capture_output=False)
+    result = subprocess.run([Path("{uv}").resolve()] + argv, cwd=project_dir, capture_output=False)
 
     if create_symlink and project_lock.exists():
         project_lock.unlink()

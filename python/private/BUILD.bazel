@@ -70,9 +70,11 @@ py_test(
         "lock_parser_test.py",
     ],
     data = [
-        # Update lock files: for d in airflow sphinx torch ; poetry lock -C python/private/assets/$d ; end
+        # Update Poetry lock files: for d in airflow sphinx torch ; poetry lock -C python/private/assets/$d ; end
+        # Update uv lock files: for d in airflow sphinx ; cd python/private/assets ; uv lock ; cd - ;  end
         "assets/airflow/poetry.lock",
         "assets/sphinx/poetry.lock",
+        "assets/sphinx/uv.lock",
         "assets/torch/poetry.lock",
     ],
     deps = [

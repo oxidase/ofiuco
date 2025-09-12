@@ -1,5 +1,6 @@
 load("@ofiuco//python:poetry.bzl", "poetry_lock")
 load("@ofiuco//python:py_venv.bzl", "py_venv")
+load("@ofiuco//python:uv.bzl", "uv_lock")
 load("@rules_python//python:defs.bzl", "py_test")
 
 py_venv(
@@ -26,7 +27,7 @@ py_venv(
 ]]
 
 poetry_lock(
-    name = "poetry",
+    name = "lock",
     lock = "lock/poetry.lock",
     toml = "pyproject.toml",
 )

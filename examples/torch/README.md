@@ -39,6 +39,6 @@ lrwxrwxrwx 1 test test 140 Mar 25 10:31 libcudnn_ops_train.so.8 -> ../../../../.
 
 The `poetry.lock` file can be updated with
 ```
-bazel run :update_lock
+bazel run :lock
 ```
 command or with a locally installed `poetry` as `poetry update`.
