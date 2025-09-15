@@ -182,6 +182,13 @@ def _package_impl(ctx):
             cc_attr["CXX"], cc_attr["CXXFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.cpp_compile)
             cc_attr["LD"], cc_attr["LDFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.cpp_link_dynamic_library)
 
+            cc_attr["AR"], cc_attr["ARFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.cpp_link_static_library)
+            if not cc_attr["ARFLAGS"]:
+                if cc_attr["AR"].endswith("libtool"):
+                    cc_attr["ARFLAGS"] = ["-static", "-o"]
+                elif cc_attr["AR"].endswith("ar"):
+                    cc_attr["ARFLAGS"] =  ["rcs"]
+
             # CcInfo dependencies
             cc_deps = [dep for dep in ctx.attr.deps if CcInfo in dep] + ctx.attr._libpython
 

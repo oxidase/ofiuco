@@ -1,5 +1,7 @@
 package(default_visibility = ["//visibility:public"])
 
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
+
 cc_library(
     name = "nanobind",
     srcs = glob(["src/**/*.cpp", "src/**/*.h", "ext/robin_map/include/tsl/*.h"], exclude=["src/nb_combined.cpp"]),

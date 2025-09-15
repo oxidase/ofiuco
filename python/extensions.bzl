@@ -73,7 +73,7 @@ parse = module_extension(
                 "lock": attr.label(mandatory = True),
                 "toml": attr.label(),
                 "deps": attr.string_list_dict(),
-                "generate_extras": attr.bool(default = False),
+                "generate_extras": attr.bool(default = True),
                 "platforms": attr.string_dict(),
                 "build_files": attr.string_dict(),
                 "_lock_parser": attr.label(

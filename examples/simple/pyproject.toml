@@ -5,8 +5,11 @@ description = "example with dependencies"
 requires-python = ">=3.13"
 classifiers = [ "Programming Language :: Python :: 3 :: Only", "Programming Language :: Python :: 3.13" ]
 dependencies = [
+  "annetbox[sync,async]",
   "boto3",
+  "botocore[crt]",
   "pre-commit",
   "pytest",
   "setuptools",
+  "urllib3[brotli,h2,socks,zstd]",
 ]
