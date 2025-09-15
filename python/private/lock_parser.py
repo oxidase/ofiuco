@@ -270,8 +270,10 @@ class Package:
     @staticmethod
     def from_poetry_lock(package: dict[str, Any], project_root: Path):
         dependencies = {
-            normalize_target_name(name): attr if isinstance(attr, dict) else {}
+            normalize_target_name(name): values
             for name, attr in package.get("dependencies", {}).items()
+            # Don't include optional dependencies
+            if (values := attr if isinstance(attr, dict) else {"optional": False}) and not values.get("optional")
         }
         source = (
             Source.from_poetry_lock(project_root, **source_dict) if (source_dict := package.get("source")) else None
@@ -319,7 +321,7 @@ class Package:
             f"""
 py_library(
   name = "{self.name}[{name}]",
-  deps = [{deps}],
+  deps = [":{self.name}", {deps}],
   visibility = ["//visibility:public"],
 )
 """
@@ -579,7 +581,7 @@ def generate_packages(locked_packages, platforms, generate_extras, extra_deps):
             package.dependencies[type_shadow] = {}
 
     # Generate synthetic targets
-    # :_*all contains all packages unconditionally
+    # :_*all contains all non-versioned packages unconditionally
     all_packages = [package.name for package in packages if "@" not in package.name]
     packages.append(
         Package(

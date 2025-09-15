@@ -116,6 +116,7 @@ def install(args):
         cpu = cc.get("cpu")
 
         paths = dict(
+            AR="AR",
             AS="AS",
             CC="CC",
             CXX="CXX",
@@ -129,12 +130,14 @@ def install(args):
         )
 
         cpu_flags = cc_compiler_cpu_to_cflags.get(compiler, {}).get(cpu, [])
+        arflags = cc.get("ARFLAGS", [])
         asflags = cpu_flags + cc.get("ASFLAGS", [])
         cflags = cpu_flags + filter_cxx_builtin_include_directories(cc.get("CFLAGS", []))
         cxxflags = cpu_flags + cc.get("CXXFLAGS", [])
         ldflags = ["-Wl,-rpath,{}".format(cc.get("dynamic_runtime_solib_dir", ""))] + cc.get("LDFLAGS", [])
         flags_substitution = {"PWD": os.getcwd()}
         flags = dict(
+            ARFLAGS=join(arflags, flags_substitution),
             ASMFLAGS=join(asflags, flags_substitution),
             ASFLAGS=join(asflags, flags_substitution),
             CFLAGS=join(cflags, flags_substitution),

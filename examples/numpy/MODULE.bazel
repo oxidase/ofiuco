@@ -2,7 +2,7 @@ bazel_dep(name = "bazel_skylib", version = "1.8.1")
 bazel_dep(name = "catch2", version = "3.10.0")
 bazel_dep(name = "fmt", version = "11.2.0.bcr.1")
 bazel_dep(name = "platforms", version = "1.0.0")
-bazel_dep(name = "rules_cc", version = "0.2.4")
+bazel_dep(name = "rules_cc", version = "0.2.8")
 bazel_dep(name = "rules_python", version = "1.6.1")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
@@ -22,6 +22,8 @@ parse.lock(
     toml = "pyproject.toml",
     build_files = {
         "numpy": """package(default_visibility = ["//visibility:public"])
+
+load("@rules_cc//cc:cc_library.bzl", "cc_library")
 
 filegroup(
     name="whl",
