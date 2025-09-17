@@ -195,7 +195,7 @@ class Package:
     markers: str = ""
     dependencies: dict[str, Any] = field(default_factory=dict)
     extra_dependencies: list[str] = field(default_factory=list)
-    extras: dict[str, list[str]] = field(default_factory=dict)
+    extras: dict[str, set[str]] = field(default_factory=dict)
     source: Source | None = None
     develop: bool = False
 
@@ -215,7 +215,6 @@ class Package:
 
     @property
     def select(self):
-        sys.stdout.write(f"# {self.source = }\n\n")
         if self.source and self.source.type == SourceType.virtual:
             # Virtual packages should hold only dependencies
             return []
@@ -285,6 +284,12 @@ class Package:
             # Don't include optional dependencies
             if (values := attr if isinstance(attr, dict) else {"optional": False}) and not values.get("optional")
         }
+
+        extras = {
+            name: {normalize_target_name(dep.split(" ")[0]) for dep in deps}
+            for name, deps in package.get("extras", {}).items()
+        }
+
         source = (
             Source.from_poetry_lock(project_root, **source_dict) if (source_dict := package.get("source")) else None
         )
@@ -300,7 +305,7 @@ class Package:
                 for entry in package.get("files", [])
                 if entry["hash"].startswith("sha256:")
             },
-            extras=package.get("extras", {}),
+            extras=extras,
             source=source,
             develop=package.get("develop", False),
         )
@@ -308,6 +313,12 @@ class Package:
     @staticmethod
     def from_uv_lock(package: dict[str, Any], project_root: Path):
         dependencies = {normalize_target_name(attr["name"]): attr for attr in package.get("dependencies", [])}
+
+        extras = {
+            name: {normalize_target_name(n) for dep in deps if (n := dep.get("name"))}
+            for name, deps in package.get("optional-dependencies", {}).items()
+        }
+
         source = Source.from_uv_lock(project_root, **source_dict) if (source_dict := package.get("source")) else None
         files = package.get("wheels", []) + ([sdist] if (sdist := package.get("sdist")) else [])
         files = [{"url": source.url} | entry for entry in files]
@@ -321,6 +332,7 @@ class Package:
             name=package.get("name"),
             version=package.get("version"),
             dependencies=dependencies,
+            extras=extras,
             source=source,
             urls=urls,
             files={normalize_basename(url): hsh for hsh, url in urls.items()},
@@ -336,11 +348,7 @@ py_library(
 )
 """
             for name, extra_deps in self.extras.items()
-            if (
-                deps := ", ".join(
-                    [f'":{dep}"' for dep in {normalize_target_name(dep.split(" ")[0]) for dep in extra_deps}]
-                )
-            )
+            if (deps := ", ".join([f'":{dep}"' for dep in extra_deps]))
         )
 
     def repr(self, platforms, generate_extras):
