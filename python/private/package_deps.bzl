@@ -92,14 +92,14 @@ def _format_library_link(lib):
 
 def merge_defines(defines):
     # Process PYTHON_PROGRAM_NAME entries
-    prefix, suffix = "PYTHON_PROGRAM_NAME='", "'"
+    prefix, suffix = 'PYTHON_PROGRAM_NAME="', '"'
     python_program_names = depset([d for d in defines if d.startswith(prefix) and d.endswith(suffix)]).to_list()
     defines = [d for d in defines if not (d.startswith(prefix) and d.endswith(suffix))]
     if len(python_program_names) >= 2:
         fail("can not merge PYTHON_PROGRAM_NAME defines " + str(python_program_names))
 
     # Process PYTHON_PATH entries
-    prefix, suffix = "PYTHON_PATH='\"", "\"'"
+    prefix, suffix = 'PYTHON_PATH="', '"'
     python_paths = [d[len(prefix):-len(suffix)] for d in defines if d.startswith(prefix) and d.endswith(suffix)]
     defines = [d for d in defines if not (d.startswith(prefix) and d.endswith(suffix))]
     if python_paths:
@@ -219,10 +219,6 @@ def _package_impl(ctx):
                 ["-isystem $PWD/{}".format(path) for dep in cc_deps for path in dep[CcInfo].compilation_context.system_includes.to_list()] + \
                 ["-D{}".format(d) for d in merge_defines([d for dep in cc_deps for d in dep[CcInfo].compilation_context.defines.to_list()])]
 
-            if cc_deps:
-                print(cc_deps[0][CcInfo].compilation_context.defines)
-                print([define for dep in cc_deps for define in dep[CcInfo].compilation_context.defines.to_list()])
-
             # Linking context
             cc_deps_linker_inputs = depset(transitive = [dep[CcInfo].linking_context.linker_inputs for dep in cc_deps], order = "topological")
             cc_deps_libraries =[lib.dynamic_library or lib.static_library for inputs in cc_deps_linker_inputs.to_list() for lib in inputs.libraries]
@@ -280,8 +276,8 @@ def _package_impl(ctx):
     # CcInfo
     compilation_context = cc_common.create_compilation_context(
         defines = depset([
-            """PYTHON_PROGRAM_NAME='"{}"'""".format(py_runtime_info.interpreter.short_path),
-            """PYTHON_PATH='"{}"'""".format(":".join(["../" + path for path in imports.to_list()])),
+            'PYTHON_PROGRAM_NAME="{}"'.format(py_runtime_info.interpreter.short_path),
+            'PYTHON_PATH="{}"'.format(":".join(["../" + path for path in imports.to_list()])),
         ])
     )
 

@@ -53,21 +53,21 @@ def _merge_defines_test_impl(ctx):
     defines = merge_defines([
         "X",
         "A=B",
-        "PYTHON_PROGRAM_NAME='\"../rules_python++python+python_3_13_aarch64-apple-darwin/bin/python3\"'",
-        "PYTHON_PATH='\"../ofiuco++parse+diskcache-5.6.3-py3-none-any\"'",
-        "PYTHON_PROGRAM_NAME='\"../rules_python++python+python_3_13_aarch64-apple-darwin/bin/python3\"'",
-        "PYTHON_PATH='\"../ofiuco++parse+MarkupSafe-3.0.2-cp313-cp313-macosx_11_0_arm64:../ofiuco++parse+jinja2-3.1.6-py3-none-any\"'",
-        "PYTHON_PROGRAM_NAME='\"../rules_python++python+python_3_13_aarch64-apple-darwin/bin/python3\"'",
-        "PYTHON_PATH='\"../ofiuco++parse+numpy-2.3.1-cp313-cp313-macosx_14_0_arm64\"'",
-        "PYTHON_PROGRAM_NAME='\"../rules_python++python+python_3_13_aarch64-apple-darwin/bin/python3\"'",
-        "PYTHON_PATH='\"../ofiuco++parse+typing_extensions-4.14.1-py3-none-any\"'",
-        "PYTHON_PATH='\"x\"'",
-        "PYTHON_PATH='\"../ofiuco++parse+numpy-2.3.1-cp313-cp313-macosx_14_0_arm64\"'",
+        'PYTHON_PROGRAM_NAME="../rules_python++python+python_3_13_aarch64-apple-darwin/bin/python3"',
+        'PYTHON_PATH="../ofiuco++parse+diskcache-5.6.3-py3-none-any"',
+        'PYTHON_PROGRAM_NAME="../rules_python++python+python_3_13_aarch64-apple-darwin/bin/python3"',
+        'PYTHON_PATH="../ofiuco++parse+MarkupSafe-3.0.2-cp313-cp313-macosx_11_0_arm64:../ofiuco++parse+jinja2-3.1.6-py3-none-any"',
+        'PYTHON_PROGRAM_NAME="../rules_python++python+python_3_13_aarch64-apple-darwin/bin/python3"',
+        'PYTHON_PATH="../ofiuco++parse+numpy-2.3.1-cp313-cp313-macosx_14_0_arm64"',
+        'PYTHON_PROGRAM_NAME="../rules_python++python+python_3_13_aarch64-apple-darwin/bin/python3"',
+        'PYTHON_PATH="../ofiuco++parse+typing_extensions-4.14.1-py3-none-any"',
+        'PYTHON_PATH="x"',
+        'PYTHON_PATH="../ofiuco++parse+numpy-2.3.1-cp313-cp313-macosx_14_0_arm64"',
     ])
 
     expected = [
         "A=B",
-        "PYTHON_PATH='\"{}\"'".format(":".join([
+        'PYTHON_PATH=\"{}"'.format(":".join([
             "../ofiuco++parse+diskcache-5.6.3-py3-none-any",
             "../ofiuco++parse+MarkupSafe-3.0.2-cp313-cp313-macosx_11_0_arm64",
             "../ofiuco++parse+jinja2-3.1.6-py3-none-any",
@@ -75,7 +75,7 @@ def _merge_defines_test_impl(ctx):
             "../ofiuco++parse+typing_extensions-4.14.1-py3-none-any",
             "x",
         ])),
-        "PYTHON_PROGRAM_NAME='\"../rules_python++python+python_3_13_aarch64-apple-darwin/bin/python3\"'",
+        'PYTHON_PROGRAM_NAME="../rules_python++python+python_3_13_aarch64-apple-darwin/bin/python3"',
         "X"]
 
     asserts.true(env, sorted(defines) == expected)
