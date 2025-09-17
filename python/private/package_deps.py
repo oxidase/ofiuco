@@ -2,6 +2,7 @@ import argparse
 import json
 import logging
 import os
+import platform
 import re
 import string
 import sys
@@ -136,6 +137,11 @@ def install(args):
         cxxflags = cpu_flags + cc.get("CXXFLAGS", [])
         ldflags = ["-Wl,-rpath,{}".format(cc.get("dynamic_runtime_solib_dir", ""))] + cc.get("LDFLAGS", [])
         flags_substitution = {"PWD": os.getcwd()}
+        fixme_macos26_cmake_flags = (
+            ["-DGGML_ACCELERATE=OFF", "-DGGML_BLAS_VENDOR=Generic", "-DCMAKE_OSX_DEPLOYMENT_TARGET=11.0"]
+            if platform.mac_ver()[0] == "26.0"
+            else []
+        )
         flags = dict(
             ARFLAGS=join(arflags, flags_substitution),
             ASMFLAGS=join(asflags, flags_substitution),
@@ -143,7 +149,12 @@ def install(args):
             CFLAGS=join(cflags, flags_substitution),
             CXXFLAGS=join(cxxflags, flags_substitution),
             LDFLAGS=join(ldflags, flags_substitution),
-            CMAKE_ARGS=join(cc_cpu_to_cmake_args.get(cpu, []) + ["-DCMAKE_VERBOSE_MAKEFILE=ON"], flags_substitution),
+            CMAKE_ARGS=join(
+                cc_cpu_to_cmake_args.get(cpu, []) + ["-DCMAKE_VERBOSE_MAKEFILE=ON"] + fixme_macos26_cmake_flags,
+                flags_substitution,
+            ),
+            GGML_ACCELERATE="OFF",
+            CMAKE_BUILD_TYPE="Debug",
         )
 
         os.environ.update(flags)

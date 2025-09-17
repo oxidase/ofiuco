@@ -260,7 +260,7 @@ def _package_impl(ctx):
     compilation_context = cc_common.create_compilation_context(
         defines = depset([
             'PYTHON_PROGRAM_NAME=L"{}"'.format(py_runtime_info.interpreter.short_path),
-            'PYTHON_PATH=L"{}"'.format(":".join(["../" + path for path in imports.to_list()]))
+            'PYTHON_PATH=L"{}"'.format(":".join(["../" + path for path in imports.to_list()])),
         ])
     )
 

@@ -7,11 +7,7 @@ py_test(
     srcs = ["test.py"],
     data = ["uv.lock"],
     deps = [
-        "@uv//:boto3",
-        "@uv//:pip",
-        "@uv//:setuptools",
-        "@uv//:sphinxcontrib-images",
-        "@uv//:pytest",
+        "@uv//:all",
     ],
 )
 
