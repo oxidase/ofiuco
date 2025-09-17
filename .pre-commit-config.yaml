@@ -17,6 +17,7 @@ repos:
     rev: v2.6.0
     hooks:
       - id: pyproject-fmt
+        exclude: ^(examples/uv/pyproject.toml)
 
   - repo: local
     hooks:
