@@ -10,6 +10,9 @@
 
 #include <iostream>
 
+#define WIDEN_(x) L##x
+#define WIDEN(x) WIDEN_(x)
+
 
 class PythonSetup : public Catch::EventListenerBase {
 public:
@@ -25,13 +28,13 @@ public:
       PyConfig_InitPythonConfig(&config);
 
       // Set the program name. Implicitly pre-initialize Python.
-      status = PyConfig_SetString(&config, &config.program_name, PYTHON_PROGRAM_NAME);
+      status = PyConfig_SetString(&config, &config.program_name, WIDEN(PYTHON_PROGRAM_NAME));
       if (PyStatus_Exception(status)) {
         goto exception;
       }
 
       // Set the python path.
-      status = PyConfig_SetString(&config, &config.pythonpath_env, PYTHON_PATH);
+      status = PyConfig_SetString(&config, &config.pythonpath_env, WIDEN(PYTHON_PATH));
       if (PyStatus_Exception(status)) {
         goto exception;
       }
