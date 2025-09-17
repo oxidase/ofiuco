@@ -6,4 +6,3 @@ build --incompatible_no_implicit_file_export
 build --incompatible_config_setting_private_default_visibility
 build --incompatible_disable_starlark_host_transitions
 build --incompatible_disable_native_repo_rules
-build --incompatible_disable_autoloads_in_main_repo
