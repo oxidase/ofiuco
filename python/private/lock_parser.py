@@ -136,6 +136,7 @@ class SourceType(StrEnum):
     hg = auto()
     legacy = auto()
     url = auto()
+    virtual = auto()
 
 
 @dataclass
@@ -172,8 +173,11 @@ class Source:
             url = urllib.parse.urlunparse(parsed._replace(fragment=""))
             return Source(type=SourceType.git, url=url, resolved_reference=parsed.fragment)
 
-        if url := kwargs.get("editable", kwargs.get("virtual")):
+        if url := kwargs.get("editable"):
             return Source(type=SourceType.directory, url=os.fspath((project_root / url).resolve()))
+
+        if url := kwargs.get("virtual"):
+            return Source(type=SourceType.virtual, url=url)
 
         if url := kwargs.get("path"):
             return Source(type=SourceType.file, url=os.fspath((project_root / url).resolve()))
@@ -210,8 +214,14 @@ class Package:
         return {k.removesuffix(".tar.gz"): v for k, v in self.files.items() if k.endswith(".tar.gz")}
 
     @property
-    def select(self) -> dict[str, str]:
+    def select(self):
+        sys.stdout.write(f"# {self.source = }\n\n")
+        if self.source and self.source.type == SourceType.virtual:
+            # Virtual packages should hold only dependencies
+            return []
+
         if self.source and self.source.type not in {SourceType.legacy, SourceType.url}:
+            # Pre-built wheel file or directory package
             kind = "whl" if self.source.is_whl else "pkg"
             return [f'"@{self.name}//:{kind}"']
 
@@ -452,6 +462,9 @@ filegroup(
     urls = {}
     if package.source is not None:
         match package.source.type:
+            case SourceType.virtual:
+                return []
+
             case SourceType.file:
                 return [
                     dict(
