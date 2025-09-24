@@ -428,7 +428,7 @@ async def get_simple_index(name, index_url):
 
     async def fetch():
         pypi_simple_mime_type = "application/vnd.pypi.simple.v1+json"
-        request = urllib.request.Request(package_index_url, headers={"Accept": pypi_simple_mime_type})
+        request = urllib.request.Request(package_index_url, headers={"Accept": f"{pypi_simple_mime_type},text/html"})
         with urllib.request.urlopen(request) as response:
             if response.getcode() != 200:
                 raise RuntimeError(f"Unexpected status code: {response.getcode()} for {package_index_url}")
