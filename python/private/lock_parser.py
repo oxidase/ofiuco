@@ -359,7 +359,15 @@ py_library(
             for name, attr in self.dependencies.items()
             if (marker := attr.get("markers", attr.get("marker")))
         }
-        dependencies = [f":{name}" for name in sorted(set(self.dependencies))] + sorted(set(self.extra_dependencies))
+
+        direct_dependencies = []
+        for dependency_name, dependency_info in self.dependencies.items():
+            for extra in dependency_info.get("extras", []):
+                direct_dependencies.append(f"{dependency_name}[{extra}]")
+            if not dependency_info.get("extras", []):
+                direct_dependencies.append(dependency_name)
+
+        dependencies = [f":{name}" for name in sorted(set(direct_dependencies))] + sorted(set(self.extra_dependencies))
 
         attrs = {
             "description": [f'"""{self.description}"""'] if self.description else [],
