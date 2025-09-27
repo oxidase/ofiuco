@@ -9,7 +9,7 @@ py_test(
     data = ["poetry.lock"],
     deps = [
         ":pre-commit",
-        "@poetry//:boto3",
+        "@poetry//:aioboto3",
         "@poetry//:pytest",
         "@poetry//:annetbox[async]",
         "@poetry//:urllib3[brotli]",
