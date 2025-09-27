@@ -235,13 +235,14 @@ def _package_impl(ctx):
             # Generates CC toolchain argument
             arguments.append("--cc_toolchain=" + json.encode(cc_attr))
 
-        # Get Rust target toolchain and propagate to the installation script
-        rust_toolchain = ctx.toolchains["@rules_rust//rust:toolchain_type"]
-        if rust_toolchain:
-            # Generates Rust toolchain argument
-            arguments.append("--rust_toolchain=" + json.encode(rust_toolchain.make_variables.variables))
+        if ctx.attr.enable_rust:
+            # Get Rust target toolchain and propagate to the installation script
+            rust_toolchain = ctx.toolchains["@rules_rust//rust:toolchain_type"]
+            if rust_toolchain:
+                # Generates Rust toolchain argument
+                arguments.append("--rust_toolchain=" + json.encode(rust_toolchain.make_variables.variables))
 
-            build_transitive_deps += [depset(transitive = [rust_toolchain.all_files])]
+                build_transitive_deps += [depset(transitive = [rust_toolchain.all_files])]
 
         # Pack transitive depenedencies
         inputs = depset(package_files, transitive = build_transitive_deps)
@@ -298,6 +299,7 @@ package = rule(
         "description": attr.string(doc = "The package description"),
         "package": attr.label(doc = "The Python package target"),
         "develop": attr.bool(),
+        "enable_rust": attr.bool(),
         "markers": attr.string(doc = "The JSON string with a dictionary of dependency markers accordingly to PEP 508"),
         "platforms": attr.string_dict(
             default = DEFAULT_PLATFORMS,

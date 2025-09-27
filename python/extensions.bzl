@@ -21,6 +21,7 @@ def _parse_impl(mctx):
                 toml = attr.toml,
                 deps = attr.deps,
                 generate_extras = attr.generate_extras,
+                enable_rust = attr.enable_rust,
                 platforms = attr.platforms,
             )
 
@@ -74,6 +75,7 @@ parse = module_extension(
                 "toml": attr.label(),
                 "deps": attr.string_list_dict(),
                 "generate_extras": attr.bool(default = True),
+                "enable_rust": attr.bool(default = False),
                 "platforms": attr.string_dict(),
                 "build_files": attr.string_dict(),
                 "_lock_parser": attr.label(

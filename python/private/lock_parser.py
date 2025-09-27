@@ -352,7 +352,7 @@ py_library(
             if (deps := ", ".join([f'":{dep}"' for dep in extra_deps]))
         )
 
-    def repr(self, platforms, generate_extras):
+    def repr(self, platforms, generate_extras, enable_rust):
         sep = "\n  "
         attr_sep = "," + sep
         markers = {
@@ -385,6 +385,7 @@ py_library(
                 else []
             ),
             "develop": ["True"] if self.develop else [],
+            "enable_rust": ["True"] if enable_rust else [],
             "visibility": ['["//visibility:public"]'],
         }
 
@@ -562,7 +563,7 @@ def generate_files(locked_packages):
     return json.dumps(repositories, indent=2)
 
 
-def generate_packages(locked_packages, platforms, generate_extras, extra_deps):
+def generate_packages(locked_packages, platforms, generate_extras, enable_rust, extra_deps):
     # Process packages by first grouping by package names
     packages = []
     name_getter = attrgetter("name")
@@ -620,7 +621,7 @@ def generate_packages(locked_packages, platforms, generate_extras, extra_deps):
     )
 
     # Print packages
-    return "".join(package.repr(platforms, generate_extras) for package in packages)
+    return "".join(package.repr(platforms, generate_extras, enable_rust) for package in packages)
 
 
 def main(argv=None):
@@ -629,11 +630,10 @@ def main(argv=None):
     parser.add_argument("input_file", type=Path, help="Path to the lock file")
     parser.add_argument("platforms", nargs="?", type=json.loads, help="JSON string with platforms definitions")
     parser.add_argument("--deps", type=json.loads, help="JSON string of extra dependencies")
-    parser.add_argument("--generate_extras", dest="generate_extras", action="store_true")
-    parser.add_argument("--nogenerate_extras", dest="generate_extras", action="store_false")
+    parser.add_argument("--generate_extras", default=True, action=argparse.BooleanOptionalAction)
+    parser.add_argument("--enable_rust", default=False, action=argparse.BooleanOptionalAction)
     parser.add_argument("--project_file", type=Path)
     parser.add_argument("--output", type=str.lower, choices=["packages", "files"])
-    parser.set_defaults(generate_extras=False)
 
     args = parser.parse_args(argv)
 
@@ -650,7 +650,7 @@ def main(argv=None):
     if args.output == "files":
         output = generate_files(locked_packages)
     else:
-        output = generate_packages(locked_packages, args.platforms, args.generate_extras, args.deps)
+        output = generate_packages(locked_packages, args.platforms, args.generate_extras, args.enable_rust, args.deps)
 
     # Print output
     sys.stdout.write(output)

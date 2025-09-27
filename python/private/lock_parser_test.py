@@ -24,7 +24,7 @@ class TestPoetryInstallSubcommand(unittest.TestCase):
 
     def test_sphinx_files(self):
         with io.StringIO() as buffer, contextlib.redirect_stdout(buffer):
-            main([self.sphinx_lock, "--nogenerate_extras", f"--project_file={self.sphinx_lock}", "--output=files"])
+            main([self.sphinx_lock, "--no-generate_extras", f"--project_file={self.sphinx_lock}", "--output=files"])
             repositories = buffer.getvalue()
         assert (
             r"zstandard-0.23.0-cp312-cp312-manylinux_2_5_i686.manylinux1_i686.manylinux_2_17_i686.manylinux2014_i686.whl"
@@ -34,9 +34,18 @@ class TestPoetryInstallSubcommand(unittest.TestCase):
 
     def test_sphinx_lock(self):
         with io.StringIO() as buffer, contextlib.redirect_stdout(buffer):
-            main([self.sphinx_lock, "--nogenerate_extras", f"--project_file={self.sphinx_lock}", "--output=packages"])
+            main(
+                [
+                    self.sphinx_lock,
+                    "--no-generate_extras",
+                    "--enable_rust",
+                    f"--project_file={self.sphinx_lock}",
+                    "--output=packages",
+                ]
+            )
             build_file = buffer.getvalue()
 
+        assert r"enable_rust = True" in build_file
         assert r"py2.py3-none-any" in build_file
         assert r"zstandard-0.23.0-cp310-cp310-macosx_10_9_x86_64//:whl" in build_file
         assert r'{"cffi": "platform_python_implementation == \\\"PyPy\\\""}' in build_file
@@ -58,7 +67,7 @@ class TestPoetryInstallSubcommand(unittest.TestCase):
 
     def test_torch_lock(self):
         with io.StringIO() as buffer, contextlib.redirect_stdout(buffer):
-            main([self.assets.format("torch")])
+            main([self.assets.format("torch"), "--no-generate_extras"])
             build_file = buffer.getvalue()
 
         assert build_file.count('name = "torch"') == 1
@@ -78,7 +87,7 @@ class TestPoetryInstallSubcommand(unittest.TestCase):
         `-- @@ofiuco++poetry+poetry//:apache-airflow-task-sdk
         """
         with io.StringIO() as buffer, contextlib.redirect_stdout(buffer):
-            main([self.assets.format("airflow")])
+            main([self.assets.format("airflow"), "--no-generate_extras"])
             build_file = buffer.getvalue()
 
         assert re.search(r'deps\s*=\s*\[\s*":apache-airflow@2.7.2",\s*":apache-airflow@3.0.1",\s*]', build_file)
@@ -167,7 +176,7 @@ class TestUvInstallSubcommand(unittest.TestCase):
 
     def test_sphinx_files(self):
         with io.StringIO() as buffer, contextlib.redirect_stdout(buffer):
-            main([self.sphinx_lock, "--nogenerate_extras", f"--project_file={self.sphinx_lock}", "--output=files"])
+            main([self.sphinx_lock, "--no-generate_extras", f"--project_file={self.sphinx_lock}", "--output=files"])
             repositories = buffer.getvalue()
         assert (
             r"zstandard-0.24.0-cp312-cp312-manylinux2010_i686.manylinux2014_i686.manylinux_2_12_i686.manylinux_2_17_i686.whl"
