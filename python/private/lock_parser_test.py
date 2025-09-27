@@ -1,3 +1,4 @@
+import asyncio
 import contextlib
 import io
 import json
@@ -5,8 +6,11 @@ import os
 import re
 import tempfile
 import unittest
+import unittest.mock
+from pathlib import Path
 
-from python.private.lock_parser import WHEEL_RE, find_unique_name, get_best_match, get_select_condition, main
+import python.private.lock_parser as parser
+from python.private.lock_parser import WHEEL_RE, find_unique_name, main
 
 
 class TestPoetryInstallSubcommand(unittest.TestCase):
@@ -103,7 +107,7 @@ class TestPoetryInstallSubcommand(unittest.TestCase):
         for test, parts, expected in tests:
             assert (m := WHEEL_RE.fullmatch(test)), f"{test = } does not match wheel regular expression"
             assert parts.items() <= m.groupdict().items(), f"{parts} ⊄ {m.groupdict()}"
-            assert (actual := get_select_condition(m.groupdict())) == expected, f"'{actual}' ≠ '{expected}'"
+            assert (actual := parser.get_select_condition(m.groupdict())) == expected, f"'{actual}' ≠ '{expected}'"
 
     def test_best_package(self):
         tests = [
@@ -153,7 +157,7 @@ class TestPoetryInstallSubcommand(unittest.TestCase):
         ]
 
         for index, (test, kwargs, expected) in enumerate(tests):
-            assert (actual := get_best_match(test, **kwargs)) == expected, f"{actual} ≠ {expected} for {index}"
+            assert (actual := parser.get_best_match(test, **kwargs)) == expected, f"{actual} ≠ {expected} for {index}"
 
 
 class TestUvInstallSubcommand(unittest.TestCase):
@@ -170,6 +174,39 @@ class TestUvInstallSubcommand(unittest.TestCase):
             in repositories
         ), repositories
         assert r"d2b3b4bda1a025b10fe0269369475f420177f2cb06e0f9d32c95b4873c9f80b8" in repositories, repositories
+
+
+class TestLegacyIndexParsers(unittest.TestCase):
+    expected = {
+        "86c0d0b93306b961d58d62a4db4879f27fe25513d4b969df351abdddb3c30e01": "https://files.pythonhosted.org/packages/a3/5c/00a0e072241553e1a7496d638deababa67c5058571567b92a7eaa258397c/pytest-8.4.2.tar.gz",
+        "872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79": "https://files.pythonhosted.org/packages/a8/a4/20da314d277121d6534b3a980b29035dcd51e6744bd79075a6ce8fa4eb8d/pytest-8.4.2-py3-none-any.whl#sha256=872f880de3fc3a5bdc88a11b39c9710c3497a547cfa9320bc3c5e62fbf272e79",
+    }
+
+    @unittest.mock.patch("urllib.request.urlopen")
+    def test_json(self, mock_urlopen):
+        """curl -s --header 'Accept: application/vnd.pypi.simple.v1+json,text/html' https://pypi.org/simple/pytest"""
+        response = unittest.mock.MagicMock()
+        response.getcode.return_value = 200
+        response.headers.get_content_type.return_value = parser.PYPI_SIMPLE_MIME_TYPE
+        response.read.return_value = Path("python/private/assets/pytest.json").read_bytes()
+        response.__enter__.return_value = response
+        mock_urlopen.return_value = response
+
+        index = asyncio.run(parser.get_simple_index("pytest", "https://pypi.org/simple/pytest"))
+        assert set(self.expected.items()) & set(index.items())
+
+    @unittest.mock.patch("urllib.request.urlopen")
+    def test_html(self, mock_urlopen):
+        """curl -s --header 'Accept: text/html' https://pypi.org/simple/pytest"""
+        response = unittest.mock.MagicMock()
+        response.geturl.return_value = ""
+        response.getcode.return_value = 200
+        response.read.return_value = Path("python/private/assets/pytest.html").read_bytes()
+        response.__enter__.return_value = response
+        mock_urlopen.return_value = response
+
+        index = asyncio.run(parser.get_simple_index("pytest", "https://pypi.org/simple/pytest"))
+        assert set(self.expected.items()) & set(index.items())
 
 
 if __name__ == "__main__":

@@ -19,6 +19,7 @@ from typing import Any
 
 NEW_ISSUE_URL = "https://github.com/oxidase/ofiuco/issues/new"
 TODO_MESSAGE = f"TODO: raise new issue at {NEW_ISSUE_URL} for adding support of {{}}"
+PYPI_SIMPLE_MIME_TYPE = "application/vnd.pypi.simple.v1+json"
 
 # Python Versioning
 # References:
@@ -435,13 +436,12 @@ async def get_simple_index(name, index_url):
     package_index_url = f"{index_url}/{name}/"
 
     async def fetch():
-        pypi_simple_mime_type = "application/vnd.pypi.simple.v1+json"
-        request = urllib.request.Request(package_index_url, headers={"Accept": f"{pypi_simple_mime_type},text/html"})
+        request = urllib.request.Request(package_index_url, headers={"Accept": f"{PYPI_SIMPLE_MIME_TYPE},text/html"})
         with urllib.request.urlopen(request) as response:
             if response.getcode() != 200:
                 raise RuntimeError(f"Unexpected status code: {response.getcode()} for {package_index_url}")
 
-            if response.headers.get_content_type() == pypi_simple_mime_type:
+            if response.headers.get_content_type() == PYPI_SIMPLE_MIME_TYPE:
                 return {
                     sha256: url
                     for e in json.loads(response.read()).get("files", [])

@@ -76,6 +76,8 @@ py_test(
         "assets/sphinx/poetry.lock",
         "assets/sphinx/uv.lock",
         "assets/torch/poetry.lock",
+        "assets/pytest.json",
+        "assets/pytest.html",
     ],
     deps = [
         ":lock_parser",
