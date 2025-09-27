@@ -20,7 +20,8 @@ def _parse_lock_impl(rctx):
         rctx.path(rctx.attr._lock_parser),
         rctx.path(rctx.attr.lock),
         json.encode(rctx.attr.platforms),
-        "--{}generate_extras".format("" if rctx.attr.generate_extras else "no"),
+        "--{}generate_extras".format("" if rctx.attr.generate_extras else "no-"),
+        "--{}enable_rust".format("" if rctx.attr.enable_rust else "no-"),
     ] + (["--deps={}".format(json.encode(rctx.attr.deps))] if rctx.attr.deps else [])
       + (["--project_file={}".format(rctx.path(rctx.attr.toml))] if rctx.attr.toml else []))
 
@@ -48,6 +49,10 @@ parse_lock = repository_rule(
         "generate_extras": attr.bool(
             default = True,
             doc = "Generate packages with extra dependencies",
+        ),
+        "enable_rust": attr.bool(
+            default = False,
+            doc = "Enable rust toolchain when compiling Python packages",
         ),
         "platforms": attr.string_dict(
             doc = "The mapping of interpter substrings to Python platform tags and environment markers as a JSON string",
