@@ -7,10 +7,16 @@ classifiers = [ "Programming Language :: Python :: 3 :: Only", "Programming Lang
 dependencies = [
   "annetbox[sync,async]",
   "aioboto3",
+  "numpy",
   "pip @ https://files.pythonhosted.org/packages/20/16/650289cd3f43d5a2fadfd98c68bd1e1e7f2550a1a5326768cddfbcedb2c5/pip-25.2.tar.gz",
   "pre-commit",
   "pytest @ file://${PROJECT_ROOT}/pytest-8.4.2-py3-none-any.whl",
   "setuptools @ https://files.pythonhosted.org/packages/a3/dc/17031897dae0efacfea57dfd3a82fdd2a2aeb58e0ff71b77b87e44edc772/setuptools-80.9.0-py3-none-any.whl",
   "sphinxcontrib-images @ git+https://github.com/sphinx-contrib/images",
   "ytsaurus-yson",
+
+  # Some Rust-dependent packages
+  "cryptography",
+  "orjson",
+  "polars[rt64]",
 ]

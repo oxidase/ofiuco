@@ -5,24 +5,21 @@ package(default_visibility = ["//visibility:public"])
 # List all targets bazel query @ofiuco//python/platforms/...
 
 ### Supported Python binary ABI versions
+###   [Python tag, Python version, Python ABI tag, free-threaded]
 python_abi_tags = [
-    # Python tag, Python version, Python ABI, free threaded
-    ["cp34", "3.4", ["abi3", "none"], "no"],
-    ["cp35", "3.5", ["abi3", "none"], "no"],
-    ["cp36", "3.6", ["abi3", "cp36m", "none"], "no"],
-    ["cp37", "3.7", ["abi3", "cp37m", "none"], "no"],
-    ["cp38", "3.8", ["abi3", "cp38", "none"], "no"],
-    ["cp39", "3.9", ["abi3", "cp39", "none"], "no"],
-    ["cp310", "3.10", ["abi3", "cp310", "none"], "no"],
-    ["cp311", "3.11", ["abi3", "cp311", "none"], "no"],
-    ["cp312", "3.12", ["abi3", "cp312", "none"], "no"],
-    ["cp313", "3.13", ["abi3", "cp313", "none"], "no"],
-    ["cp313", "3.13", ["cp313t"], "yes"],
-    ["cp314", "3.14", ["abi3", "cp314", "none"], "no"],
-    ["cp314", "3.14", ["cp314t"], "yes"],
-    ["cp315", "3.15", ["abi3", "cp315", "none"], "no"],
-    ["cp315", "3.15", ["cp315t"], "yes"],
-    ["py3", None, ["none"], "no"],
+    ["py3", None, "none", "no"],
+    ["cp3x", None, "abi3", "no"],
+] + [
+    # ABI m versions
+    ["cp3" + str(minor), "3." + str(minor), "cp3" + str(minor) + "m", "no"] for minor in range(4, 8)
+] + [
+    ["cp3" + str(minor), "3." + str(minor), "cp3" + str(minor), "no"] for minor in range(8, 17)
+] + [
+    # ABI free-threaded versions
+    ["cp3" + str(minor), "3." + str(minor), "cp3" + str(minor) + "t", "yes"] for minor in range(13, 17)
+] + [
+    # ABI 'none' versions
+    ["cp3" + str(minor), "3." + str(minor), "none", "no"] for minor in range(4, 17)
 ]
 
 # Linux
@@ -37,8 +34,7 @@ python_abi_tags = [
         "@rules_python//python/config_settings:py_freethreaded": freethreaded,
     } if python_version else {}),
 )
- for python_tag, python_version, abi_tags, freethreaded in python_abi_tags
- for abi_tag in abi_tags
+ for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
  for cpu in ["aarch64", "armv7", "ppc64le", "riscv64", "riscv32", "s390x", "x86_32", "x86_64"]
  for libc in ["glibc", "musl"]]
 
@@ -75,8 +71,7 @@ macosx_versions = [
         "@rules_python//python/config_settings:py_freethreaded": freethreaded,
     }  if python_version else {},
 )
- for python_tag, python_version, abi_tags, freethreaded in python_abi_tags
- for abi_tag in abi_tags
+ for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
  for cpu in ["x86_64", "arm64"]
  for macosx in macosx_versions]
 
@@ -93,8 +88,7 @@ macosx_versions = [
         "@rules_python//python/config_settings:py_freethreaded": freethreaded,
     }  if python_version else {},
 )
- for python_tag, python_version, abi_tags, freethreaded in python_abi_tags
- for abi_tag in abi_tags
+ for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
  for macosx in macosx_versions]
 
 # Windows
@@ -109,8 +103,7 @@ macosx_versions = [
         "@rules_python//python/config_settings:py_freethreaded": freethreaded,
     } if python_version else {},
 )
- for python_tag, python_version, abi_tags, freethreaded in python_abi_tags
- for abi_tag in abi_tags
+ for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
  for cpu, platform  in [
      ["arm64", "win_arm64"],
      ["x86_32", "win32"],
@@ -145,8 +138,7 @@ ios_versions = [
         "@rules_python//python/config_settings:py_freethreaded": freethreaded,
     } if python_version else {},
 )
- for python_tag, python_version, abi_tags, freethreaded in python_abi_tags
- for abi_tag in abi_tags
+ for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
  for ios_version in ios_versions
  for cpu, ios_platform  in [
      ["arm64", "iphoneos"],

@@ -163,10 +163,19 @@ class TestPoetryInstallSubcommand(unittest.TestCase):
                 {"glibc": (2, 34), "musl": (1, 2)},
                 "c",
             ),
+            (
+                # cryptography-46.0.2 case
+                {"cp311-abi3-macosx_10_9_universal2": "a", "cp38-abi3-macosx_10_9_universal2": "b"},
+                {"glibc": None, "musl": None},
+                "b",
+            ),
         ]
 
+        parts = {"python_tag": "cp313", "abi_tag": "abi3"}
         for index, (test, kwargs, expected) in enumerate(tests):
-            assert (actual := parser.get_best_match(test, **kwargs)) == expected, f"{actual} ≠ {expected} for {index}"
+            wheel_targets = [(condition, parts | {"platform": platform}, "_") for platform, condition in test.items()]
+            actual = parser.get_best_match(wheel_targets, **kwargs)
+            assert actual[0] == expected, f"{actual[0]} ≠ {expected} for {test} at {index}"
 
     def test_back_compatible_targets(self):
         wheel_target = "x"
@@ -178,8 +187,8 @@ class TestPoetryInstallSubcommand(unittest.TestCase):
                     "platform": "macosx_15_0_x86_64",
                 },
                 {
-                    "cp314-abi3-macosx_15_0_x86_64",
-                    "cp314-abi3-macosx_16_0_x86_64",
+                    "cp3x-abi3-macosx_15_0_x86_64",
+                    "cp3x-abi3-macosx_16_0_x86_64",
                 },
             ),
             (
@@ -217,7 +226,9 @@ class TestPoetryInstallSubcommand(unittest.TestCase):
             assert set(actual.keys()) == expected, f"{sorted(actual.keys())} ≠ {sorted(expected)} for {index}"
             assert set(actual.values()) == {wheel_target}, f"{set(actual.values())} ≠ {wheel_target} for {index}"
 
-        assert parser.get_back_compatible_targets({"platform": "linux_x86_64"}, wheel_target) is None
+        # Irrelevant system case
+        parts = {"python_tag": "cp313", "abi_tag": "none", "platform": "linux_x86_64"}
+        assert parser.get_back_compatible_targets(parts, wheel_target) is None
 
 
 class TestUvInstallSubcommand(unittest.TestCase):
