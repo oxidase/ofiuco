@@ -168,6 +168,57 @@ class TestPoetryInstallSubcommand(unittest.TestCase):
         for index, (test, kwargs, expected) in enumerate(tests):
             assert (actual := parser.get_best_match(test, **kwargs)) == expected, f"{actual} ≠ {expected} for {index}"
 
+    def test_back_compatible_targets(self):
+        wheel_target = "x"
+        tests = [
+            (
+                {
+                    "python_tag": "cp314",
+                    "abi_tag": "abi3",
+                    "platform": "macosx_15_0_x86_64",
+                },
+                {
+                    "cp314-abi3-macosx_15_0_x86_64",
+                    "cp314-abi3-macosx_16_0_x86_64",
+                },
+            ),
+            (
+                {
+                    "python_tag": "cp313",
+                    "abi_tag": "cp313",
+                    "platform": "macosx_11_0_x86_64.macosx_11_0_arm64.macosx_10_15_universal2",
+                },
+                {
+                    "cp313-cp313-macosx_10_15_universal2",
+                    "cp313-cp313-macosx_11_0_arm64",
+                    "cp313-cp313-macosx_11_0_universal2",
+                    "cp313-cp313-macosx_11_0_x86_64",
+                    "cp313-cp313-macosx_12_0_arm64",
+                    "cp313-cp313-macosx_12_0_universal2",
+                    "cp313-cp313-macosx_12_0_x86_64",
+                    "cp313-cp313-macosx_13_0_arm64",
+                    "cp313-cp313-macosx_13_0_universal2",
+                    "cp313-cp313-macosx_13_0_x86_64",
+                    "cp313-cp313-macosx_14_0_arm64",
+                    "cp313-cp313-macosx_14_0_universal2",
+                    "cp313-cp313-macosx_14_0_x86_64",
+                    "cp313-cp313-macosx_15_0_arm64",
+                    "cp313-cp313-macosx_15_0_universal2",
+                    "cp313-cp313-macosx_15_0_x86_64",
+                    "cp313-cp313-macosx_16_0_arm64",
+                    "cp313-cp313-macosx_16_0_universal2",
+                    "cp313-cp313-macosx_16_0_x86_64",
+                },
+            ),
+        ]
+
+        for index, (parts, expected) in enumerate(tests):
+            actual = parser.get_back_compatible_targets(parts, wheel_target)
+            assert set(actual.keys()) == expected, f"{sorted(actual.keys())} ≠ {sorted(expected)} for {index}"
+            assert set(actual.values()) == {wheel_target}, f"{set(actual.values())} ≠ {wheel_target} for {index}"
+
+        assert parser.get_back_compatible_targets({"platform": "linux_x86_64"}, wheel_target) is None
+
 
 class TestUvInstallSubcommand(unittest.TestCase):
     tmpdir = os.environ.get("TEST_TMPDIR", tempfile.gettempdir())

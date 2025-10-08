@@ -128,6 +128,23 @@ def get_best_match(wheel_targets, *, glibc, musl):
     raise RuntimeError(TODO_MESSAGE.format(f"{wheel_targets = }"))
 
 
+def get_back_compatible_targets(parts, wheel_target):
+    # Add back-compatible select conditions for MacOS platforms
+    macosx_platforms = [
+        (int(m["major"]), int(m["minor"]), m["arch"])
+        for p in parts["platform"].split(".")
+        if (m := WHEEL_PLATFORM_MACOSX_RE.match(p))
+    ]
+    if macosx_platforms:
+        wheels = {}
+        for minimum_major, minimum_minor, arch in macosx_platforms:
+            for major, minor in MACOSX_VERSIONS:
+                if major > minimum_major or major == minimum_major and minor >= minimum_minor:
+                    back_compatible = f"{parts['python_tag']}-{parts['abi_tag']}-macosx_{major}_{minor}_{arch}"
+                    wheels[back_compatible] = wheel_target
+        return wheels
+
+
 class SourceType(StrEnum):
     """Ref poetry/packages/locker.py"""
 
@@ -240,17 +257,10 @@ class Package:
             ),
             key=condition_getter,
         ):
+            # Check if the wheels group has one non-ambiguous wheel reference
             if len(wheels_list := list(wheels_group)) == 1:
                 _, parts, wheel_target = wheels_list.pop()
-                if m := WHEEL_PLATFORM_MACOSX_RE.match(parts["platform"]):
-                    # Add back-compatible select conditions for MacOS platforms
-                    minimum_major, minimum_minor, arch = int(m["major"]), int(m["minor"]), m["arch"]
-                    for major, minor in MACOSX_VERSIONS:
-                        if major > minimum_major or major == minimum_major and minor >= minimum_minor:
-                            back_compatible = f"{parts['python_tag']}-{parts['abi_tag']}-macosx_{major}_{minor}_{arch}"
-                            wheels[back_compatible] = wheel_target
-                else:
-                    wheels[condition] = wheel_target
+                wheels.update(get_back_compatible_targets(parts, wheel_target) or {condition: wheel_target})
             else:
                 wheel_targets = {parts["platform"]: wheel_target for _, parts, wheel_target in wheels_list}
                 wheels[condition] = get_best_match(wheel_targets, glibc=(2, 31), musl=(1, 1))
