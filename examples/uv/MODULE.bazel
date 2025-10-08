@@ -1,5 +1,6 @@
 bazel_dep(name = "rules_python", version = "1.6.3")
 bazel_dep(name = "rules_uv", version = "0.88.0")
+bazel_dep(name = "rules_rust", version = "0.65.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.14")
@@ -14,3 +15,6 @@ local_path_override(
 parse = use_extension("@ofiuco//python:extensions.bzl", "parse")
 parse.lock(name = "uv", lock = "//:uv.lock", toml = "//:pyproject.toml")
 use_repo(parse, "uv")
+
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(edition = "2025", versions = [ "nightly/2025-10-02" ])

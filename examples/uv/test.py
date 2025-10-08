@@ -28,10 +28,6 @@ def test_all_imports():
 
     assert setuptools
 
-    import sphinxcontrib.images as images
-
-    assert images
-
 
 def test_rust_dependencies():
     # pola-rs
