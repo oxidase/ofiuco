@@ -139,7 +139,7 @@ def install(args):
         flags_substitution = {"PWD": os.getcwd()}
         fixme_macos26_cmake_flags = (
             ["-DGGML_ACCELERATE=OFF", "-DGGML_BLAS_VENDOR=Generic", "-DCMAKE_OSX_DEPLOYMENT_TARGET=11.0"]
-            if platform.mac_ver()[0] == "26.0"
+            if (mac_ver_major := platform.mac_ver()[0].split(".")[0]) and int(mac_ver_major) >= 26
             else []
         )
         flags = dict(

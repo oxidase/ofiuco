@@ -83,7 +83,14 @@ def normalize_target_name(name):
     return name.strip().strip('"').strip("'").replace("_", "-").replace(".", "-").lower()
 
 
+def normalize_target_parts(parts):
+    # Generalize Python tag based on ABI tag
+    parts["python_tag"] = {"abi3": "cp3x"}.get(parts["abi_tag"], parts["python_tag"])
+    return parts
+
+
 def get_select_condition(parts):
+    # Generalize platform-specific tags
     if m := WHEEL_PLATFORM_RE.match(parts["platform"]):
         arch2cpu = {"armv7l": "armv7", "i686": "x86_32"}
         cpu = arch2cpu.get(m["arch"], m["arch"])
@@ -97,39 +104,63 @@ def get_select_condition(parts):
 
 
 def get_best_match(wheel_targets, *, glibc, musl):
-    # Check for musllinux
-    parsed = [
-        (WHEEL_PLATFORM_MUSLLINUX_RE.match(platform), target)
-        for platforms, target in wheel_targets.items()
-        for platform in platforms.split(".")
+    # Return an item (condition, parts, target) from the list if there is no ambiguity
+    if len(wheel_targets) == 1:
+        return wheel_targets.pop()
+
+    # Getter for (version, wheel_target) tuples
+    version_getter = itemgetter(0)
+
+    # Check for musllinux libc
+    musllinux = [
+        (WHEEL_PLATFORM_MUSLLINUX_RE.match(platform), (condition, parts, target))
+        for condition, parts, target in wheel_targets
+        for platform in parts["platform"].split(".")
     ]
-    if all(m for m, _ in parsed) and len(set(m["arch"] for m, _ in parsed)) == 1:
-        versions = sorted(((int(m["major"]), int(m["minor"])), target) for m, target in parsed)
-        filtered = [target for version, target in versions if musl >= version]
-        return filtered[-1] if filtered else versions[0][1]
+    if all(m for m, _ in musllinux) and len(set(m["arch"] for m, _ in musllinux)) == 1:
 
-    # Check for manylinux
-    parsed = [
-        (WHEEL_PLATFORM_MANYLINUX_RE.match(platform), target)
-        for platforms, target in wheel_targets.items()
-        for platform in platforms.split(".")
+        def _version(m):
+            return (int(m["major"]), int(m["minor"]))
+
+        ordered = sorted(((_version(m), target) for m, target in musllinux), key=version_getter, reverse=True)
+        _, selected = next(((version, target) for version, target in ordered if version <= musl), ordered.pop())
+        return selected
+
+    # Check for manylinux libc
+    manylinux = [
+        (WHEEL_PLATFORM_MANYLINUX_RE.match(platform), (condition, parts, target))
+        for condition, parts, target in wheel_targets
+        for platform in parts["platform"].split(".")
     ]
-    if all(m for m, _ in parsed) and len(set(m["arch"] for m, _ in parsed)) == 1:
+    if all(m for m, _ in manylinux) and len(set(m["arch"] for m, _ in manylinux)) == 1:
 
-        def get_glibc(d):
-            if d["legacy"]:
-                return {"2010": (2, 12), "2014": (2, 17)}.get(d["legacy"], (2, 5))
-            return (int(d["major"]), int(d["minor"]))
+        def _version(m):
+            if m["legacy"]:
+                return {"2010": (2, 12), "2014": (2, 17)}.get(m["legacy"], (2, 5))
+            return (int(m["major"]), int(m["minor"]))
 
-        versions = sorted((get_glibc(m.groupdict()), target) for m, target in parsed)
-        filtered = [target for version, target in versions if glibc >= version]
-        return filtered[-1] if filtered else versions[0][1]
+        ordered = sorted(((_version(m), target) for m, target in manylinux), key=version_getter, reverse=True)
+        _, selected = next(((version, target) for version, target in ordered if version <= glibc), ordered.pop())
+        return selected
 
-    raise RuntimeError(TODO_MESSAGE.format(f"{wheel_targets = }"))
+    # Check for multiple CPython versions with stable 'abi3' tags
+    abi3_tags = [
+        (int(parts["python_tag"].removeprefix("cp3")), (condition, parts, target))
+        for condition, parts, target in wheel_targets
+        if parts["python_tag"].startswith("cp3") and parts["abi_tag"] == "abi3"
+    ]
+    if len(abi3_tags) == len(wheel_targets):
+        ordered = sorted(abi3_tags, key=version_getter, reverse=True)
+        _, selected = ordered.pop()
+        return selected
+
+    raise RuntimeError(TODO_MESSAGE.format(f"best match selection for {wheel_targets = }"))
 
 
 def get_back_compatible_targets(parts, wheel_target):
-    # Add back-compatible select conditions for MacOS platforms
+    parts = normalize_target_parts(parts)
+
+    # Add back-compatible select conditions for MacOS platforms separated by dots
     macosx_platforms = [
         (int(m["major"]), int(m["minor"]), m["arch"])
         for p in parts["platform"].split(".")
@@ -248,7 +279,7 @@ class Package:
         for condition, wheels_group in itertools.groupby(
             sorted(
                 (
-                    (get_select_condition(m.groupdict()), m.groupdict(), f'"@{wheel}//:whl"')
+                    (get_select_condition(normalize_target_parts(m.groupdict())), m.groupdict(), f'"@{wheel}//:whl"')
                     for wheel in self.wheels
                     if (m := re.match(WHEEL_RE, wheel))
                     and (m["python_tag"].startswith("cp") or ("py3" in m["python_tag"].split(".")))
@@ -257,13 +288,9 @@ class Package:
             ),
             key=condition_getter,
         ):
-            # Check if the wheels group has one non-ambiguous wheel reference
-            if len(wheels_list := list(wheels_group)) == 1:
-                _, parts, wheel_target = wheels_list.pop()
-                wheels.update(get_back_compatible_targets(parts, wheel_target) or {condition: wheel_target})
-            else:
-                wheel_targets = {parts["platform"]: wheel_target for _, parts, wheel_target in wheels_list}
-                wheels[condition] = get_best_match(wheel_targets, glibc=(2, 31), musl=(1, 1))
+            wheels_list = list(wheels_group)
+            _, parts, wheel_best_target = get_best_match(wheels_list, glibc=(2, 31), musl=(1, 1))
+            wheels.update(get_back_compatible_targets(parts, wheel_best_target) or {condition: wheel_best_target})
 
         if any_platform := next((target for condition, target in wheels.items() if condition.endswith("any")), None):
             return [any_platform]
