@@ -1,25 +1,35 @@
 services:
-  ofiuco:
+  linux-amd64:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: ofiuco
     platform: linux/amd64
+    container_name: ofiuco-linux-amd64
     cap_add:
       - NET_ADMIN
     environment:
       - USER=${USER}
       - WORKSPACE=${PWD}
-      - HISTFILE=/home/fsw-dev/.cache/.bash_history
+      - HISTFILE=/home/ubuntu/.cache/.bash_history
+      - CACHE_DIR=${HOME}/.cache/ofiuco-linux-amd64
     volumes:
       - ${PWD}:${PWD}:rw
-      - ${HOME}/.gitconfig:/home/fsw-dev/.gitconfig:ro
-      - ${HOME}/.netrc:/home/fsw-dev/.netrc:ro
-      - ${HOME}/.ssh:/home/fsw-dev/.ssh:ro
+      - ${HOME}/.gitconfig:/home/ubuntu/.gitconfig:ro
+      - ${HOME}/.netrc:/home/ubuntu/.netrc:ro
+      - ${HOME}/.ssh:/home/ubuntu/.ssh:ro
       - ${HOME}/foss:${HOME}/foss
-      - ofiuco-cache:/home/fsw-dev/.cache
+      - ${HOME}/.cache/ofiuco-linux-amd64:${HOME}/.cache/ofiuco-linux-amd64
     working_dir: ${PWD}
     entrypoint: sleep infinity
+    post_start:
+      - command: chown -R 1000:1000 /home/ubuntu/.cache
+        user: root
 
-volumes:
-  ofiuco-cache:
+  linux-aarch64:
+    extends: linux-amd64
+    platform: linux/aarch64
+    container_name: ofiuco-linux-aarch64
+    environment:
+      - CACHE_DIR=${HOME}/.cache/ofiuco-linux-aarch64
+    volumes:
+      - ${HOME}/.cache/ofiuco-linux-aarch64:${HOME}/.cache/ofiuco-linux-aarch64

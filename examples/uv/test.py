@@ -81,6 +81,11 @@ def test_rust_dependencies():
     expected = b'{"x":"y","created_at":"1970-01-01T00:00:00+00:00","status":"\xf0\x9f\x86\x97","payload":[[1,2],[3,4]]}'
     assert orjson.dumps(data, option=orjson.OPT_NAIVE_UTC | orjson.OPT_SERIALIZE_NUMPY) == expected
 
+    # questdb
+    import questdb
+
+    assert questdb
+
 
 @pytest.mark.skipif(os.name == "nt", reason="@abseil-cpp+//absl/base building fails")
 def test_re2():
