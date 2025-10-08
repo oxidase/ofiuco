@@ -1,5 +1,6 @@
 bazel_dep(name = "rules_python", version = "1.8.0-rc1")
 bazel_dep(name = "rules_uv", version = "0.89.2")
+bazel_dep(name = "rules_rust", version = "0.68.1")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.14")
@@ -18,3 +19,9 @@ parse.lock(
     toml = "//:pyproject.toml",
 )
 use_repo(parse, "uv")
+
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(
+    edition = "2025",
+    versions = ["nightly/2025-10-02"],
+)

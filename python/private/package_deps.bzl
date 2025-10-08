@@ -144,7 +144,7 @@ def _package_impl(ctx):
 
     # Get package files
     package_files = ctx.attr.package.files.to_list() if ctx.attr.package else []
-    package_directory, package_import, output_files = None, [], package_files
+    package_directory, package_import, package_deps, output_files = None, [], [], package_files
 
     # Find the package build file and update package import and directory
     if package_files:
@@ -204,7 +204,9 @@ def _package_impl(ctx):
             cc_attr["AS"], cc_attr["ASFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.assemble)
             cc_attr["CC"], cc_attr["CFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.c_compile)
             cc_attr["CXX"], cc_attr["CXXFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.cpp_compile)
-            cc_attr["LD"], cc_attr["LDFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.cpp_link_dynamic_library)
+            cc_attr["LD"], cc_attr["LDFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.cpp_link_executable)
+            cc_attr["LDSHARED"], ld_shared_flags = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.cpp_link_dynamic_library)
+            cc_attr["LDSHARED"] =  cc_attr["LDSHARED"] + " " + " ".join(ld_shared_flags)
 
             cc_attr["AR"], cc_attr["ARFLAGS"] = get_tool(ctx, cc, feature_configuration, ACTION_NAMES.cpp_link_static_library)
             if not cc_attr["ARFLAGS"]:
@@ -230,12 +232,12 @@ def _package_impl(ctx):
             cc_deps_linker_inputs = depset(transitive = [dep[CcInfo].linking_context.linker_inputs for dep in cc_deps], order = "topological")
             cc_deps_libraries = [lib.dynamic_library or lib.static_library or lib.interface_library for inputs in cc_deps_linker_inputs.to_list() for lib in inputs.libraries]
             cc_deps_ldflags = ["-Wl,-rpath,{} -L$PWD/{} $PWD/{}".format(paths.dirname(file.short_path), paths.dirname(file.path), file.path) for file in cc_deps_libraries if file]
-            output_files += cc_deps_libraries
+            package_deps += cc_deps_libraries
 
             # Add to flags tranitive dependencies
             cc_attr["CFLAGS"] = cc_attr["CFLAGS"] + cc_deps_cflags
             cc_attr["CXXFLAGS"] = cc_attr["CXXFLAGS"] + cc_deps_cflags
-            cc_attr["LDFLAGS"] = cc_attr["LDFLAGS"] + cc_deps_ldflags
+            cc_attr["LDFLAGS"] = cc_attr["LDFLAGS"]
 
             build_transitive_deps.append(depset(cc_deps_libraries, transitive = [cc.all_files] + cc_deps_headers))
 
@@ -278,7 +280,7 @@ def _package_impl(ctx):
     # PyInfo
     transitive_imports = [get_imports(dep) for dep in deps]
     transitive_depsets = [get_transitive_sources(dep) for dep in deps]
-    files = depset(direct = output_files, transitive = transitive_depsets + [py_runtime_info.files])
+    files = depset(direct = output_files + package_deps, transitive = transitive_depsets + [py_runtime_info.files])
     imports = depset(direct = package_import, transitive = transitive_imports)
 
     # CcInfo

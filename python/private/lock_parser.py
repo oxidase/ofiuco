@@ -47,7 +47,7 @@ WHEEL_RE = re.compile(
     r"(?P<platform>.+)?$"
 )
 
-WHEEL_PLATFORM_MACOSX_RE = re.compile(r"^macosx_(?P<major>\d+)_(?P<minor>\d+)_(?P<arch>.+)$")
+WHEEL_PLATFORM_MACOSX_RE = re.compile(r"macosx_(?P<major>\d+)_(?P<minor>\d+)_(?P<arch>.+)")
 WHEEL_PLATFORM_MUSLLINUX_RE = re.compile(r"^musllinux_(?P<major>\d+)_(?P<minor>\d+)_(?P<arch>.+)$")
 WHEEL_PLATFORM_MANYLINUX_RE = re.compile(
     r"^manylinux(?:(?P<legacy>\d+))?(?:_(?P<major>\d+)_(?P<minor>\d+))?_(?P<arch>[^.]+)$"

@@ -140,6 +140,8 @@ def install_internal(args):
             CC="CC",
             CXX="CXX",
             LD="LD",
+            LDSHARED="LDSHARED",
+            LDCXXSHARED="LDSHARED",
             CPP="preprocessor_executable",
             GCOV="gcov_executable",
             NM="nm_executable",
@@ -161,7 +163,6 @@ def install_internal(args):
             else []
         )
         flags = dict(
-            ARFLAGS=join(arflags, flags_substitution),
             ASMFLAGS=join(asflags, flags_substitution),
             ASFLAGS=join(asflags, flags_substitution),
             CFLAGS=join(cflags, flags_substitution),
@@ -178,16 +179,19 @@ def install_internal(args):
         os.environ.update(flags)
         os.environ.update({k: os.fspath(Path(cc[v]).resolve()) for k, v in paths.items() if v in cc})
 
-        # Add Python-specific variables defined in sysconfig
-        # python3 -c "import sysconfig; print(sysconfig, sysconfig.get_config_var('LDCXXSHARED'))"
-        os.environ["LDSHARED"] = f"{os.environ['LD']} {os.environ['LDFLAGS']}"
-        os.environ["LDCXXSHARED"] = f"{os.environ['LD']} {os.environ['LDFLAGS']}"
+        if "polars" not in str(args.output) and "cryptography" not in str(args.output):
+            os.environ["ARFLAGS"] = join(arflags, flags_substitution)
+        else:
+            os.environ["AR"] = "/usr/bin/ar"
+            os.environ["RUSTUP_TOOLCHAIN"] = "nightly"
 
     if args.rust_toolchain is not None:
         rust_toolchain = json.loads(args.rust_toolchain)
         os.environ["PATH"] = f"{os.getcwd()}/{rust_toolchain.get('RUST_SYSROOT')}/bin:{os.environ['PATH']}"
         os.environ["RUSTUP_HOME"] = os.fspath(output_path)
         os.environ["CARGO_HOME"] = os.fspath(output_path)
+
+    sys.stderr.write(f"{os.environ}")
 
     if retcode := install_command.main(install_args + get_platform_args(args)):
         logging.error(f"pip install returned {retcode}")
