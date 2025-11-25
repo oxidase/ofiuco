@@ -1,3 +1,4 @@
+import os
 import sys
 import tomllib
 
@@ -35,6 +36,8 @@ def test_evdev():
 
 
 def test_psycopg():
+    os.environ["DYLD_LIBRARY_PATH"] = "/opt/homebrew/opt/libpq/lib"
+
     import psycopg
 
     assert psycopg

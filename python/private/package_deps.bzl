@@ -6,6 +6,8 @@ load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@rules_python//python:defs.bzl", "PyInfo", "PyRuntimeInfo")
 load("@rules_python//python:versions.bzl", _MINOR_MAPPING = "MINOR_MAPPING")
 load("//python:markers.bzl", "evaluate", "parse")
+load("@rules_cc//cc:defs.bzl", "cc_common")
+
 
 # Environment Markers https://peps.python.org/pep-0508/#environment-markers
 #

@@ -23,7 +23,9 @@ jobs:
             cache: /private/var/tmp/_bazel_runner
             install: |
               brew update
-              brew install postgresql
+              brew install libpq
+              brew link libpq
+              ls -al /opt/homebrew/opt/libpq/lib
 
     steps:
       - name: "node-cleanup"
@@ -70,5 +72,4 @@ jobs:
       - name: Run tests
         id: tests
         run: bazel test ... --spawn_strategy=standalone --verbose_failures
-        #run: cd examples/cc_toolchain && bazel run //:test --spawn_strategy=standalone --verbose_failures
         shell: bash

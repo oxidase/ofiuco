@@ -1,6 +1,8 @@
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
+load("@rules_cc//cc:defs.bzl", "cc_common")
 load("@rules_python//python:defs.bzl", "PyInfo")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
+load("@rules_cc//cc/private/toolchain_config:configure_features.bzl", "configure_features")
 
 def _cc_py_library_impl(ctx):
     """
