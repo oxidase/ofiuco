@@ -1,1 +1,2 @@
 common --incompatible_default_to_explicit_init_py=true
+common --test_env=LD_LIBRARY_PATH

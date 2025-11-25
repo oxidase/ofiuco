@@ -1,3 +1,4 @@
+import glob
 import os
 import shutil
 import stat
@@ -60,8 +61,12 @@ class TestZipper(unittest.TestCase):
         assert os.path.exists(zip_path)
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
             file_list = [os.path.basename(path) for path in zip_ref.namelist()]
-            dir_list = [path for path in os.listdir(os.path.dirname(__file__)) if "__pycache__" not in path]
-            assert sorted(file_list) == sorted(dir_list)
+            dir_list = [
+                os.path.basename(f)
+                for f in glob.glob("./**/*", recursive=True)
+                if not os.path.isdir(f) and "__pycache__" not in f
+            ]
+            assert sorted(file_list) == sorted(dir_list), f"{sorted(file_list)} != {sorted(dir_list)}"
 
     def test_manifest(self):
         manifest_path = os.path.join(self.tmpdir, "manifest")
