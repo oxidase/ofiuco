@@ -1,6 +1,6 @@
 [project]
 name = "ofiuco"
-version = "0.7.0"
+version = "0.7.1"
 description = "Bazel tools for Python and package managers"
 readme = "README.md"
 license = "Apache-2.0"
