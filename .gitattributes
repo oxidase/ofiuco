@@ -1,0 +1,7 @@
+.** export-ignore
+Dockerfile export-ignore
+docker-compose.yml export-ignore
+docs/20240718_MTZ/ export-ignore
+examples/ export-ignore
+pyproject.toml export-ignore
+tools/ export-ignore
