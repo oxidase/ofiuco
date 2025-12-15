@@ -1,4 +1,5 @@
-load("@bazel_tools//tools/cpp:cc_toolchain_config_lib.bzl", "tool_path")
+load("@rules_cc//cc:cc_toolchain_config_lib.bzl", "tool_path")
+load("@rules_cc//cc:defs.bzl", "cc_common", "CcToolchainConfigInfo")
 
 def _impl(ctx):
     tool_paths = [

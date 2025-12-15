@@ -20,7 +20,7 @@ bcr_test_module:
       - debian11
       - macos
       - ubuntu2004
-    bazel: [8.x, 7.x]
+    bazel: [last_rc, 8.x, 7.x]
   tasks:
     run_test_module:
       name: Run test module
