@@ -4,8 +4,10 @@ import logging
 import os
 import platform
 import re
+import shutil
 import string
 import sys
+import tempfile
 import warnings
 from pathlib import Path
 
@@ -14,6 +16,9 @@ with warnings.catch_warnings():
     from pip._internal.commands import create_command
     from pip._internal.locations import USER_CACHE_DIR
     from pip._internal.models.direct_url import DIRECT_URL_METADATA_NAME
+
+
+QUIET_PIP_INSTALL = True
 
 
 def get_platform_args(args):
@@ -70,9 +75,25 @@ def filter_cxx_builtin_include_directories(flags):
 
 
 def install(args):
+    # Setup output directory
     output_path = Path(args.output)
     output_path.mkdir(parents=True, exist_ok=True)
 
+    # Set temporary build directory to the current sandbox and copy input as some backends require writeable source tree
+    # Ref: https://github.com/pypa/setuptools-scm/issues/1252
+    with tempfile.TemporaryDirectory(dir=output_path, delete=QUIET_PIP_INSTALL) as tmp_directory:
+        os.environ["TMPDIR"] = tmp_directory
+
+        # Copy input repository directory to a writable temporary location
+        if os.path.isdir(args.input):
+            input_path = os.path.sep.join([tmp_directory, args.input])
+            shutil.copytree(args.input, input_path)
+            args.input = input_path
+
+        return install_internal(args)
+
+
+def install_internal(args):
     # Install wheel from sdist
     install_command = create_command("install")
 
@@ -89,15 +110,16 @@ def install(args):
     use_cache = False
     install_args.append(f"--cache-dir={possible_cache}" if use_cache else "--no-cache-dir")
 
+    output_path = Path(args.output)
     install_args += [
-        f"--target={output_path}",
+        f"--target={args.output}",
         "--prefer-binary",
         "--no-dependencies",
         "--disable-pip-version-check",
         "--use-pep517",
     ]
 
-    if True:
+    if QUIET_PIP_INSTALL:
         install_args += [
             "--quiet",
         ]
@@ -105,11 +127,6 @@ def install(args):
         install_args += [
             "--no-clean",
         ]
-
-    # Set temporary build directory to the current sandbox
-    tmp_directory = output_path.resolve() / "tmp"
-    tmp_directory.mkdir()
-    os.environ["TMPDIR"] = os.fspath(tmp_directory)
 
     if args.cc_toolchain is not None:
         cc = json.loads(args.cc_toolchain)
