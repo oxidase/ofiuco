@@ -32,6 +32,10 @@ def test_all_imports():
 
     assert images
 
+    import ccsdspy
+
+    assert ccsdspy
+
 
 def test_rust_dependencies():
     # pola-rs

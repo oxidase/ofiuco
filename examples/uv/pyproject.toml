@@ -19,4 +19,7 @@ dependencies = [
   "cryptography",
   "orjson",
   "polars[rt64]",
+
+  # Package with setuptools_scm build-system
+  "ccsdspy",
 ]
