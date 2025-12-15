@@ -1,0 +1,16 @@
+.** export-ignore
+Dockerfile export-ignore
+docker-compose.yml export-ignore
+docs/20240718_MTZ/ export-ignore
+examples/BUILD export-ignore
+examples/airflow export-ignore
+examples/aspect_rules_py export-ignore
+examples/cc_toolchain export-ignore
+examples/integration_test.sh export-ignore
+examples/markers export-ignore
+examples/numpy export-ignore
+examples/simple export-ignore
+examples/torch export-ignore
+examples/uv export-ignore
+pyproject.toml export-ignore
+tools/ export-ignore
