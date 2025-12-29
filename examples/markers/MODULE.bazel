@@ -1,4 +1,4 @@
-bazel_dep(name = "rules_python", version = "1.7.0")
+bazel_dep(name = "rules_python", version = "1.8.0-rc1")
 
 python_version = "3_13"
 
