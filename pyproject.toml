@@ -1,6 +1,6 @@
 [project]
 name = "ofiuco"
-version = "0.7.2"
+version = "0.7.3"
 description = "Bazel tools for Python and package managers"
 readme = "README.md"
 license = "Apache-2.0"
@@ -12,6 +12,7 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
 ]
 dependencies = [
+  "aiohttp",
   "poetry",
 ]
 

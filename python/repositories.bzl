@@ -8,7 +8,7 @@ _PACKAGES_ENDPOINT = "https://files.pythonhosted.org/packages/"
 _INTERNAL_DEPS = [
     (
         "pip",
-        _PACKAGES_ENDPOINT + "b7/3f/945ef7ab14dc4f9d7f40288d2df998d1837ee0888ec3659c813487572faa/pip-25.3-py3-none-any.whl",
+        _PACKAGES_ENDPOINT + "44/3c/d717024885424591d5376220b5e836c2d5293ce2011523c9de23ff7bf068/pip-25.3-py3-none-any.whl",
         "9655943313a94722b7774661c21049070f6bbb0a1516bf02f7c8d5d9201514cd",
         ["@ofiuco//python:patches/scripts_executable.patch"],
     ),

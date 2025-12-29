@@ -1,4 +1,4 @@
-bazel_dep(name = "rules_python", version = "1.7.0")
+bazel_dep(name = "rules_python", version = "1.8.0-rc1")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.12")
@@ -28,9 +28,9 @@ parse.lock(
 use_repo(parse, "poetry")
 
 # google-re2 cc dependencies
-bazel_dep(name = "re2", version = "2025-08-12")
+bazel_dep(name = "re2", version = "2025-11-05.bcr.1")
 bazel_dep(name = "abseil-cpp", version = "20250512.1")
-bazel_dep(name = "pybind11_bazel", version = "2.13.6")
+bazel_dep(name = "pybind11_bazel", version = "3.0.0")
 
 pybind11_configure = use_extension("@pybind11_bazel//:internal_configure.bzl", "internal_configure_extension")
 use_repo(pybind11_configure, "pybind11")
