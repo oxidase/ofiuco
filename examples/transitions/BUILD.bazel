@@ -1,3 +1,4 @@
+load("@ofiuco//python:poetry.bzl", "poetry_lock")
 load("@ofiuco//lib:defs.bzl", "lib")
 load("@rules_python//python:defs.bzl", "py_binary", "py_test")
 load("@rules_cc//cc:defs.bzl", "cc_toolchain")
@@ -138,4 +139,10 @@ py_test(
         "@poetry//:pyelftools",
         "@poetry//:pytest",
     ],
+)
+
+poetry_lock(
+    name = "lock",
+    lock = "poetry.lock",
+    toml = "pyproject.toml",
 )

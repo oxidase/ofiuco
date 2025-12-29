@@ -1,10 +1,14 @@
-[tool.poetry]
-name = "poetry-demo"
-version = "0.1.0"
-authors = []
-description = "Bazel Python example using Poetry"
-package-mode = false
+[project]
+name = "aspect-rules-py"
+version = "0.0.0"
+description = "aspect_rules_py example"
+requires-python = ">=3.13"
 
-[tool.poetry.dependencies]
-python = "~3.11"
-absl-py = "^2.1.0"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.13",
+]
+
+dependencies = [
+  "absl-py",
+]
