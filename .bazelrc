@@ -2,8 +2,6 @@ startup --windows_enable_symlinks
 common --action_env=PATH
 common --test_env=LD_LIBRARY_PATH
 common --enable_bzlmod
-query --deleted_packages=examples/simple,examples/torch,examples/transitions,examples/markers,examples/aspect_rules_py,examples/cc_toolchain,examples/airflow,examples/numpy,examples/uv
-build --deleted_packages=examples/simple,examples/torch,examples/transitions,examples/markers,examples/aspect_rules_py,examples/cc_toolchain,examples/airflow,examples/numpy,examples/uv
 build --enable_runfiles
 test --test_output=errors
 
@@ -15,3 +13,8 @@ build --incompatible_config_setting_private_default_visibility
 build --incompatible_disable_starlark_host_transitions
 build --incompatible_disable_native_repo_rules
 build --incompatible_disable_autoloads_in_main_repo
+
+common --deleted_packages=examples/simple,examples/torch,examples/markers,examples/aspect_rules_py,examples/cc_toolchain,examples/airflow,examples/numpy,examples/uv
+common --deleted_packages=examples/transitions,examples/transitions/toolchains,examples/transitions/toolchains/args,examples/transitions/constraint
+common --deleted_packages=examples/transitions/toolchains/clang,examples/transitions/toolchains/clang/tools,examples/transitions/toolchains/clang/args
+common --deleted_packages=examples/transitions/toolchains/gcc,examples/transitions/toolchains/gcc/tools,examples/transitions/toolchains/gcc/args

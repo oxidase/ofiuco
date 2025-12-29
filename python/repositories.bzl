@@ -19,12 +19,15 @@ _POETRY_VERSION = "2.2.1"
 def _poetry_deps_repo_impl(rctx):
     interpreter = rctx.path(rctx.attr.python_host)
 
-    rctx.execute(
-        [interpreter, "-m", "pip", "install", "poetry=={}".format(_POETRY_VERSION), "--target", rctx.attr.output],
+    args = [interpreter, "-m", "pip", "install", "poetry=={}".format(_POETRY_VERSION), "--target", rctx.attr.output]
+    result = rctx.execute(
+        args,
         environment = {
             "PYTHONPATH": ":".join([str(rctx.path(dep).dirname) for dep in rctx.attr.deps]),
         },
     )
+    if result.return_code != 0:
+        fail("{} failed with code {}\n{}\n{}".format(" ".join(args), result.return_code), result.stderr, result.stdout)
 
     rctx.file("BUILD", """load("@rules_python//python:defs.bzl", "py_library")
 
