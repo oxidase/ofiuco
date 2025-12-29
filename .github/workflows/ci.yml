@@ -31,7 +31,9 @@ jobs:
       - name: "node-cleanup"
         run: |
           df -h
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo rm -rf /usr/lib/jvm /usr/share/dotnet /usr/share/swift /usr/local/.ghcup /usr/local/share/powershell /usr/local/julia* /usr/local/lib/android /usr/local/share/chromium /opt/microsoft /opt/google /opt/az /opt/ghc /opt/hostedtoolcache
+          docker system prune -af || true
+          docker builder prune -af || true
           df -h
 
       - name: Mount bazel cache

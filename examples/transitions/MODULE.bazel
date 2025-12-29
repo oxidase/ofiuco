@@ -1,3 +1,4 @@
+bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "rules_cc", version = "0.2.16")
 bazel_dep(name = "rules_python", version = "1.8.0-rc1")
 bazel_dep(name = "platforms", version = "1.0.0")
@@ -19,4 +20,67 @@ parse.lock(
 )
 use_repo(parse, "poetry")
 
-register_toolchains("//:cc-toolchain")
+# C++ toolchains from https://chrome-infra-packages.appspot.com/p/fuchsia/third_party/clang/
+# Reference: @rules_cc//examples/rule_based_toolchain/...
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "clang-linux-x86_64",
+    build_file = "//toolchains/clang:clang.BUILD",
+    sha256 = "937faeaec15fcc705c4d485dfe760fe4d688f1612d5ca72b436705ae1ac8db4a",
+    type = "zip",
+    url = "https://chrome-infra-packages.appspot.com/dl/fuchsia/third_party/clang/linux-amd64/+/git_revision:05a34dde7008f41395312c36c95c4ebc65ff6254",
+)
+
+http_archive(
+    name = "clang-linux-aarch64",
+    build_file = "//toolchains/clang:clang.BUILD",
+    sha256 = "23b5e9c811eb98b2adade8fa4726cbb8b1ca62836e315f85dfb6031c7f7dfd49",
+    type = "zip",
+    url = "https://chrome-infra-packages.appspot.com/dl/fuchsia/third_party/clang/linux-arm64/+/git_revision:05a34dde7008f41395312c36c95c4ebc65ff6254",
+)
+
+http_archive(
+    name = "clang-macos-x86_64",
+    build_file = "//toolchains/clang:clang.BUILD",
+    sha256 = "2c40fd93e3517ae0d3786451a3344ce0d933472a00eae15d9463312350e52b40",
+    type = "zip",
+    url = "https://chrome-infra-packages.appspot.com/dl/fuchsia/third_party/clang/mac-amd64/+/git_revision:05a34dde7008f41395312c36c95c4ebc65ff6254",
+)
+
+http_archive(
+    name = "clang-macos-aarch64",
+    build_file = "//toolchains/clang:clang.BUILD",
+    sha256 = "1d47a8973b8536f80a1bd6c113755de73efb97706dc264a0d266008e9ef993b3",
+    type = "zip",
+    url = "https://chrome-infra-packages.appspot.com/dl/fuchsia/third_party/clang/mac-arm64/+/git_revision:05a34dde7008f41395312c36c95c4ebc65ff6254",
+)
+
+http_archive(
+    name = "clang-windows-x86_64",
+    build_file = "//toolchains/clang:clang.BUILD",
+    sha256 = "3c15cbdbc91b4921442d1660239047b3ca3dedf401119362dac9b7e803992a21",
+    type = "zip",
+    url = "https://chrome-infra-packages.appspot.com/dl/fuchsia/third_party/clang/windows-amd64/+/git_revision:05a34dde7008f41395312c36c95c4ebc65ff6254",
+)
+
+http_archive(
+    name = "gcc-linux-x86_64",
+    build_file = "//toolchains/gcc:gcc.BUILD",
+    integrity = "sha256-kygjypo+Bn5+KimBCmZtIMnMW7VQ3pR/aHnjis4aqVU=",
+    strip_prefix = "x86-64--glibc--stable-2024.05-1",
+    urls = ["https://toolchains.bootlin.com/downloads/releases/toolchains/x86-64/tarballs/x86-64--glibc--stable-2024.05-1.tar.xz"],
+)
+
+http_archive(
+    name = "linux_sysroot",
+    build_file = "//toolchains/clang:linux_sysroot.BUILD",
+    sha256 = "f45ca0d8b46810b94d2a7dbc65f9092337d6a9568b260b51173a5ab9314da25e",
+    type = "zip",
+    url = "https://chrome-infra-packages.appspot.com/dl/fuchsia/third_party/sysroot/bionic/+/git_revision:702eb9654703a7cec1cadf93a7e3aa269d053943",
+)
+
+register_toolchains(
+    "//toolchains:host_toolchain",
+    dev_dependency = True,
+)

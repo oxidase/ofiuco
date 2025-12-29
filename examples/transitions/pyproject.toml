@@ -2,12 +2,12 @@
 name = "example"
 version = "0.0.0"
 description = "example with dependencies"
-authors = []
+authors = [  ]
 
 [tool.poetry.dependencies]
-python = "^3.11"
+python = "^3.13"
 numpy = "^2.3"
 pyelftools = "^0.29"
 
 [tool.poetry.group.dev.dependencies]
-pytest = {version = "^7.2", "python" = ">=3.7"}
+pytest = { version = "^7.2", "python" = ">=3.7" }
