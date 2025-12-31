@@ -87,6 +87,10 @@ def _test_py_zip():
         srcs = ["py_zip_test_shebang.sh"],
         args = ["$(locations :test_py_zip_shebang_subject.pyz)"],
         data = [":test_py_zip_shebang_subject.pyz"],
+        target_compatible_with = select({
+            "@platforms//os:windows": ["@platforms//:incompatible"],
+            "//conditions:default": [],
+        }),
     )
 
     return [

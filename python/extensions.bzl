@@ -40,7 +40,7 @@ def _parse_impl(mctx):
             for file in json.decode(result.stdout):
                 name = file["name"]
                 _, build_file = lib.prefix_lookup(attr.build_files, name, file["build_file"])
-                #print(name)
+
                 if file["kind"] == "http_archive":
                     http_archive(
                         name = name,

@@ -37,7 +37,7 @@ class TestInstallSubcommand(unittest.TestCase):
 
         assert all(os.path.islink(name) or os.path.isdir(name) for name in venv_resolved_files)
         assert "test_file" in venv_files
-        assert "test/test_file" in venv_files
+        assert os.path.join("test", "test_file") in venv_files
         assert "requirements.txt" not in venv_files
         assert all(file not in venv_files for file in SKIP_SET)
 

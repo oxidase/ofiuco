@@ -1,4 +1,6 @@
-load("@rules_python//python:defs.bzl", "PyInfo", "py_binary")
+load("@rules_python//python:defs.bzl", _PyInfo = "PyInfo", _PyRuntimeInfo = "PyRuntimeInfo", "py_binary")
+load("@rules_python//python/private:py_executable_info.bzl", _PyExecutableInfo = "PyExecutableInfo")
+load("@rules_python//python/private:py_cc_link_params_info.bzl", _PyCcLinkParamsInfo = "PyCcLinkParamsInfo")
 
 def _linux_x86_64_platform_impl(settings, attr):
     return {"//command_line_option:platforms": [":linux_x86_64"]}
@@ -27,7 +29,10 @@ def _py_binary_cfg_impl(ctx):
             runfiles = runfiles,
             executable = link,
         ),
-        binary[PyInfo],
+        binary[_PyInfo],
+        binary[_PyRuntimeInfo],
+        binary[_PyExecutableInfo],
+        binary[_PyCcLinkParamsInfo],
     ]
 
 def _py_binary_cfg(cfg):

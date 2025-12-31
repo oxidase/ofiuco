@@ -4,6 +4,15 @@ load("@rules_python//python:defs.bzl", "PyInfo")
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
 load("@rules_cc//cc/private/toolchain_config:configure_features.bzl", "configure_features")
 
+# @rules_cc//cc/common:cc_helper_internal.bzl
+_BINDING_EXTENSIONS_MAP = {
+    "so": ".so",
+    "dylib": ".so",
+    "dll": ".pyd",
+    "pyd": ".pyd",
+    ".wasm": ".so"
+}
+
 def _cc_py_library_impl(ctx):
     """
     Rule to generate a Python bindings module.
@@ -53,18 +62,22 @@ def _cc_py_library_impl(ctx):
         cc_toolchain = cc_toolchain,
         compilation_outputs = outputs,
         linking_contexts = linking_contexts,
-        name = ctx.label.name + ".so",
+        name = ctx.label.name,
         language = "c++",
-        output_type = "executable",
+        output_type = "dynamic_library",
         user_link_flags = ["-shared", "-Wl,-rpath,$ORIGIN"] + ctx.attr.linkopts,
         link_deps_statically = ctx.attr.linkstatic,
     )
+
+    dynamic_library = linking_outputs.library_to_link.resolved_symlink_dynamic_library or linking_outputs.library_to_link.dynamic_library
+    bindings_symlink = ctx.actions.declare_file(ctx.label.name + _BINDING_EXTENSIONS_MAP.get(dynamic_library.extension), sibling =dynamic_library)
+    ctx.actions.symlink(output=bindings_symlink, target_file=dynamic_library)
 
     library_to_link = cc_common.create_library_to_link(
         actions = ctx.actions,
         feature_configuration = feature_configuration,
         cc_toolchain = cc_toolchain,
-        dynamic_library = linking_outputs.executable,
+        dynamic_library = dynamic_library,
     )
 
     linker_input = cc_common.create_linker_input(
@@ -77,7 +90,7 @@ def _cc_py_library_impl(ctx):
     )
 
     # Collect runfiles
-    runfiles = ctx.runfiles(transitive_files = depset([linking_outputs.executable] + ctx.files.data))
+    runfiles = ctx.runfiles(transitive_files = depset([dynamic_library, bindings_symlink] + ctx.files.data))
     for dep in ctx.attr.deps:
         runfiles = runfiles.merge(dep[DefaultInfo].data_runfiles)
 
@@ -87,7 +100,7 @@ def _cc_py_library_impl(ctx):
 
     return [
         DefaultInfo(
-            files = depset([linking_outputs.executable]),
+            files = depset([dynamic_library, bindings_symlink]),
             runfiles = runfiles,
         ),
         CcInfo(
@@ -95,7 +108,7 @@ def _cc_py_library_impl(ctx):
             linking_context = linking_context,
         ),
         PyInfo(
-            transitive_sources = depset([linking_outputs.executable]),
+            transitive_sources = depset([dynamic_library, bindings_symlink]),
             uses_shared_libraries = True,
         ),
         OutputGroupInfo(compilation_prerequisites_INTERNAL_ = ctx.files.hdrs + ctx.files.srcs),

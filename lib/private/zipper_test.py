@@ -25,7 +25,7 @@ class TestZipper(unittest.TestCase):
         assert os.path.exists(zip_path)
         with zipfile.ZipFile(zip_path, "r") as zip_ref:
             file_list = zip_ref.namelist()
-            assert file_list == files
+            assert {os.path.normcase(p) for p in file_list} == {os.path.normcase(p) for p in files}
             file_info = zip_ref.infolist().pop()
             assert file_info.date_time == (1980, 1, 1, 0, 0, 0)
             assert file_info.compress_type == zipfile.ZIP_DEFLATED
@@ -64,7 +64,7 @@ class TestZipper(unittest.TestCase):
             dir_list = [
                 os.path.basename(f)
                 for f in glob.glob("./**/*", recursive=True)
-                if not os.path.isdir(f) and "__pycache__" not in f
+                if not os.path.isdir(f) and "__pycache__" not in f and os.path.basename(f) not in {"__init__.py"}
             ]
             assert sorted(file_list) == sorted(dir_list), f"{sorted(file_list)} != {sorted(dir_list)}"
 
@@ -82,7 +82,7 @@ class TestZipper(unittest.TestCase):
             assert file_list == ["test/script"]
 
     def test_shebang(self):
-        zip_path = os.path.join(self.tmpdir, "test.zip")
+        zip_path = os.path.join(self.tmpdir, "test_with_shebang.zip")
         files = [__file__]
 
         unzip = shutil.which("unzip")
@@ -91,14 +91,16 @@ class TestZipper(unittest.TestCase):
         assert os.path.exists(zip_path)
         with open(zip_path, "rb") as zip_file:
             lines = zip_file.readlines()
-            assert lines[: len(shebang)] == [line.encode() + b"\n" for line in shebang]
-            assert lines[len(shebang)].startswith(b"PK")
-            assert os.stat(zip_path).st_mode & stat.S_IXUSR
+            assert lines[: len(shebang)] == [line.encode() + b"\n" for line in shebang], f"{lines[: len(shebang)] = }"
+            assert lines[len(shebang)].startswith(b"PK"), f"after shebang {lines[len(shebang):len(shebang)+8] = }"
 
-            result = subprocess.run([zip_path], capture_output=True)
-            assert result.returncode == 0
-            assert not unzip or b"01-01-1980 00:00" in result.stdout or b"1980-01-01 00:00" in result.stdout
-            assert __file__.encode() in result.stdout
+            if os.name != "nt":
+                assert os.stat(zip_path).st_mode & stat.S_IXUSR, f"mode {os.stat(zip_path).st_mode:06o}"
+                result = subprocess.run([zip_path], capture_output=True)
+
+                assert result.returncode == 0
+                assert not unzip or b"01-01-1980 00:00" in result.stdout or b"1980-01-01 00:00" in result.stdout
+                assert __file__.encode() in result.stdout
 
 
 if __name__ == "__main__":

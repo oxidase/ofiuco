@@ -10,4 +10,5 @@ Some build commands:
 
 ```
 bazel build @bazel_tools//tools/zip:zipper --platforms=//:linux_x86_64
+bazelisk build "@clang-windows-x86_64//..."
 ```

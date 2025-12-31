@@ -79,7 +79,7 @@ def main(argv=None):
             compress(args.command, Path(args.dir), output_stream, args.files)
 
         # Set +x mode if shebang is given
-        if args.shebang is not None:
+        if os.name != "nt" and args.shebang is not None:
             x_bits = (stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH) & ~os.umask(0)
             os.chmod(args.zip, os.stat(args.zip).st_mode | x_bits)
     else:

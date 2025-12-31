@@ -282,7 +282,7 @@ class Package:
                     (get_select_condition(normalize_target_parts(m.groupdict())), m.groupdict(), f'"@{wheel}//:whl"')
                     for wheel in self.wheels
                     if (m := re.match(WHEEL_RE, wheel))
-                    and (m["python_tag"].startswith("cp") or ("py3" in m["python_tag"].split(".")))
+                    and (m["python_tag"].startswith("cp3") or ("py3" in m["python_tag"].split(".")))
                 ),
                 key=condition_getter,
             ),
@@ -510,7 +510,7 @@ async def read_package_files(package):
     build_file = """package(default_visibility = ["//visibility:public"])
 filegroup(
     name="{kind}",
-    srcs = glob(["**/*"], exclude = ["target/**", "tests/**", "**/__pycache__/**", "*.egg-info/**"]),
+    srcs = glob(["**/*"], exclude = ["target/**", "**/__pycache__/**"]),
 )"""
 
     urls = {}
@@ -524,7 +524,7 @@ filegroup(
                     dict(
                         kind="http_archive",
                         name=package.name,
-                        url=f"file://{package.source.url}",
+                        url=f"file:///{package.source.url}" if os.name == "nt" else f"file://{package.source.url}",
                         # TODO: add sha256 if exists in lock file
                         build_file=build_file.format(kind="whl" if package.source.is_whl else "pkg"),
                     )

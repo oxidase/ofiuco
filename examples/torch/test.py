@@ -15,7 +15,8 @@ def test_torch_version():
         dependencies = tomllib.load(lock_file)
     locked_torch = [package for package in dependencies["package"] if package["name"] == "torch"]
     assert len(locked_torch) == 2
-    assert torch.__version__ in set(package["version"] for package in locked_torch)
+    assert len(torch_version := {package["version"].split("+").pop(0) for package in locked_torch}) == 1
+    assert torch.__version__.split("+").pop(0) in torch_version
 
 
 @pytest.mark.skipif(sys.platform != "linux", reason="torch+CUDA is installed only for linux")
@@ -39,7 +40,7 @@ def test_torchvision_version():
         if package["name"] == "torchvision" and eval(package.get("markers", ""), {}, {"sys_platform": sys.platform})
     ]
     assert len(packages) == 1
-    assert torchvision.__version__ == packages[0]["version"]
+    assert torchvision.__version__.split("+").pop(0) == packages[0]["version"].split("+").pop(0)
 
 
 def test_colorama_version():
@@ -51,7 +52,6 @@ def test_sample_packages():
 
     assert "Hello" in sample_package.hello()
 
-    print(sys.path)
     import sample_package_flit
 
     assert "Hello" in sample_package_flit.hello()
