@@ -4,9 +4,15 @@ BUILD_WORKSPACE_DIRECTORY=$(dirname $(readlink -f WORKSPACE))
 if [ ! -z ${TEST_TMPDIR+x} -a $1 != "transitions" ]; then
   export TMPDIR=$TEST_TMPDIR
 fi
-export HOME=$TEST_TMPDIR
+export HOME="$TEST_TMPDIR"
+export LOCALAPPDATA="$TEST_TMPDIR"
 
 cd examples/$1
+
+if [[ -n "$WINDIR" ]] && ! grep -q "^startup --windows_enable_symlinks$" .bazelrc; then
+    echo "Skip $1 test on Windows"
+    exit 0
+fi
 
 ARGS="--test_output=errors --spawn_strategy=local --verbose_failures"
 ARGS="$ARGS --override_repository=ofiuco=$BUILD_WORKSPACE_DIRECTORY"

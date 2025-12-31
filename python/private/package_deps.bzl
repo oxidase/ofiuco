@@ -7,6 +7,10 @@ load("@rules_python//python:defs.bzl", "PyInfo", "PyRuntimeInfo")
 load("@rules_python//python:versions.bzl", _MINOR_MAPPING = "MINOR_MAPPING")
 load("//python:markers.bzl", "evaluate", "parse")
 load("@rules_cc//cc:defs.bzl", "cc_common")
+load("//lib/private:paths.bzl", "pathsep")
+load("@rules_python//python:py_runtime_info.bzl", _PyRuntimeInfo = "PyRuntimeInfo")
+load("@rules_python//python/private:py_executable_info.bzl", _PyExecutableInfo = "PyExecutableInfo")
+
 
 
 # Environment Markers https://peps.python.org/pep-0508/#environment-markers
@@ -84,7 +88,7 @@ def get_tool(ctx, cc_toolchain, feature_configuration, action_name):
             cc_toolchain = cc_toolchain,
             include_directories = depset(direct = cc_toolchain.built_in_include_directories),
             user_compile_flags = ctx.attr.copts if hasattr(ctx.attr, "copts") else [],
-            use_pic = True,
+            use_pic = " pic," in str(feature_configuration),
         ),
     )
     return binary, flags
@@ -92,22 +96,6 @@ def get_tool(ctx, cc_toolchain, feature_configuration, action_name):
 def _format_library_link(lib):
     return "-L$PWD/{} -l{}".format(paths.dirname(lib), paths.split_extension(paths.basename(lib))[0].removeprefix("lib"))
 
-def merge_defines(defines):
-    # Process PYTHON_PROGRAM_NAME entries
-    prefix, suffix = 'PYTHON_PROGRAM_NAME="', '"'
-    python_program_names = depset([d for d in defines if d.startswith(prefix) and d.endswith(suffix)]).to_list()
-    defines = [d for d in defines if not (d.startswith(prefix) and d.endswith(suffix))]
-    if len(python_program_names) >= 2:
-        fail("can not merge PYTHON_PROGRAM_NAME defines " + str(python_program_names))
-
-    # Process PYTHON_PATH entries
-    prefix, suffix = 'PYTHON_PATH="', '"'
-    python_paths = [d[len(prefix):-len(suffix)] for d in defines if d.startswith(prefix) and d.endswith(suffix)]
-    defines = [d for d in defines if not (d.startswith(prefix) and d.endswith(suffix))]
-    if python_paths:
-        python_paths = [prefix + ":".join(depset([p for paths in python_paths for p in paths.split(":")]).to_list()) + suffix]
-
-    return defines + python_program_names + python_paths
 
 def _package_impl(ctx):
     """
@@ -151,9 +139,10 @@ def _package_impl(ctx):
     # Call "pip install" for the sdist or local packages
     if ctx.attr.package and ctx.attr.package.label.name in ["pkg", "sdist"]:
         # Get Python tooling toolchain and runfiles dependencies
+        package_deps = ctx.attr._package_deps
         package_deps_info = ctx.attr._package_deps[DefaultInfo]
-        package_deps_binary = package_deps_info.files_to_run.executable
-        package_deps_runfiles = package_deps_info.default_runfiles.files
+        package_deps_binary = package_deps[_PyExecutableInfo].main if _PyExecutableInfo in package_deps else package_deps_info.files_to_run.executable
+        package_deps_runfiles = package_deps[_PyExecutableInfo].runfiles_without_exe if _PyRuntimeInfo in package_deps else package_deps_info.default_runfiles
         package_deps_runtime_info = ctx.attr._python_host[PyRuntimeInfo]
 
         build_transitive_deps = [py_runtime_info.files, package_deps_info.files, package_deps_runtime_info.files]
@@ -219,11 +208,11 @@ def _package_impl(ctx):
                 ["-I$PWD/{}".format(path) for dep in cc_deps for path in dep[CcInfo].compilation_context.framework_includes.to_list()] + \
                 ["-iquote $PWD/{}".format(path) for dep in cc_deps for path in dep[CcInfo].compilation_context.quote_includes.to_list()] + \
                 ["-isystem $PWD/{}".format(path) for dep in cc_deps for path in dep[CcInfo].compilation_context.system_includes.to_list()] + \
-                ["-D{}".format(d) for d in merge_defines([d for dep in cc_deps for d in dep[CcInfo].compilation_context.defines.to_list()])]
+                ["-D{}".format(d) for d in depset([d for dep in cc_deps for d in dep[CcInfo].compilation_context.defines.to_list()]).to_list()]
 
             # Linking context
             cc_deps_linker_inputs = depset(transitive = [dep[CcInfo].linking_context.linker_inputs for dep in cc_deps], order = "topological")
-            cc_deps_libraries =[lib.dynamic_library or lib.static_library for inputs in cc_deps_linker_inputs.to_list() for lib in inputs.libraries]
+            cc_deps_libraries =[lib.dynamic_library or lib.static_library or lib.interface_library for inputs in cc_deps_linker_inputs.to_list() for lib in inputs.libraries]
             cc_deps_ldflags = ["-Wl,-rpath,{} -L$PWD/{} $PWD/{}".format(paths.dirname(file.short_path), paths.dirname(file.path), file.path) for file in cc_deps_libraries if file]
             output_files += cc_deps_libraries
 
@@ -263,7 +252,7 @@ def _package_impl(ctx):
             arguments = arguments,
             use_default_shell_env = True,
             executable = package_deps_runtime_info.interpreter.path,
-            tools = package_deps_runfiles,
+            tools = package_deps_runfiles.files,
             execution_requirements = execution_requirements,
         )
 
@@ -277,10 +266,13 @@ def _package_impl(ctx):
     imports = depset(direct = package_import, transitive = transitive_imports)
 
     # CcInfo
+    python_prefix = paths.dirname(py_runtime_info.interpreter.short_path)
+    python_prefix = paths.dirname(python_prefix) if paths.basename(python_prefix) == "bin" else python_prefix
     compilation_context = cc_common.create_compilation_context(
         defines = depset([
             'PYTHON_PROGRAM_NAME="{}"'.format(py_runtime_info.interpreter.short_path),
-            'PYTHON_PATH="{}"'.format(":".join(["../" + path for path in imports.to_list()])),
+            'PYTHON_PREFIX="{}"'.format(python_prefix),
+            'PYTHON_PATH_{}="{}"'.format(ctx.label.name.replace("-", "_"), pathsep(ctx).join(["../" + path for path in imports.to_list()])),
         ])
     )
 

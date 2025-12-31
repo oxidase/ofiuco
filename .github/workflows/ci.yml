@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 40
     strategy:
       matrix:
-        include: # TODO: windows-latest
+        include:
           - os: ubuntu-latest
             cache: ~/.cache/bazel
             install: |
@@ -26,9 +26,20 @@ jobs:
               brew install libpq
               brew link libpq
               ls -al /opt/homebrew/opt/libpq/lib
+          - os: windows-latest
+            cache:  ~/.cache/bazel
+            install: |
+              echo "LOCALAPPDATA: $env:LOCALAPPDATA"
+              echo "LocalAppData: $env:LocalAppData"
+              echo "APPDATA: $env:APPDATA"
+              echo "TEMP: $env:TEMP"
 
     steps:
+      # - uses: ikalnytskyi/action-setup-postgres@v8
+      # - run: psql postgresql://postgres:postgres@localhost:5432/postgres -c "SELECT 1"
+
       - name: "node-cleanup"
+        if: runner.os != 'Windows'
         run: |
           df -h
           sudo rm -rf /usr/lib/jvm /usr/share/dotnet /usr/share/swift /usr/local/.ghcup /usr/local/share/powershell /usr/local/julia* /usr/local/lib/android /usr/local/share/chromium /opt/microsoft /opt/google /opt/az /opt/ghc /opt/hostedtoolcache

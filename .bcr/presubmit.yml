@@ -4,6 +4,8 @@ matrix:
     - debian10
     - ubuntu2004
     - macos
+    - macos_arm64
+    - windows
   bazel: [last_rc, 8.x, 7.x]
 tasks:
   verify_targets:
@@ -17,9 +19,11 @@ bcr_test_module:
   module_path: "examples/transitions"
   matrix:
     platform:
-      - debian11
-      - macos
+      - debian10
       - ubuntu2004
+      - macos
+      - macos_arm64
+      - windows
     bazel: [last_rc, 8.x, 7.x]
   tasks:
     run_test_module:

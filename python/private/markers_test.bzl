@@ -132,7 +132,7 @@ def parsing_failure_tests():
     for name, data in tests.items():
         text, env, expected = data
         parsing_failure_rule(name = name, text = text, env = env, tags = ["manual"])
-        parsing_failure_test(name = name + "_test", target_under_test = ":" + name, args = [expected])
+        parsing_failure_test(name = name + "_test", target_under_test = ":{}".format(name), args = [expected])
 
     return [":{}_test".format(name) for name in tests]
 

@@ -8,6 +8,7 @@ load("@rules_shell//shell:sh_test.bzl", "sh_test")
     tags = tags,
     data = glob(["{}/**/*".format(name)]) + ["//:WORKSPACE", "//:MODULE.bazel"],
 ) for name, tags in [
+    # TODO ["airflow", []],
     ["aspect_rules_py", []],
     ["cc_toolchain", []],
     ["markers", []],

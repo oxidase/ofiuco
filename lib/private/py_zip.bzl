@@ -5,8 +5,10 @@ Support for serverless deployments.
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("//python/private:package_deps.bzl", _get_imports = "get_imports")
 load(":runfiles.bzl", _matches = "matches")
+load("//lib/private:paths.bzl", "pathsep")
+load("@rules_python//python:py_runtime_info.bzl", _PyRuntimeInfo = "PyRuntimeInfo")
+load("@rules_python//python/private:py_executable_info.bzl", _PyExecutableInfo = "PyExecutableInfo")
 
-DEFAULT_STUB_SHEBANG = "#!/usr/bin/env python3"
 
 def _target_platform_transition_impl(settings, attr):
     return {"//command_line_option:platforms": str(attr.platform)} if attr.platform else {}
@@ -20,13 +22,13 @@ _target_platform_transition = transition(
 def _py_zip_impl(ctx):
     basename = ctx.label.name
     target = ctx.attr.target[0] if type(ctx.attr.target) == "list" else ctx.attr.target
-    executable = target[DefaultInfo].files_to_run.executable
-    deps = target[DefaultInfo].default_runfiles.files.to_list()
+    main = target[_PyExecutableInfo].main if _PyExecutableInfo in target else target[DefaultInfo].files_to_run.executable
+    deps = target[_PyExecutableInfo].runfiles_without_exe if _PyRuntimeInfo in target else target[DefaultInfo].default_runfiles
     workspace_dir = ctx.label.workspace_name or "_main"
 
     ## Collect runfiles and prepare the arguments list
     args, filtered_deps = [], []
-    for dep in deps:
+    for dep in deps.files.to_list():
         short_path = paths.normalize(paths.join(workspace_dir, dep.short_path))
         if _matches(short_path, ctx.attr.exclude):
             continue
@@ -36,15 +38,16 @@ def _py_zip_impl(ctx):
 
     ## Create a package __main__.py entry
     main_short_path = "__main__.py"
-    if executable and not _matches(main_short_path, ctx.attr.exclude):
+    if main and not _matches(main_short_path, ctx.attr.exclude):
         zip_main_entry = ctx.actions.declare_file(basename + "_main_entry.py")
         ctx.actions.expand_template(
+            # TODO: switch to the new rules_python/python/private/python_bootstrap_template.txt
+            # template = target[_PyRuntimeInfo].bootstrap_template,
             template = ctx.file._python_stub,
             output = zip_main_entry,
             substitutions = {
-                "%shebang%": DEFAULT_STUB_SHEBANG,
-                # assume the generated app is the first entry in dependencies depset
-                "%main%": "{}/{}".format(workspace_dir, executable.short_path),
+                "%shebang%": "#!{}".format(target[_PyExecutableInfo].interpreter_path),
+                "%main%": "{}/{}".format(workspace_dir, main.short_path),
                 # use the current interpreter to launch the app
                 "PYTHON_BINARY = '%python_binary%'": "PYTHON_BINARY = sys.executable",
                 "%coverage_tool%": "",
@@ -69,7 +72,7 @@ def _py_zip_impl(ctx):
     ## Genrate a JSON files with enviroment variables for downstream consumers
     python_paths = [workspace_dir] + _get_imports(target).to_list()
     json_file = ctx.actions.declare_file(basename + ".json")
-    ctx.actions.write(json_file, json.encode({"environment": {"PYTHONPATH": ":".join(python_paths)}}))
+    ctx.actions.write(json_file, json.encode({"environment": {"PYTHONPATH": pathsep(ctx).join(python_paths)}}))
 
     ## Package zip file
     output_file = ctx.actions.declare_file(basename)
@@ -110,6 +113,7 @@ py_zip = rule(
             default = "@bazel_tools//tools/allowlists/function_transition_allowlist",
         ),
         "_python_stub": attr.label(
+            # deprecated and will be removed from Bazel
             default = "@bazel_tools//tools/python:python_bootstrap_template.txt",
             allow_single_file = True,
         ),

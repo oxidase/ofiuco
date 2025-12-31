@@ -1,2 +1,4 @@
+startup --windows_enable_symlinks # GitHub has C:\Program Files\Microsoft Visual Studio\2022\Enterprise installed but Bazel can not detect it
+common --action_env=ProgramFiles --action_env=ProgramFiles(x86)
 common --incompatible_default_to_explicit_init_py=true
 common --test_env=LD_LIBRARY_PATH

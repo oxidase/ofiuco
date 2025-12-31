@@ -9,10 +9,23 @@
 #include <catch2/catch_approx.hpp>
 
 #include <iostream>
+#include <filesystem>
 
 #define WIDEN_(x) L##x
 #define WIDEN(x) WIDEN_(x)
 
+
+#if defined(_WIN32)
+  #include <windows.h>
+  #include <direct.h>
+  #define getcwd _getcwd
+  #define PATH_MAX MAX_PATH
+  #define PATH_SEP ";"
+#else
+  #include <unistd.h>
+  #include <limits.h>
+  #define PATH_SEP ":"
+#endif
 
 class PythonSetup : public Catch::EventListenerBase {
 public:
@@ -20,23 +33,33 @@ public:
 
     void testRunStarting(Catch::TestRunInfo const& info) override {
       char cwd[PATH_MAX];
-      printf("Current working directory: %s\n", getcwd(cwd, sizeof(cwd)));
+
+      fprintf(stderr, "Current working directory: %s\n", getcwd(cwd, sizeof(cwd)));
+      fprintf(stderr, "PYTHON_PREFIX %s\n", PYTHON_PREFIX);
+      fprintf(stderr, "PYTHON_PROGRAM_NAME %s, %s\n", PYTHON_PROGRAM_NAME, std::filesystem::exists(PYTHON_PROGRAM_NAME) ? "exists" : "does not exist");
 
       PyStatus status;
 
       PyConfig config;
       PyConfig_InitPythonConfig(&config);
 
+
       // Set the program name. Implicitly pre-initialize Python.
       status = PyConfig_SetString(&config, &config.program_name, WIDEN(PYTHON_PROGRAM_NAME));
       if (PyStatus_Exception(status)) {
-        goto exception;
+	goto exception;
       }
 
-      // Set the python path.
-      status = PyConfig_SetString(&config, &config.pythonpath_env, WIDEN(PYTHON_PATH));
+      // Set the Python prefix.
+      status = PyConfig_SetString(&config, &config.prefix, std::filesystem::absolute(PYTHON_PREFIX).wstring().c_str());
       if (PyStatus_Exception(status)) {
-        goto exception;
+	goto exception;
+      }
+
+      // Set the Python path.
+      status = PyConfig_SetString(&config, &config.pythonpath_env, WIDEN(PYTHON_PATH_numpy PATH_SEP PYTHON_PATH_pytest));
+      if (PyStatus_Exception(status)) {
+	goto exception;
       }
 
       status = Py_InitializeFromConfig(&config);
@@ -45,12 +68,17 @@ public:
       }
       PyConfig_Clear(&config);
 
-      PyRun_SimpleString(
-                         "import sys\n"
-                         "print(f\"Python home      : {sys.prefix}\")\n"
-                         "print(f\"Python executable: {sys.executable}\")\n"
-                         "print(f\"Python version   : {sys.version}\")\n"
-                         "print(f\"Python path      : {sys.path}\")");
+      PyRun_SimpleString(R"(
+import sys
+import sysconfig
+print(f'Python home             : {sys.prefix}')
+print(f'Python executable       : {sys.executable}')
+print(f'Python version          : {sys.version}')
+print(f'Python path             : {sys.path}')
+print(f'Python platlibdir       : {sys.platlibdir}')
+print(f'Python prefix           : {sysconfig.get_config_var("prefix")}')
+print(f'Python exec_prefix      : {sysconfig.get_config_var("exec_prefix")}')
+)");
 
       return;
 
@@ -119,4 +147,24 @@ TEST_CASE("Compute eigenvalues of a 2x2 matrix") {
   Py_DECREF(eig_func);
   Py_DECREF(linalg);
   Py_DECREF(array);
+}
+
+TEST_CASE("Run a pytest example") {
+  PyRun_SimpleString(R"(
+import tempfile, pathlib, pytest
+
+code = '''
+import numpy as np
+
+def test_example():
+    array = np.array([[1, 2, 3], [3, 4, 5]], dtype=np.float32)
+    assert array.shape == (2, 3)
+'''
+
+tmp = tempfile.TemporaryDirectory()
+path = pathlib.Path(tmp.name) / "test_example.py"
+path.write_text(code)
+
+assert (exit_code := pytest.main(["-q", str(path)])) == 0, f'exit code {exit_code} is not 0'
+)");
 }

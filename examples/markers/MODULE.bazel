@@ -52,6 +52,16 @@ parse.lock(
                 '"sys_platform": "darwin"',
             ],
         ) + "}",
+        python_version + "_x86_64-pc-windows-msvc": "{" + ",".join(
+            [
+                '"python_full_version": "{}"'.format(python_full_version),
+                '"os_name": "nt"',
+                '"platform_machine": "amd64"',
+                '"platform_system": "Windows"',
+                '"platform_tags": []',
+                '"sys_platform": "win32"',
+            ],
+        ) + "}",
     },
 )
 use_repo(parse, "python")

@@ -61,7 +61,9 @@ http_archive(
     build_file = "//toolchains/clang:clang.BUILD",
     sha256 = "3c15cbdbc91b4921442d1660239047b3ca3dedf401119362dac9b7e803992a21",
     type = "zip",
-    url = "https://chrome-infra-packages.appspot.com/dl/fuchsia/third_party/clang/windows-amd64/+/git_revision:05a34dde7008f41395312c36c95c4ebc65ff6254",
+    url = "https://tinyurl.com/2s4deny3",
+    # TODO: switch to original URL after https://github.com/bazelbuild/bazel/issues/28121 is fixed
+    # url = "https://chrome-infra-packages.appspot.com/dl/fuchsia/third_party/clang/windows-amd64/+/git_revision:05a34dde7008f41395312c36c95c4ebc65ff6254",
 )
 
 http_archive(
@@ -77,7 +79,9 @@ http_archive(
     build_file = "//toolchains/clang:linux_sysroot.BUILD",
     sha256 = "f45ca0d8b46810b94d2a7dbc65f9092337d6a9568b260b51173a5ab9314da25e",
     type = "zip",
-    url = "https://chrome-infra-packages.appspot.com/dl/fuchsia/third_party/sysroot/bionic/+/git_revision:702eb9654703a7cec1cadf93a7e3aa269d053943",
+    url = "https://tinyurl.com/5by6945k",
+    # TODO: switch to original URL after https://github.com/bazelbuild/bazel/issues/28121 is fixed
+    # url = "https://chrome-infra-packages.appspot.com/dl/fuchsia/third_party/sysroot/bionic/+/git_revision:702eb9654703a7cec1cadf93a7e3aa269d053943",
 )
 
 register_toolchains(

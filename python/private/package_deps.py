@@ -7,9 +7,9 @@ import re
 import shutil
 import string
 import sys
-import tempfile
 import warnings
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
@@ -81,14 +81,15 @@ def install(args):
 
     # Set temporary build directory to the current sandbox and copy input as some backends require writeable source tree
     # Ref: https://github.com/pypa/setuptools-scm/issues/1252
-    with tempfile.TemporaryDirectory(dir=output_path, delete=QUIET_PIP_INSTALL) as tmp_directory:
+    with TemporaryDirectory(dir=None if os.name == "nt" else args.output, delete=QUIET_PIP_INSTALL) as tmp_directory:
         os.environ["TMPDIR"] = tmp_directory
 
         # Copy input repository directory to a writable temporary location
         if os.path.isdir(args.input):
-            input_path = os.path.sep.join([tmp_directory, args.input])
-            shutil.copytree(args.input, input_path)
-            args.input = input_path
+            copy_src = os.path.normpath(args.input)
+            copy_dst = os.path.sep.join([tmp_directory, copy_src])
+            shutil.copytree(copy_src, copy_dst)
+            args.input = copy_dst
 
         return install_internal(args)
 
