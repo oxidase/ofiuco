@@ -1,3 +1,5 @@
+"""Fetching phase rules for Python dependencies."""
+
 load("@ofiuco_defs//:defs.bzl", _python_host = "python_host")
 
 def _parse_lock_impl(rctx):
@@ -16,22 +18,19 @@ def _parse_lock_impl(rctx):
         rctx.watch(rctx.attr.toml)
 
     exec_result = rctx.execute([
-        interpreter,
-        rctx.path(rctx.attr._lock_parser),
-        rctx.path(rctx.attr.lock),
-        json.encode(rctx.attr.platforms),
-        "--{}generate_extras".format("" if rctx.attr.generate_extras else "no-"),
-        "--{}enable_rust".format("" if rctx.attr.enable_rust else "no-"),
-    ] + (["--deps={}".format(json.encode(rctx.attr.deps))] if rctx.attr.deps else [])
-      + (["--project_file={}".format(rctx.path(rctx.attr.toml))] if rctx.attr.toml else []))
-
+                                   interpreter,
+                                   rctx.path(rctx.attr._lock_parser),
+                                   rctx.path(rctx.attr.lock),
+                                   json.encode(rctx.attr.platforms),
+                                   "--{}generate_extras".format("" if rctx.attr.generate_extras else "no-"),
+                                   "--{}enable_rust".format("" if rctx.attr.enable_rust else "no-"),
+                               ] + (["--deps={}".format(json.encode(rctx.attr.deps))] if rctx.attr.deps else []) +
+                               (["--project_file={}".format(rctx.path(rctx.attr.toml))] if rctx.attr.toml else []))
 
     if exec_result.return_code:
         fail("Parsing {} failed with exit code {}\n{}\n".format(rctx.attr.lock, exec_result.return_code, exec_result.stderr))
 
     rctx.file("BUILD.bazel", "{}\n\n{}\n\n{}".format(header, prefix, exec_result.stdout))
-
-
 
 parse_lock = repository_rule(
     attrs = {

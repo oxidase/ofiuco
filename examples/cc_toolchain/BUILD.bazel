@@ -9,8 +9,8 @@ py_test(
     deps = [
         "@poetry//:llama-cpp-python",
         "@poetry//:psycopg",
-        "@poetry//:pytest",
         "@poetry//:py-radix",
+        "@poetry//:pytest",
     ] + select({
         "@platforms//os:linux": ["@poetry//:evdev"],
         "//conditions:default": [],

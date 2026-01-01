@@ -1,10 +1,11 @@
-load("@ofiuco//python/private:lock_parser.bzl", "parse_lock")
+"""Ofiuco module extensions."""
+
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 load("@bazel_tools//tools/build_defs/repo:local.bzl", "new_local_repository")
-load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
-load("@ofiuco_defs//:defs.bzl", _python_host = "python_host")
 load("@ofiuco//lib:defs.bzl", "lib")
-
+load("@ofiuco//python/private:lock_parser.bzl", "parse_lock")
+load("@ofiuco_defs//:defs.bzl", _python_host = "python_host")
 
 def _parse_impl(mctx):
     for mod in mctx.modules:
@@ -52,18 +53,17 @@ def _parse_impl(mctx):
                     )
                 elif file["kind"] == "local_repository":
                     new_local_repository(
-                        name=name,
-                        path=file["path"],
-                        build_file_content=build_file,
+                        name = name,
+                        path = file["path"],
+                        build_file_content = build_file,
                     )
                 elif file["kind"] == "git_repository":
                     git_repository(
-                        name=name,
-                        remote=file["remote"],
-                        commit=file["commit"],
-                        build_file_content=build_file,
+                        name = name,
+                        remote = file["remote"],
+                        commit = file["commit"],
+                        build_file_content = build_file,
                     )
-
 
 parse = module_extension(
     implementation = _parse_impl,

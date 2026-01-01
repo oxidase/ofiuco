@@ -1,5 +1,5 @@
-load("@ofiuco//python:poetry.bzl", "poetry_lock")
 load("@aspect_rules_py//py:defs.bzl", "py_test")
+load("@ofiuco//python:poetry.bzl", "poetry_lock")
 
 py_test(
     name = "test",

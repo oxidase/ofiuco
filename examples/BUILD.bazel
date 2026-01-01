@@ -5,16 +5,43 @@ load("@rules_shell//shell:sh_test.bzl", "sh_test")
     size = "large",
     srcs = ["integration_test.sh"],
     args = [name],
+    data = glob(["{}/**/*".format(name)]) + [
+        "//:MODULE.bazel",
+        "//:WORKSPACE",
+    ],
     tags = tags,
-    data = glob(["{}/**/*".format(name)]) + ["//:WORKSPACE", "//:MODULE.bazel"],
 ) for name, tags in [
     # TODO ["airflow", []],
-    ["aspect_rules_py", []],
-    ["cc_toolchain", []],
-    ["markers", []],
-    ["numpy", []],
-    ["simple", []],
-    ["torch", []],
-    ["transitions", ["exclusive"]],
-    ["uv", []],
+    [
+        "aspect_rules_py",
+        [],
+    ],
+    [
+        "cc_toolchain",
+        [],
+    ],
+    [
+        "markers",
+        [],
+    ],
+    [
+        "numpy",
+        [],
+    ],
+    [
+        "simple",
+        [],
+    ],
+    [
+        "torch",
+        [],
+    ],
+    [
+        "transitions",
+        ["exclusive"],
+    ],
+    [
+        "uv",
+        [],
+    ],
 ]]

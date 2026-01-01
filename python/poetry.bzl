@@ -1,3 +1,5 @@
+"""Rules for Poetry lock files."""
+
 load("@ofiuco_defs//:defs.bzl", _python_host_runtime = "python_host_runtime")
 load("@rules_python//python:defs.bzl", "PyRuntimeInfo")
 load("//python/private:package_deps.bzl", _get_imports = "get_imports")

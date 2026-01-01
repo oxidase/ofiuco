@@ -1,15 +1,21 @@
 [project]
 name = "example"
 version = "0.0.0"
-readme = "README.md"
 description = "example with circular dependencies"
-requires-python = ">=3.11,<4"
+readme = "README.md"
 license = "Apache-2.0"
+requires-python = ">=3.11,<4"
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+]
 dependencies = [
-    "apache-airflow",
-    "types-requests",
+  "apache-airflow",
+  "types-requests",
 ]
 
 [tool.poetry.group.dev.dependencies]
-pytest = {version = "^7.2", "python" = ">=3.7"}
-google-re2 = {path = "re2/python", develop = false}
+pytest = { version = "^7.2", "python" = ">=3.7" }
+google-re2 = { path = "re2/python", develop = false }

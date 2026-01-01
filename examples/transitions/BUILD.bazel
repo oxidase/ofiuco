@@ -1,6 +1,7 @@
-load("@ofiuco//python:poetry.bzl", "poetry_lock")
 load("@ofiuco//lib:defs.bzl", "lib")
+load("@ofiuco//python:poetry.bzl", "poetry_lock")
 load("@rules_python//python:defs.bzl", "py_binary", "py_test")
+
 # load("@rules_cc//cc:defs.bzl", "cc_toolchain")
 # load(":cc_toolchain_config.bzl", "cc_toolchain_config")
 load(":transitions.bzl", "py_binary_linux_x86_64")
@@ -71,8 +72,8 @@ filegroup(
 lib.py_zip(
     name = "deploy_windows_x86_64.zip",
     platform = ":windows_x86_64",
-    target = ":app",
     tags = ["manual"],
+    target = ":app",
 )
 
 py_binary_linux_x86_64(

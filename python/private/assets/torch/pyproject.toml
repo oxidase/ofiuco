@@ -2,7 +2,7 @@
 name = "test"
 version = "0.0.0"
 description = ""
-authors = ["x"]
+authors = [ "x" ]
 
 [[tool.poetry.source]]
 name = "pypi"
@@ -24,7 +24,7 @@ docker = "^6.0.1"
 einops = "^0.6.1"
 fitter = "^1.5.2"
 fonttools = "^4.39.3"
-geojson = {version = "^3.0.1", python = ">=3.10,<4.0"}
+geojson = { version = "^3.0.1", python = ">=3.10,<4.0" }
 geomet = "^1.0.0"
 geopandas = "^0.12.2"
 hydra-core = "^1.3.2"
@@ -34,7 +34,7 @@ Jinja2 = "^3.1.4"
 jupyterlab = "^4.0.0"
 mapbox-vector-tile = "^2.0.1"
 mercantile = "^1.2.1"
-moto = {version = "5.0.5", extras = ["server"]}
+moto = { version = "5.0.5", extras = [ "server" ] }
 mypy = "^1.2.0"
 myst-nb = "^1.0.0"
 numba = "^0.58.1"
@@ -45,14 +45,14 @@ optuna = "^3.1.1"
 plotly = "^5.17.0"
 pmtiles = "^3.2.0"
 psutil = "^5.9.5"
-psycopg = {version = "^3.1.19", extras = ["binary"]}
+psycopg = { version = "^3.1.19", extras = [ "binary" ] }
 pydantic = "^2.5.2"
 geojson-pydantic = "^1.1.0"
 python = ">=3.10,<4.0"
 pyperclip = "^1.8.2"
 rasterio = "^1.3.6"
 requests = "2.31.0"
-safetensors = {version = "0.4.0", extras = ["numpy"]}
+safetensors = { version = "0.4.0", extras = [ "numpy" ] }
 scikit-learn = "^1.3.2"
 scipy = "^1.10.1"
 sentile = "^1.2.0"
@@ -69,21 +69,20 @@ supermercado = "^0.2.0"
 tempora = "^5.2.1"
 timm = "^0.9.10"
 torch = [
-  {platform = "darwin", version = "2.7.0", source="pypi"},
-  {platform = "linux", url = "https://download.pytorch.org/whl/cu118/torch-2.7.0%2Bcu118-cp313-cp313-manylinux_2_28_x86_64.whl#sha256=816bedc673934ecc04395a0e3251ce19b4d44c7682177e2dd04ec895f2f02c51"},
+  { platform = "darwin", version = "2.7.0", source = "pypi" },
+  { platform = "linux", url = "https://download.pytorch.org/whl/cu118/torch-2.7.0%2Bcu118-cp313-cp313-manylinux_2_28_x86_64.whl#sha256=816bedc673934ecc04395a0e3251ce19b4d44c7682177e2dd04ec895f2f02c51" },
 ]
 torchinfo = "^1.8.0"
 torchvision = [
-   {version = "0.22.0"},
-   {platform = "manylinux_2_28_x86_64", version = "0.22.0", source="pytorch"},
+  { version = "0.22.0" },
+  { platform = "manylinux_2_28_x86_64", version = "0.22.0", source = "pytorch" },
 ]
 tqdm = "^4.65.0"
 types-PyYAML = "^6"
 types-Pillow = "^10"
 utm = "^0.7.0"
 wandb = "^0.16"
-xgboost = {version = "^2.1.0", extras = ["plotting"]}
-
+xgboost = { version = "^2.1.0", extras = [ "plotting" ] }
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"

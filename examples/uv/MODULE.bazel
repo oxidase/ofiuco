@@ -12,5 +12,9 @@ local_path_override(
 )
 
 parse = use_extension("@ofiuco//python:extensions.bzl", "parse")
-parse.lock(name = "uv", lock = "//:uv.lock", toml = "//:pyproject.toml")
+parse.lock(
+    name = "uv",
+    lock = "//:uv.lock",
+    toml = "//:pyproject.toml",
+)
 use_repo(parse, "uv")
