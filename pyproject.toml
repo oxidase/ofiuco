@@ -14,6 +14,7 @@ classifiers = [
 dependencies = [
   "aiohttp",
   "poetry",
+  "pre-commit",
 ]
 
 [tool.ruff]

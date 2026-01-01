@@ -3,7 +3,6 @@
 load("@bazel_skylib//lib:partial.bzl", "partial")
 load("@bazel_skylib//lib:unittest.bzl", "asserts", "unittest")
 load("//python/private:package_deps.bzl", "DEFAULT_PLATFORMS", "derive_environment_markers")
-load("//lib/private:paths.bzl", "pathsep")
 
 def _derive_environment_markers_test_impl(ctx):
     env = unittest.begin(ctx)
@@ -35,6 +34,7 @@ def _derive_environment_markers_host_test_impl(ctx):
     }
     runtime, tags = derive_environment_markers(interpreter_path, {}, json.encode(host_tags))
 
+    asserts.true(env, runtime == "host")
     asserts.true(env, "python_version" in tags)
     asserts.true(env, "python_full_version" in tags)
     asserts.true(env, tags["python_version"] == host_tags["python_version"])
@@ -44,8 +44,6 @@ def _derive_environment_markers_host_test_impl(ctx):
 
 derive_environment_markers_test = unittest.make(_derive_environment_markers_test_impl)
 derive_environment_markers_host_test = unittest.make(_derive_environment_markers_host_test_impl)
-
-
 
 def package_deps_test_suite():
     unittest.suite(

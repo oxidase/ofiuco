@@ -1,5 +1,3 @@
-load("@bazel_skylib//lib:selects.bzl", "selects")
-
 package(default_visibility = ["//visibility:public"])
 
 # List all targets bazel query @ofiuco//python/platforms/...
@@ -7,142 +5,271 @@ package(default_visibility = ["//visibility:public"])
 ### Supported Python binary ABI versions
 ###   [Python tag, Python version, Python ABI tag, free-threaded]
 python_abi_tags = [
-    ["py2.py3", None, "none", "no"],
-    ["py3", None, "none", "no"],
-    ["cp3x", None, "abi3", "no"],
+    [
+        "py2.py3",
+        None,
+        "none",
+        "no",
+    ],
+    [
+        "py3",
+        None,
+        "none",
+        "no",
+    ],
+    [
+        "cp3x",
+        None,
+        "abi3",
+        "no",
+    ],
 ] + [
     # ABI m versions
-    ["cp3" + str(minor), "3." + str(minor), "cp3" + str(minor) + "m", "no"] for minor in range(4, 8)
+    [
+        "cp3" + str(minor),
+        "3." + str(minor),
+        "cp3" + str(minor) + "m",
+        "no",
+    ]
+    for minor in range(4, 8)
 ] + [
-    ["cp3" + str(minor), "3." + str(minor), "cp3" + str(minor), "no"] for minor in range(8, 17)
+    [
+        "cp3" + str(minor),
+        "3." + str(minor),
+        "cp3" + str(minor),
+        "no",
+    ]
+    for minor in range(8, 17)
 ] + [
     # ABI free-threaded versions
-    ["cp3" + str(minor), "3." + str(minor), "cp3" + str(minor) + "t", "yes"] for minor in range(13, 17)
+    [
+        "cp3" + str(minor),
+        "3." + str(minor),
+        "cp3" + str(minor) + "t",
+        "yes",
+    ]
+    for minor in range(13, 17)
 ] + [
     # ABI 'none' versions
-    ["cp3" + str(minor), "3." + str(minor), "none", "no"] for minor in range(4, 17)
+    [
+        "cp3" + str(minor),
+        "3." + str(minor),
+        "none",
+        "no",
+    ]
+    for minor in range(4, 17)
 ]
 
 # Linux
-[config_setting(
-    name = "{python_tag}-{abi_tag}-linux-{cpu}-{libc}".format(python_tag=python_tag, abi_tag=abi_tag, cpu=cpu, libc=libc),
-    constraint_values = [
-        "@platforms//cpu:{cpu}".format(cpu=cpu),
-        "@platforms//os:linux",
-    ],
-    flag_values = {"@rules_python//python/config_settings:py_linux_libc": libc}  | ({
-        "@rules_python//python/config_settings:python_version_major_minor": python_version,
-        "@rules_python//python/config_settings:py_freethreaded": freethreaded,
-    } if python_version else {}),
-)
- for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
- for cpu in ["aarch64", "armv7", "ppc64le", "riscv64", "riscv32", "s390x", "x86_32", "x86_64"]
- for libc in ["glibc", "musl"]]
-
+[
+    config_setting(
+        name = "{python_tag}-{abi_tag}-linux-{cpu}-{libc}".format(
+            abi_tag = abi_tag,
+            cpu = cpu,
+            libc = libc,
+            python_tag = python_tag,
+        ),
+        constraint_values = [
+            "@platforms//cpu:{cpu}".format(cpu = cpu),
+            "@platforms//os:linux",
+        ],
+        flag_values = {"@rules_python//python/config_settings:py_linux_libc": libc} | ({
+            "@rules_python//python/config_settings:python_version_major_minor": python_version,
+            "@rules_python//python/config_settings:py_freethreaded": freethreaded,
+        } if python_version else {}),
+    )
+    for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
+    for cpu in [
+        "aarch64",
+        "armv7",
+        "ppc64le",
+        "riscv64",
+        "riscv32",
+        "s390x",
+        "x86_32",
+        "x86_64",
+    ]
+    for libc in [
+        "glibc",
+        "musl",
+    ]
+]
 
 # MacOS
-constraint_setting(name = "macosx", default_constraint_value = ":macosx_14_0")
+constraint_setting(
+    name = "macosx",
+    default_constraint_value = ":macosx_14_0",
+)
+
 macosx_versions = [
-    "10_9",   # Mavericks
+    "10_9",  # Mavericks
     "10_10",  # Yosemite
     "10_11",  # El Capitan
     "10_12",  # Sierra
     "10_13",  # High Sierra
     "10_14",  # Mojave
     "10_15",  # Catalina
-    "11_0",   # Big Sur
-    "12_0",   # Monterey
-    "13_0",   # Ventura
-    "14_0",   # Sonoma
-    "15_0",   # Sequoia
-    "16_0",   # Tahoe
+    "11_0",  # Big Sur
+    "12_0",  # Monterey
+    "13_0",  # Ventura
+    "14_0",  # Sonoma
+    "15_0",  # Sequoia
+    "16_0",  # Tahoe
 ]
 
-[constraint_value(name = "macosx_{}".format(version), constraint_setting = ":macosx") for version in macosx_versions]
+[constraint_value(
+    name = "macosx_{}".format(version),
+    constraint_setting = ":macosx",
+) for version in macosx_versions]
 
-[config_setting(
-    name = "{python_tag}-{abi_tag}-macosx_{macosx}_{cpu}".format(python_tag=python_tag, abi_tag=abi_tag, macosx=macosx, cpu=cpu),
-    constraint_values = [
-        "@platforms//cpu:{cpu}".format(cpu=cpu),
-        "@platforms//os:macos",
-        ":macosx_{macosx}".format(macosx=macosx),
-    ],
-    flag_values = {
-        "@rules_python//python/config_settings:python_version_major_minor": python_version,
-        "@rules_python//python/config_settings:py_freethreaded": freethreaded,
-    }  if python_version else {},
-)
- for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
- for cpu in ["x86_64", "arm64"]
- for macosx in macosx_versions]
-
+[
+    config_setting(
+        name = "{python_tag}-{abi_tag}-macosx_{macosx}_{cpu}".format(
+            abi_tag = abi_tag,
+            cpu = cpu,
+            macosx = macosx,
+            python_tag = python_tag,
+        ),
+        constraint_values = [
+            "@platforms//cpu:{cpu}".format(cpu = cpu),
+            "@platforms//os:macos",
+            ":macosx_{macosx}".format(macosx = macosx),
+        ],
+        flag_values = {
+            "@rules_python//python/config_settings:python_version_major_minor": python_version,
+            "@rules_python//python/config_settings:py_freethreaded": freethreaded,
+        } if python_version else {},
+    )
+    for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
+    for cpu in [
+        "x86_64",
+        "arm64",
+    ]
+    for macosx in macosx_versions
+]
 
 # MacOS universal architecture
-[config_setting(
-    name = "{python_tag}-{abi_tag}-macosx_{macosx}_universal2".format(python_tag=python_tag, abi_tag=abi_tag, macosx=macosx),
-    constraint_values = [
-        "@platforms//os:macos",
-        ":macosx_{macosx}".format(macosx=macosx),
-    ],
-    flag_values = {
-        "@rules_python//python/config_settings:python_version_major_minor": python_version,
-        "@rules_python//python/config_settings:py_freethreaded": freethreaded,
-    }  if python_version else {},
-)
- for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
- for macosx in macosx_versions]
+[
+    config_setting(
+        name = "{python_tag}-{abi_tag}-macosx_{macosx}_universal2".format(
+            abi_tag = abi_tag,
+            macosx = macosx,
+            python_tag = python_tag,
+        ),
+        constraint_values = [
+            "@platforms//os:macos",
+            ":macosx_{macosx}".format(macosx = macosx),
+        ],
+        flag_values = {
+            "@rules_python//python/config_settings:python_version_major_minor": python_version,
+            "@rules_python//python/config_settings:py_freethreaded": freethreaded,
+        } if python_version else {},
+    )
+    for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
+    for macosx in macosx_versions
+]
 
 # Windows
-[config_setting(
-    name = "{python_tag}-{abi_tag}-{platform}".format(python_tag=python_tag, abi_tag=abi_tag, platform=platform),
-    constraint_values = [
-        "@platforms//cpu:{cpu}".format(cpu=cpu),
-        "@platforms//os:windows",
-    ],
-    flag_values = {
-        "@rules_python//python/config_settings:python_version_major_minor": python_version,
-        "@rules_python//python/config_settings:py_freethreaded": freethreaded,
-    } if python_version else {},
-)
- for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
- for cpu, platform  in [
-     ["arm64", "win_arm64"],
-     ["x86_32", "win32"],
-     ["x86_64", "win_amd64"],
- ]]
+[
+    config_setting(
+        name = "{python_tag}-{abi_tag}-{platform}".format(
+            abi_tag = abi_tag,
+            platform = platform,
+            python_tag = python_tag,
+        ),
+        constraint_values = [
+            "@platforms//cpu:{cpu}".format(cpu = cpu),
+            "@platforms//os:windows",
+        ],
+        flag_values = {
+            "@rules_python//python/config_settings:python_version_major_minor": python_version,
+            "@rules_python//python/config_settings:py_freethreaded": freethreaded,
+        } if python_version else {},
+    )
+    for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
+    for cpu, platform in [
+        [
+            "arm64",
+            "win_arm64",
+        ],
+        [
+            "x86_32",
+            "win32",
+        ],
+        [
+            "x86_64",
+            "win_amd64",
+        ],
+    ]
+]
 
 # iOS
-constraint_setting(name = "ios_platform", default_constraint_value = ":iphoneos")
-constraint_value(name = "iphoneos", constraint_setting = ":ios_platform")
-constraint_value(name = "iphonesimulator", constraint_setting = ":ios_platform")
+constraint_setting(
+    name = "ios_platform",
+    default_constraint_value = ":iphoneos",
+)
 
-constraint_setting(name = "ios_version", default_constraint_value = ":ios_13_0")
+constraint_value(
+    name = "iphoneos",
+    constraint_setting = ":ios_platform",
+)
+
+constraint_value(
+    name = "iphonesimulator",
+    constraint_setting = ":ios_platform",
+)
+
+constraint_setting(
+    name = "ios_version",
+    default_constraint_value = ":ios_13_0",
+)
+
 ios_versions = [
     "13_0",
     "14_0",
     "15_0",
     "16_0",
 ]
-[constraint_value(name = "ios_{}".format(version), constraint_setting = ":ios_version") for version in ios_versions]
 
-[config_setting(
-    name = "{python_tag}-{abi_tag}-ios_{ios_version}_{cpu}_{platform}".format(python_tag=python_tag, abi_tag=abi_tag, ios_version=ios_version, cpu=cpu, platform=ios_platform),
-    constraint_values = [
-        "@platforms//cpu:{cpu}".format(cpu=cpu),
-        "@platforms//os:ios",
-        ":ios_{ios_version}".format(ios_version=ios_version),
-        ":{ios_platform}".format(ios_platform=ios_platform),
+[constraint_value(
+    name = "ios_{}".format(version),
+    constraint_setting = ":ios_version",
+) for version in ios_versions]
 
-    ],
-    flag_values = {
-        "@rules_python//python/config_settings:python_version_major_minor": python_version,
-        "@rules_python//python/config_settings:py_freethreaded": freethreaded,
-    } if python_version else {},
-)
- for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
- for ios_version in ios_versions
- for cpu, ios_platform  in [
-     ["arm64", "iphoneos"],
-     ["arm64", "iphonesimulator"],
-     ["x86_64", "iphonesimulator"],
- ]]
+[
+    config_setting(
+        name = "{python_tag}-{abi_tag}-ios_{ios_version}_{cpu}_{platform}".format(
+            abi_tag = abi_tag,
+            cpu = cpu,
+            ios_version = ios_version,
+            platform = ios_platform,
+            python_tag = python_tag,
+        ),
+        constraint_values = [
+            "@platforms//cpu:{cpu}".format(cpu = cpu),
+            "@platforms//os:ios",
+            ":ios_{ios_version}".format(ios_version = ios_version),
+            ":{ios_platform}".format(ios_platform = ios_platform),
+        ],
+        flag_values = {
+            "@rules_python//python/config_settings:python_version_major_minor": python_version,
+            "@rules_python//python/config_settings:py_freethreaded": freethreaded,
+        } if python_version else {},
+    )
+    for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
+    for ios_version in ios_versions
+    for cpu, ios_platform in [
+        [
+            "arm64",
+            "iphoneos",
+        ],
+        [
+            "arm64",
+            "iphonesimulator",
+        ],
+        [
+            "x86_64",
+            "iphonesimulator",
+        ],
+    ]
+]

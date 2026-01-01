@@ -13,7 +13,7 @@ local_path_override(
 parse = use_extension("@ofiuco//python:extensions.bzl", "parse")
 parse.lock(
     name = "poetry",
-    lock = "//:poetry.lock",
     generate_extras = True,
+    lock = "//:poetry.lock",
 )
 use_repo(parse, "poetry")

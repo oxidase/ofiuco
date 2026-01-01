@@ -28,7 +28,6 @@ def _basic(ctx):
 
 basic_test = unittest.make(_basic)
 
-
 def prefix_lookup_test_suite():
     unittest.suite(
         "prefix_lookup",

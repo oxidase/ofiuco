@@ -1,8 +1,10 @@
-load("@rules_python//python:defs.bzl", _PyInfo = "PyInfo", _PyRuntimeInfo = "PyRuntimeInfo", "py_binary")
-load("@rules_python//python/private:py_executable_info.bzl", _PyExecutableInfo = "PyExecutableInfo")
-load("@rules_python//python/private:py_cc_link_params_info.bzl", _PyCcLinkParamsInfo = "PyCcLinkParamsInfo")
+"""Rules for Python binary transitions."""
 
-def _linux_x86_64_platform_impl(settings, attr):
+load("@rules_python//python:defs.bzl", _PyInfo = "PyInfo", _PyRuntimeInfo = "PyRuntimeInfo")
+load("@rules_python//python:py_cc_link_params_info.bzl", _PyCcLinkParamsInfo = "PyCcLinkParamsInfo")
+load("@rules_python//python:py_executable_info.bzl", _PyExecutableInfo = "PyExecutableInfo")
+
+def _linux_x86_64_platform_impl(_, __):
     return {"//command_line_option:platforms": [":linux_x86_64"]}
 
 linux_x86_64_transition = transition(

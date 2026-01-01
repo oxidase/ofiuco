@@ -3,14 +3,16 @@ Support for serverless deployments.
 """
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
-load("//python/private:package_deps.bzl", _get_imports = "get_imports")
-load(":runfiles.bzl", _matches = "matches")
-load("//lib/private:paths.bzl", "pathsep")
+load("@rules_python//python:defs.bzl", _PyInfo = "PyInfo")
+load("@rules_python//python:py_executable_info.bzl", _PyExecutableInfo = "PyExecutableInfo")
 load("@rules_python//python:py_runtime_info.bzl", _PyRuntimeInfo = "PyRuntimeInfo")
-load("@rules_python//python/private:py_executable_info.bzl", _PyExecutableInfo = "PyExecutableInfo")
+load(":paths.bzl", "pathsep")
+load(":runfiles.bzl", _matches = "matches")
 
+def _get_imports(target):
+    return target[_PyInfo].imports if _PyInfo in target else depset()
 
-def _target_platform_transition_impl(settings, attr):
+def _target_platform_transition_impl(_, attr):
     return {"//command_line_option:platforms": str(attr.platform)} if attr.platform else {}
 
 _target_platform_transition = transition(

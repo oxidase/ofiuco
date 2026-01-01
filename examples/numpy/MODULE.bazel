@@ -18,8 +18,6 @@ local_path_override(
 parse = use_extension("@ofiuco//python:extensions.bzl", "parse")
 parse.lock(
     name = "poetry",
-    lock = "//:poetry.lock",
-    toml = "pyproject.toml",
     build_files = {
         "numpy": """package(default_visibility = ["//visibility:public"])
 
@@ -36,20 +34,23 @@ cc_library(
     includes = [
         "numpy/_core/include",
     ],
-)"""
-    })
+)""",
+    },
+    lock = "//:poetry.lock",
+    toml = "pyproject.toml",
+)
 use_repo(parse, "poetry")
 use_repo(parse, "numpy-2.3.1-cp313-cp313-manylinux_2_28_aarch64")
 use_repo(parse, "numpy-2.3.1-cp313-cp313-manylinux_2_28_x86_64")
 use_repo(parse, "numpy-2.3.1-cp313-cp313-macosx_14_0_arm64")
 use_repo(parse, "numpy-2.3.1-cp313-cp313-win_amd64")
 
-
 git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+
 git_repository(
     name = "nanobind",
-    remote = "https://github.com/wjakob/nanobind",
-    commit = "953554ea1a32a42a9a98a76ea465a179af261bee",
     build_file = "nanobind.BUILD.bazel",
+    commit = "953554ea1a32a42a9a98a76ea465a179af261bee",
     recursive_init_submodules = True,
+    remote = "https://github.com/wjakob/nanobind",
 )

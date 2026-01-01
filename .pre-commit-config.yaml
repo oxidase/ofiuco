@@ -19,6 +19,12 @@ repos:
       - id: pyproject-fmt
         exclude: ^(examples/uv/pyproject.toml)
 
+  - repo: https://github.com/keith/pre-commit-buildifier
+    rev: 8.2.1
+    hooks:
+      - id: buildifier
+      - id: buildifier-lint
+
   - repo: local
     hooks:
       - id: check-version

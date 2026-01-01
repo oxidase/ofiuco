@@ -1,8 +1,9 @@
-load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
-load("@rules_cc//cc:defs.bzl", "cc_common")
-load("@rules_python//python:defs.bzl", "PyInfo")
+"""Rules for C++ <-> Python bindings."""
+
 load("@bazel_tools//tools/cpp:toolchain_utils.bzl", "find_cpp_toolchain")
-load("@rules_cc//cc/private/toolchain_config:configure_features.bzl", "configure_features")
+load("@rules_cc//cc:defs.bzl", "cc_common")
+load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
+load("@rules_python//python:defs.bzl", "PyInfo")
 
 # @rules_cc//cc/common:cc_helper_internal.bzl
 _BINDING_EXTENSIONS_MAP = {
@@ -10,7 +11,7 @@ _BINDING_EXTENSIONS_MAP = {
     "dylib": ".so",
     "dll": ".pyd",
     "pyd": ".pyd",
-    ".wasm": ".so"
+    ".wasm": ".so",
 }
 
 def _cc_py_library_impl(ctx):
@@ -35,13 +36,6 @@ def _cc_py_library_impl(ctx):
 
     compilation_contexts = [dep[CcInfo].compilation_context for dep in ctx.attr.deps if CcInfo in dep]
     linking_contexts = [dep[CcInfo].linking_context for dep in ctx.attr.deps if CcInfo in dep and dep[CcInfo].linking_context]
-    dynamic_libraries = [
-        lib.dynamic_library
-        for linking_context in linking_contexts
-        for linker_input in linking_context.linker_inputs.to_list()
-        for lib in linker_input.libraries
-        if lib.dynamic_library
-    ]
 
     compilation_context, outputs = cc_common.compile(
         actions = ctx.actions,
@@ -70,8 +64,8 @@ def _cc_py_library_impl(ctx):
     )
 
     dynamic_library = linking_outputs.library_to_link.resolved_symlink_dynamic_library or linking_outputs.library_to_link.dynamic_library
-    bindings_symlink = ctx.actions.declare_file(ctx.label.name + _BINDING_EXTENSIONS_MAP.get(dynamic_library.extension), sibling =dynamic_library)
-    ctx.actions.symlink(output=bindings_symlink, target_file=dynamic_library)
+    bindings_symlink = ctx.actions.declare_file(ctx.label.name + _BINDING_EXTENSIONS_MAP.get(dynamic_library.extension), sibling = dynamic_library)
+    ctx.actions.symlink(output = bindings_symlink, target_file = dynamic_library)
 
     library_to_link = cc_common.create_library_to_link(
         actions = ctx.actions,
@@ -113,7 +107,6 @@ def _cc_py_library_impl(ctx):
         ),
         OutputGroupInfo(compilation_prerequisites_INTERNAL_ = ctx.files.hdrs + ctx.files.srcs),
     ]
-
 
 cc_py_library = rule(
     implementation = _cc_py_library_impl,

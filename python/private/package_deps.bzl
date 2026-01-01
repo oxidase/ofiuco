@@ -1,17 +1,16 @@
+"""Second stage rules for Python dependencies."""
+
 load("@bazel_skylib//lib:paths.bzl", "paths")
-load("@bazel_skylib//lib:versions.bzl", "versions")
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
 load("@ofiuco_defs//:defs.bzl", _python_host_runtime = "python_host_runtime", _python_toolchain_prefix = "python_toolchain_prefix", _python_version = "python_version")
+load("@rules_cc//cc:defs.bzl", "cc_common")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
 load("@rules_python//python:defs.bzl", "PyInfo", "PyRuntimeInfo")
-load("@rules_python//python:versions.bzl", _MINOR_MAPPING = "MINOR_MAPPING")
-load("//python:markers.bzl", "evaluate", "parse")
-load("@rules_cc//cc:defs.bzl", "cc_common")
-load("//lib/private:paths.bzl", "pathsep")
 load("@rules_python//python:py_runtime_info.bzl", _PyRuntimeInfo = "PyRuntimeInfo")
+load("@rules_python//python:versions.bzl", _MINOR_MAPPING = "MINOR_MAPPING")
 load("@rules_python//python/private:py_executable_info.bzl", _PyExecutableInfo = "PyExecutableInfo")
-
-
+load("//lib:defs.bzl", "lib")
+load("//python:markers.bzl", "evaluate", "parse")
 
 # Environment Markers https://peps.python.org/pep-0508/#environment-markers
 #
@@ -35,6 +34,7 @@ def _get_python_version(interpreter):
     parts = interpreter.replace(".", "_").split(_python_toolchain_prefix.replace(".", "_"))
     for part in parts:
         tokens = [token for token in part.split("_") if token]
+        index = 0
         for index in range(len(tokens)):
             if not tokens[index].isdigit():
                 break
@@ -45,6 +45,16 @@ def _get_python_version(interpreter):
     return _python_version
 
 def derive_environment_markers(interpreter, interpreter_markers, host_tags):
+    """Derive environment markers from interpreter, interpreter markers, and host tags.
+
+    Args:
+        interpreter: interpreter path string
+        interpreter_markers: in-build defined platform tags
+        host_tags: in-build defined host platform tags
+
+    Returns:
+        Tuple of platform name and platform tags
+    """
     python_version = _get_python_version(interpreter)
     for fr, to in interpreter_markers.items():
         if fr in interpreter:
@@ -63,6 +73,17 @@ def derive_environment_markers(interpreter, interpreter_markers, host_tags):
     return "host", json.decode(host_tags)
 
 def include_dep(dep, markers, environment):
+    """Evaluate dependencies based on parsed markers and environment tags.
+
+    Args:
+        dep: dependency label
+        markers: parsed dependency markers
+        environment: environment tags
+
+    Returns:
+        evaluated dependency markers with the environment tags.
+        True if dependency has to be included or false to skip the dependency.
+    """
     if not markers:
         return True
     markers = json.decode(markers)
@@ -93,15 +114,11 @@ def get_tool(ctx, cc_toolchain, feature_configuration, action_name):
     )
     return binary, flags
 
-def _format_library_link(lib):
-    return "-L$PWD/{} -l{}".format(paths.dirname(lib), paths.split_extension(paths.basename(lib))[0].removeprefix("lib"))
-
-
 def _package_impl(ctx):
     """
     Rule to install a Python package.
 
-    Arguments:
+    Args:
         ctx: The rule context.
 
     Attributes:
@@ -127,12 +144,12 @@ def _package_impl(ctx):
 
     # Get package files
     package_files = ctx.attr.package.files.to_list() if ctx.attr.package else []
-    package_import, output_files = [], package_files
+    package_directory, package_import, output_files = None, [], package_files
 
     # Find the package build file and update package import and directory
     if package_files:
         package_build_files = [file for file in package_files if paths.basename(file.path).endswith("BUILD.bazel")]
-        package_build_file = sorted(package_build_files, reverse=True).pop()
+        package_build_file = sorted(package_build_files, reverse = True).pop()
         package_import = [paths.dirname(package_build_file.short_path).replace("../", "")]
         package_directory = paths.dirname(package_build_file.path)
 
@@ -170,7 +187,6 @@ def _package_impl(ctx):
         for platform in platform_tags:
             arguments += ["--platform", platform]
 
-
         # Get CC target toolchain and propagate to the installation script
         cc_toolchain = ctx.toolchains["@bazel_tools//tools/cpp:toolchain_type"]
         if cc_toolchain and hasattr(cc_toolchain, "cc") and type(cc_toolchain.cc) != "string":
@@ -195,7 +211,7 @@ def _package_impl(ctx):
                 if cc_attr["AR"].endswith("libtool"):
                     cc_attr["ARFLAGS"] = ["-static", "-o"]
                 elif cc_attr["AR"].endswith("ar"):
-                    cc_attr["ARFLAGS"] =  ["rcs"]
+                    cc_attr["ARFLAGS"] = ["rcs"]
 
             # CcInfo dependencies
             cc_deps = [dep for dep in ctx.attr.deps if CcInfo in dep] + ctx.attr._libpython
@@ -212,7 +228,7 @@ def _package_impl(ctx):
 
             # Linking context
             cc_deps_linker_inputs = depset(transitive = [dep[CcInfo].linking_context.linker_inputs for dep in cc_deps], order = "topological")
-            cc_deps_libraries =[lib.dynamic_library or lib.static_library or lib.interface_library for inputs in cc_deps_linker_inputs.to_list() for lib in inputs.libraries]
+            cc_deps_libraries = [lib.dynamic_library or lib.static_library or lib.interface_library for inputs in cc_deps_linker_inputs.to_list() for lib in inputs.libraries]
             cc_deps_ldflags = ["-Wl,-rpath,{} -L$PWD/{} $PWD/{}".format(paths.dirname(file.short_path), paths.dirname(file.path), file.path) for file in cc_deps_libraries if file]
             output_files += cc_deps_libraries
 
@@ -221,7 +237,7 @@ def _package_impl(ctx):
             cc_attr["CXXFLAGS"] = cc_attr["CXXFLAGS"] + cc_deps_cflags
             cc_attr["LDFLAGS"] = cc_attr["LDFLAGS"] + cc_deps_ldflags
 
-            build_transitive_deps += [depset(cc_deps_libraries, transitive = [cc.all_files] + cc_deps_headers)]
+            build_transitive_deps.append(depset(cc_deps_libraries, transitive = [cc.all_files] + cc_deps_headers))
 
             # Generates CC toolchain argument
             arguments.append("--cc_toolchain=" + json.encode(cc_attr))
@@ -233,7 +249,7 @@ def _package_impl(ctx):
                 # Generates Rust toolchain argument
                 arguments.append("--rust_toolchain=" + json.encode(rust_toolchain.make_variables.variables))
 
-                build_transitive_deps += [depset(transitive = [rust_toolchain.all_files])]
+                build_transitive_deps.append(depset(transitive = [rust_toolchain.all_files]))
 
         # Pack transitive depenedencies
         inputs = depset(package_files, transitive = build_transitive_deps)
@@ -262,7 +278,7 @@ def _package_impl(ctx):
     # PyInfo
     transitive_imports = [get_imports(dep) for dep in deps]
     transitive_depsets = [get_transitive_sources(dep) for dep in deps]
-    files = depset(direct=output_files, transitive = transitive_depsets + [py_runtime_info.files])
+    files = depset(direct = output_files, transitive = transitive_depsets + [py_runtime_info.files])
     imports = depset(direct = package_import, transitive = transitive_imports)
 
     # CcInfo
@@ -272,8 +288,8 @@ def _package_impl(ctx):
         defines = depset([
             'PYTHON_PROGRAM_NAME="{}"'.format(py_runtime_info.interpreter.short_path),
             'PYTHON_PREFIX="{}"'.format(python_prefix),
-            'PYTHON_PATH_{}="{}"'.format(ctx.label.name.replace("-", "_"), pathsep(ctx).join(["../" + path for path in imports.to_list()])),
-        ])
+            'PYTHON_PATH_{}="{}"'.format(ctx.label.name.replace("-", "_"), lib.pathsep(ctx).join(["../" + path for path in imports.to_list()])),
+        ]),
     )
 
     return [
@@ -281,8 +297,6 @@ def _package_impl(ctx):
         CcInfo(compilation_context = compilation_context),
         PyInfo(transitive_sources = files, imports = imports),
     ]
-
-
 
 package = rule(
     implementation = _package_impl,

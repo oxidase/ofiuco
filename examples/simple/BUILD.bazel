@@ -10,8 +10,8 @@ py_test(
     deps = [
         ":pre-commit",
         "@poetry//:aioboto3",
-        "@poetry//:pytest",
         "@poetry//:annetbox[async]",
+        "@poetry//:pytest",
         "@poetry//:urllib3[brotli]",
         "@poetry//:urllib3[h2]",
         "@poetry//:urllib3[socks]",

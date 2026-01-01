@@ -1,3 +1,5 @@
+"""Rules for uv lock files."""
+
 load("@ofiuco_defs//:defs.bzl", _python_host_runtime = "python_host_runtime")
 load("@rules_python//python:defs.bzl", "PyRuntimeInfo")
 
@@ -51,7 +53,6 @@ if __name__ == "__main__":
     return [
         DefaultInfo(executable = output, runfiles = runfiles),
     ]
-
 
 uv_lock = rule(
     implementation = _uv_lock_impl,
