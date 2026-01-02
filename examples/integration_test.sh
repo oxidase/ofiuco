@@ -9,7 +9,7 @@ export LOCALAPPDATA="$TEST_TMPDIR"
 
 cd examples/$1
 
-if [[ -n "$WINDIR" ]] && ! grep -q "^startup --windows_enable_symlinks$" .bazelrc; then
+if [[ -n "$WINDIR" ]] && ! grep -qE "^startup --(no)?windows_enable_symlinks$" .bazelrc; then
     echo "Skip $1 test on Windows"
     exit 0
 fi
