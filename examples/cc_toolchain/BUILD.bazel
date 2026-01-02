@@ -7,12 +7,16 @@ py_test(
     srcs = ["test.py"],
     data = ["poetry.lock"],
     deps = [
-        "@poetry//:llama-cpp-python",
         "@poetry//:psycopg",
         "@poetry//:py-radix",
         "@poetry//:pytest",
+        "@poetry//:win-inet-pton",
     ] + select({
-        "@platforms//os:linux": ["@poetry//:evdev"],
+        "@platforms//os:linux": [
+            "@poetry//:evdev",
+            "@poetry//:llama-cpp-python",
+        ],
+        "@platforms//os:macos": ["@poetry//:llama-cpp-python"],
         "//conditions:default": [],
     }),
 )
