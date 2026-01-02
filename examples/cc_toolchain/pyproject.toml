@@ -12,6 +12,7 @@ evdev = [
 ]
 psycopg = { extras = [ "c" ], version = "^3.2.9" }
 py-radix = "^0.10.0"
+win-inet-pton = "^1.1.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = { version = "^7.2", "python" = ">=3.7" }

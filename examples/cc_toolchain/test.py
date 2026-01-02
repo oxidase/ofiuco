@@ -5,6 +5,7 @@ import tomllib
 import pytest
 
 
+@pytest.mark.skipif(sys.platform in {"win32"}, reason="compilation is slow")
 def test_llama_version():
     import llama_cpp
 
@@ -16,6 +17,7 @@ def test_llama_version():
     assert llama_cpp.llama_max_devices() > 0
 
 
+@pytest.mark.skipif(sys.platform in {"win32"}, reason="compilation is slow")
 def test_llama_library_rpath():
     from llama_cpp.llama_cpp import _base_path as base_path
     from llama_cpp.llama_cpp import _lib as llama_lib
@@ -35,6 +37,7 @@ def test_evdev():
     assert evdev
 
 
+@pytest.mark.skipif(sys.platform in {"win32"}, reason="libpq is not installed")
 def test_psycopg():
     os.environ["DYLD_LIBRARY_PATH"] = "/opt/homebrew/opt/libpq/lib"
 
@@ -44,6 +47,10 @@ def test_psycopg():
 
 
 def test_radix():
+    import win_inet_pton
+
+    assert win_inet_pton
+
     import radix
 
     rtree = radix.Radix()
