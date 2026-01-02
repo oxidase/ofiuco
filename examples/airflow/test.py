@@ -2,17 +2,13 @@ import os
 import sys
 import tomllib
 
-import pendulum
 import pytest
-
-# Monkey-patch pendulum.tz.timezone to be a function for airflow v2 and a module for airflow v3
-UTC = pendulum.tz.timezone.UTC
-pendulum.tz.timezone = lambda _: UTC
-pendulum.tz.timezone.UTC = UTC
 
 
 def test_airflow_version():
-    base_dir = os.environ.get("TEST_TMPDIR", "/tmp")
+    v = sys.version_info
+    base_dir = os.environ.get("TEST_TMPDIR", "/tmp") + f"/{v.major}_{v.minor}_{v.micro}"
+    os.makedirs(base_dir, exist_ok=True)
 
     os.environ["AIRFLOW_HOME"] = base_dir
     os.environ["AIRFLOW__LOGGING__BASE_LOG_FOLDER"] = base_dir
@@ -28,12 +24,15 @@ def test_airflow_version():
 
 
 @pytest.mark.skipif(os.name == "nt", reason="@abseil-cpp+//absl/base building fails")
-@pytest.mark.skipif(sys.version_info.minor != 13, reason="TODO: make version-independent")
 def test_re2():
-    print(os.getcwd())
     import re2
 
-    assert re2
+    text = "email=test@example.com"
+    pattern = re2.compile(r"(\w+)@(\w+\.\w+)")
+
+    assert (m := pattern.search(text))
+    assert m.group(1) == "test"
+    assert m.group(2) == "example.com"
 
 
 if __name__ == "__main__":
