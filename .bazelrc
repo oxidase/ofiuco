@@ -1,5 +1,5 @@
 startup --windows_enable_symlinks
-common --action_env=PATH
+common --action_env=PATH --action_env=ProgramFiles --action_env=ProgramFiles(x86)
 common --test_env=LD_LIBRARY_PATH
 common --enable_bzlmod
 build --enable_runfiles
