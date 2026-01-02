@@ -2,10 +2,10 @@
 
 load("@bazel_skylib//lib:paths.bzl", "paths")
 load("@bazel_tools//tools/build_defs/cc:action_names.bzl", "ACTION_NAMES")
-load("@ofiuco_defs//:defs.bzl", _python_host_runtime = "python_host_runtime", _python_toolchain_prefix = "python_toolchain_prefix", _python_version = "python_version")
+load("@ofiuco_defs//:defs.bzl", _python_toolchain_prefix = "python_toolchain_prefix", _python_version = "python_version")
 load("@rules_cc//cc:defs.bzl", "cc_common")
 load("@rules_cc//cc/common:cc_info.bzl", "CcInfo")
-load("@rules_python//python:defs.bzl", "PyInfo", "PyRuntimeInfo")
+load("@rules_python//python:defs.bzl", "PyInfo")
 load("@rules_python//python:py_runtime_info.bzl", _PyRuntimeInfo = "PyRuntimeInfo")
 load("@rules_python//python:versions.bzl", _MINOR_MAPPING = "MINOR_MAPPING")
 load("@rules_python//python/private:py_executable_info.bzl", _PyExecutableInfo = "PyExecutableInfo")
@@ -171,7 +171,7 @@ def _package_impl(ctx):
         package_deps_info = ctx.attr._package_deps[DefaultInfo]
         package_deps_binary = package_deps[_PyExecutableInfo].main if _PyExecutableInfo in package_deps else package_deps_info.files_to_run.executable
         package_deps_runfiles = package_deps[_PyExecutableInfo].runfiles_without_exe if _PyRuntimeInfo in package_deps else package_deps_info.default_runfiles
-        package_deps_runtime_info = ctx.attr._python_host[PyRuntimeInfo]
+        package_deps_runtime_info = py_runtime_info
 
         build_transitive_deps = [py_runtime_info.files, package_deps_info.files, package_deps_runtime_info.files]
 
@@ -291,6 +291,7 @@ def _package_impl(ctx):
             use_default_shell_env = True,
             executable = package_deps_runtime_info.interpreter.path,
             tools = package_deps_runfiles.files,
+            toolchain = "@bazel_tools//tools/python:toolchain_type",
             execution_requirements = execution_requirements,
         )
 
@@ -343,7 +344,6 @@ package = rule(
             "@rules_python//python/cc:current_py_cc_libs",
         ]),
         "_package_deps": attr.label(default = ":package_deps", cfg = "exec", executable = True),
-        "_python_host": attr.label(default = _python_host_runtime),
     },
     toolchains = [
         "@bazel_tools//tools/python:toolchain_type",
