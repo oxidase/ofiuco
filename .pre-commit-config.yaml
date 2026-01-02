@@ -23,7 +23,9 @@ repos:
     rev: 8.2.1
     hooks:
       - id: buildifier
+        exclude: python/platforms/BUILD.bazel
       - id: buildifier-lint
+        exclude: python/platforms/BUILD.bazel
 
   - repo: local
     hooks:

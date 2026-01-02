@@ -11,7 +11,7 @@ _BINDING_EXTENSIONS_MAP = {
     "dylib": ".so",
     "dll": ".pyd",
     "pyd": ".pyd",
-    ".wasm": ".so",
+    "wasm": ".so",
 }
 
 def _cc_py_library_impl(ctx):

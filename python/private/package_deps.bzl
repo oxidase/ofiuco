@@ -99,6 +99,16 @@ def get_imports(target):
 def get_transitive_sources(target):
     return target[PyInfo].transitive_sources if PyInfo in target else depset()
 
+def unique_dirnames(files):
+    return dict([[paths.dirname(file.path), None] for file in files]).keys()
+
+def unique_short_dirnames(files):
+    return dict([[paths.dirname(file.short_path), None] for file in files]).keys()
+
+def lib_stem(file):
+    stem = paths.basename(file.path).removeprefix("lib")
+    return stem.rsplit(".so", 1).pop(0).rsplit(".dylib", 1).pop(0).rsplit(".dll", 1).pop(0).rsplit(".pyd", 1).pop(0)
+
 def get_tool(ctx, cc_toolchain, feature_configuration, action_name):
     binary = cc_common.get_tool_for_action(feature_configuration = feature_configuration, action_name = action_name)
     flags = cc_common.get_memory_inefficient_command_line(
@@ -145,6 +155,7 @@ def _package_impl(ctx):
     # Get package files
     package_files = ctx.attr.package.files.to_list() if ctx.attr.package else []
     package_directory, package_import, output_files = None, [], package_files
+    runtime_transitive_deps = [py_runtime_info.files]
 
     # Find the package build file and update package import and directory
     if package_files:
@@ -227,17 +238,28 @@ def _package_impl(ctx):
                 ["-D{}".format(d) for d in depset([d for dep in cc_deps for d in dep[CcInfo].compilation_context.defines.to_list()]).to_list()]
 
             # Linking context
-            cc_deps_linker_inputs = depset(transitive = [dep[CcInfo].linking_context.linker_inputs for dep in cc_deps], order = "topological")
-            cc_deps_libraries = [lib.dynamic_library or lib.static_library or lib.interface_library for inputs in cc_deps_linker_inputs.to_list() for lib in inputs.libraries]
-            cc_deps_ldflags = ["-Wl,-rpath,{} -L$PWD/{} $PWD/{}".format(paths.dirname(file.short_path), paths.dirname(file.path), file.path) for file in cc_deps_libraries if file]
-            output_files += cc_deps_libraries
+            cc_deps_linker_inputs = [lib for inputs in depset(transitive = [dep[CcInfo].linking_context.linker_inputs for dep in cc_deps], order = "topological").to_list() for lib in inputs.libraries]
+            cc_dynamic_libraries = [lib.dynamic_library or lib.interface_library for lib in cc_deps_linker_inputs]
+            cc_dynamic_libraries = [lib for lib in cc_dynamic_libraries if lib]
+            cc_resolved_libraries = [lib.resolved_symlink_dynamic_library or lib.resolved_symlink_interface_library for lib in cc_deps_linker_inputs]
+            cc_resolved_libraries = [lib for lib in cc_resolved_libraries if lib]
+            cc_runtime_libraries = depset(cc_dynamic_libraries + cc_resolved_libraries)
+            cc_static_libraries = [lib.static_library for lib in cc_deps_linker_inputs if lib.static_library]
+
+            # NOTE: use -l<stem> for dynamic libraries as Bazel mangles names, use full paths for static libraries as library names are not mangled
+            cc_deps_ldflags = \
+                ["-L$PWD/{}".format(d) for d in unique_dirnames(cc_dynamic_libraries + cc_resolved_libraries + cc_static_libraries)] + \
+                ["-Wl,-rpath,{}".format(d) for d in unique_short_dirnames(cc_dynamic_libraries + cc_resolved_libraries)] + \
+                ["-l{}".format(lib_stem(file)) for file in cc_dynamic_libraries] + \
+                ["$PWD/{}".format(file.path) for file in cc_static_libraries]
 
             # Add to flags tranitive dependencies
             cc_attr["CFLAGS"] = cc_attr["CFLAGS"] + cc_deps_cflags
             cc_attr["CXXFLAGS"] = cc_attr["CXXFLAGS"] + cc_deps_cflags
             cc_attr["LDFLAGS"] = cc_attr["LDFLAGS"] + cc_deps_ldflags
 
-            build_transitive_deps.append(depset(cc_deps_libraries, transitive = [cc.all_files] + cc_deps_headers))
+            build_transitive_deps.extend([cc_runtime_libraries, depset(cc_static_libraries, transitive = [cc.all_files] + cc_deps_headers)])
+            runtime_transitive_deps.append(cc_runtime_libraries)
 
             # Generates CC toolchain argument
             arguments.append("--cc_toolchain=" + json.encode(cc_attr))
@@ -278,7 +300,7 @@ def _package_impl(ctx):
     # PyInfo
     transitive_imports = [get_imports(dep) for dep in deps]
     transitive_depsets = [get_transitive_sources(dep) for dep in deps]
-    files = depset(direct = output_files, transitive = transitive_depsets + [py_runtime_info.files])
+    files = depset(direct = output_files, transitive = runtime_transitive_deps + transitive_depsets)
     imports = depset(direct = package_import, transitive = transitive_imports)
 
     # CcInfo
