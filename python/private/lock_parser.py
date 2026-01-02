@@ -231,6 +231,9 @@ class Source:
         if url := kwargs.get("path"):
             return Source(type=SourceType.file, url=os.fspath((project_root / url).resolve()))
 
+        if url := kwargs.get("directory"):
+            return Source(type=SourceType.directory, url=os.fspath((project_root / url).resolve()))
+
         raise NotImplementedError(f"for {project_root = } and {kwargs = }")
 
 

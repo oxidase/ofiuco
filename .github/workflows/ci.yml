@@ -29,15 +29,16 @@ jobs:
           - os: windows-latest
             cache:  ~/.cache/bazel
             install: |
+              # https://github.com/ikalnytskyi/action-setup-postgres/blob/master/action.yml
+              choco install postgresql18 --params "/Password:postgres" --ia "--enable-components server,commandlinetools --extract-only 1" --no-progress
+              echo "$env:PROGRAMFILES\PostgreSQL\18\bin" >> $GITHUB_PATH
+              echo "PQ_LIB_DIR=$env:PROGRAMFILES\PostgreSQL\18\lib" >> $GITHUB_ENV
               echo "LOCALAPPDATA: $env:LOCALAPPDATA"
               echo "LocalAppData: $env:LocalAppData"
               echo "APPDATA: $env:APPDATA"
               echo "TEMP: $env:TEMP"
 
     steps:
-      # - uses: ikalnytskyi/action-setup-postgres@v8
-      # - run: psql postgresql://postgres:postgres@localhost:5432/postgres -c "SELECT 1"
-
       - name: "node-cleanup"
         if: runner.os != 'Windows'
         run: |
@@ -48,7 +49,7 @@ jobs:
           df -h
 
       - name: Mount bazel cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ matrix.cache }}
           key: bazel-${{ matrix.os }}
@@ -58,15 +59,18 @@ jobs:
         run: ${{ matrix.install }}
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
+        with:
+          submodules: true
+
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.9"
 
       - name: Setup Bazel
-        uses: bazel-contrib/setup-bazel@0.14.0
+        uses: bazel-contrib/setup-bazel@0.16.0
         with:
           # Avoid downloading Bazel every time.
           bazelisk-cache: true
@@ -80,6 +84,8 @@ jobs:
         run: |
           uname -a
           bazel info
+          git submodule status --recursive
+          grep version= examples/airflow/re2/python/setup.py
         shell: bash
 
       - name: Run tests

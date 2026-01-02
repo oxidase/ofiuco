@@ -13,9 +13,8 @@ classifiers = [
 ]
 dependencies = [
   "apache-airflow",
+  "google-re2 @ file:///Users/michael/foss/ofiuco/re2/python",
+  "pytest",
+  "pyyaml",
   "types-requests",
 ]
-
-[tool.poetry.group.dev.dependencies]
-pytest = { version = "^7.2", "python" = ">=3.7" }
-google-re2 = { path = "re2/python", develop = false }

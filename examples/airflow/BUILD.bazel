@@ -1,11 +1,11 @@
-load("@ofiuco//python:poetry.bzl", "poetry_lock")
 load("@ofiuco//python:py_venv.bzl", "py_venv")
+load("@ofiuco//python:uv.bzl", "uv_lock")
 load("@rules_python//python:defs.bzl", "py_test")
 
 py_venv(
     name = "airflow",
     deps = [
-        "@poetry//:apache-airflow",
+        "@python//:apache-airflow",
     ],
 )
 
@@ -13,20 +13,25 @@ py_venv(
     name = "test_{}".format(python_version),
     size = "large",
     srcs = ["test.py"],
-    data = ["lock/poetry.lock"],
+    data = ["lock/uv.lock"],
     main = "test.py",
     python_version = python_version,
     deps = [
         ":airflow",
-        "@poetry//:pytest",
-    ],
+        "@python//:pytest",
+        "@python//:pyyaml",
+    ] + select({
+        "@platforms//os:windows": [],  # skip google-re2 building on windows
+        "//conditions:default": ["@python//:google-re2"],
+    }),
 ) for python_version in [
     "3.12",
     "3.13",
+    "3.14",
 ]]
 
-poetry_lock(
+uv_lock(
     name = "lock",
-    lock = "lock/poetry.lock",
+    lock = "lock/uv.lock",
     toml = "pyproject.toml",
 )

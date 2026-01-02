@@ -47,19 +47,19 @@ public:
       // Set the program name. Implicitly pre-initialize Python.
       status = PyConfig_SetString(&config, &config.program_name, WIDEN(PYTHON_PROGRAM_NAME));
       if (PyStatus_Exception(status)) {
-	goto exception;
+        goto exception;
       }
 
       // Set the Python prefix.
       status = PyConfig_SetString(&config, &config.prefix, std::filesystem::absolute(PYTHON_PREFIX).wstring().c_str());
       if (PyStatus_Exception(status)) {
-	goto exception;
+        goto exception;
       }
 
       // Set the Python path.
       status = PyConfig_SetString(&config, &config.pythonpath_env, WIDEN(PYTHON_PATH_numpy PATH_SEP PYTHON_PATH_pytest));
       if (PyStatus_Exception(status)) {
-	goto exception;
+        goto exception;
       }
 
       status = Py_InitializeFromConfig(&config);
