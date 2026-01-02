@@ -25,3 +25,7 @@ use_repo(internal_deps, "ofiuco_defs", "ofiuco_pip", "ofiuco_poetry_deps")
 multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")
 multitool.hub(lockfile = "//python/private:uv.lock.json")
 use_repo(multitool, "multitool")
+
+rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rust.toolchain(edition = "2025", versions = [ "nightly/2025-10-02" ])
+#rust.toolchain(edition = "2024", versions = [ "1.85.0" ])
