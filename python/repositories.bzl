@@ -65,12 +65,33 @@ def _internal_definitions_repo_impl(rctx):
         python_host_path = python_host_path.dirname
     if not [path for path in python_host_path.readdir() if path.basename in ["BUILD", "BUILD.bazel"]]:
         fail("can not find build file for {} at {}".format(rctx.attr.python_host, rctx.os.name))
-    if rctx.os.name.startswith("windows") and rctx.attr.python_host.workspace_name in python_host_path.basename:
-        fail("on windows use 'startup --windows_enable_symlinks' to link real Python toolchain path")
 
-    for target in python_host_path.readdir():
-        rctx.symlink(target, target.basename)
+    if rctx.attr.python_host.workspace_name in python_host_path.basename:
+        # If symbolic links are disabled than resolved Python host path basename should not change.
+        # In this case create a BUILD file with a generic py3_runtime target.
 
+        rctx.file("BUILD.bazel", """{banner}
+
+load("@rules_python//python:py_runtime.bzl", "py_runtime")
+
+py_runtime(
+    name = "py3_runtime",
+    interpreter = "{python}",
+    visibility = ["//visibility:public"],
+)
+
+""".format(
+            banner = banner,
+            python = str(rctx.attr.python_host),
+        ))
+    else:
+        # If symbolic links are enabled than resolved Python host path basename should point to Python toolchain.
+        # Create first-level symbolic links into the current repository together with the BUILD file which containes.
+        # Python toolchain with py3_runtime runtime definition.
+        for target in python_host_path.readdir():
+            rctx.symlink(target, target.basename)
+
+    # Create defs.bzl file with resolved variables
     rctx.file("defs.bzl", """{banner}
 
 python_host = "{python_host}"
