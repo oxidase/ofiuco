@@ -6,7 +6,7 @@ matrix:
     - macos
     - macos_arm64
     - windows
-  bazel: [last_rc, 8.x, 7.x]
+  bazel: [7.*, 8.*, 9.*, last_rc]
 tasks:
   verify_targets:
     name: Verify build targets
@@ -24,7 +24,7 @@ bcr_test_module:
       - macos
       - macos_arm64
       - windows
-    bazel: [last_rc, 8.x, 7.x]
+    bazel: [7.*, 8.*, 9.*]
   tasks:
     run_test_module:
       name: Run test module

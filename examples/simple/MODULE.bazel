@@ -1,8 +1,7 @@
 bazel_dep(name = "rules_python", version = "1.8.0-rc1")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
-python.toolchain(python_version = "3.13")
-use_repo(python, "python_3_13")
+python.toolchain(python_version = "3.14")
 
 bazel_dep(name = "ofiuco", version = "0.0.0")
 local_path_override(

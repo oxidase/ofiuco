@@ -17,5 +17,5 @@ dependencies = [
   "pre-commit",
   "pytest",
   "setuptools",
-  "urllib3[brotli,h2,socks,zstd]",
+  "urllib3[brotli,h2,socks]",
 ]

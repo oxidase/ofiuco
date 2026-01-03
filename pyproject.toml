@@ -1,6 +1,6 @@
 [project]
 name = "ofiuco"
-version = "0.8.0"
+version = "0.8.1"
 description = "Bazel tools for Python and package managers"
 readme = "README.md"
 license = "Apache-2.0"
@@ -43,7 +43,7 @@ known_third_party = [
 line_length = 120
 multi_line_output = 3
 no_lines_before = "LOCALFOLDER"
-py_version = 311
+py_version = 314
 skip = [
   "bazel-ofiuco",
   "bazel-bin",
