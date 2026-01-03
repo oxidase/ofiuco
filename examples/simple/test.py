@@ -4,6 +4,10 @@ import tomllib
 import pytest
 
 
+def test_free_threaded_flag():
+    assert not sys._is_gil_enabled()
+
+
 def test_boto3_version():
     import boto3
 

@@ -15,7 +15,6 @@ py_test(
         "@poetry//:urllib3[brotli]",
         "@poetry//:urllib3[h2]",
         "@poetry//:urllib3[socks]",
-        "@poetry//:urllib3[zstd]",
     ],
 )
 
