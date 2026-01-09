@@ -1,6 +1,7 @@
 load("@rules_shell//shell:sh_test.bzl", "sh_test")
 
 tags = {
+    "torch": [],
 }
 
 [sh_test(

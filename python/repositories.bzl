@@ -89,7 +89,15 @@ py_runtime(
         # Create first-level symbolic links into the current repository together with the BUILD file which containes.
         # Python toolchain with py3_runtime runtime definition.
         for target in python_host_path.readdir():
-            rctx.symlink(target, target.basename)
+            if target.basename == "BUILD.bazel":
+                build_file_content = rctx.read(target)
+
+                # Set coverage_tool to None for ofiuco's internal Python repository
+                fr = build_file_content.find("coverage_tool = ")
+                to = build_file_content.find("\n", fr)
+                rctx.file(target.basename, build_file_content[:fr] + "coverage_tool = None," + build_file_content[to:])
+            else:
+                rctx.symlink(target, target.basename)
 
     # Create defs.bzl file with resolved variables
     rctx.file("defs.bzl", """{banner}
