@@ -17,6 +17,7 @@ jobs:
           - os: ubuntu-latest
             cache: ~/.cache/bazel
             install: |
+              cat /proc/cpuinfo
               sudo apt-get update
               sudo apt-get install -y postgresql postgresql-contrib
           - os: macos-latest
@@ -90,5 +91,5 @@ jobs:
 
       - name: Run tests
         id: tests
-        run: bazel test ... --spawn_strategy=standalone --verbose_failures
+        run: bazel test --local_test_jobs=5 --spawn_strategy=standalone --verbose_failures ...
         shell: bash
