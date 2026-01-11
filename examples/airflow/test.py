@@ -23,17 +23,5 @@ def test_airflow_version():
     assert locked_version["version"] == version
 
 
-@pytest.mark.skipif(os.name == "nt", reason="@abseil-cpp+//absl/base building fails")
-def test_re2():
-    import re2
-
-    text = "email=test@example.com"
-    pattern = re2.compile(r"(\w+)@(\w+\.\w+)")
-
-    assert (m := pattern.search(text))
-    assert m.group(1) == "test"
-    assert m.group(2) == "example.com"
-
-
 if __name__ == "__main__":
     sys.exit(pytest.main(sys.argv + ["-W", "ignore::DeprecationWarning"]))

@@ -8,11 +8,20 @@ py_test(
     data = ["uv.lock"],
     deps = [
         "@uv//:all",
-    ],
+    ] + select({
+        "@platforms//os:windows": [],  # skip google-re2 building on windows
+        "//conditions:default": ["@uv_re2//:google-re2"],
+    }),
 )
 
 uv_lock(
     name = "lock",
     lock = "uv.lock",
     toml = "pyproject.toml",
+)
+
+uv_lock(
+    name = "lock_re2",
+    lock = "re2/uv.lock",
+    toml = "re2/pyproject.toml",
 )

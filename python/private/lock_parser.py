@@ -219,8 +219,10 @@ class Source:
 
         if url := kwargs.get("git"):
             parsed = urllib.parse.urlparse(url)
-            url = urllib.parse.urlunparse(parsed._replace(fragment=""))
-            return Source(type=SourceType.git, url=url, resolved_reference=parsed.fragment)
+            query = urllib.parse.parse_qs(parsed.query)
+            url = urllib.parse.urlunparse(parsed._replace(query="", fragment=""))
+            sub = query.get("subdirectory", [""]).pop()
+            return Source(type=SourceType.git, url=url, resolved_reference=parsed.fragment, subdirectory=sub)
 
         if url := kwargs.get("editable"):
             return Source(type=SourceType.directory, url=os.fspath((project_root / url).resolve()))
@@ -513,11 +515,12 @@ async def read_package_files(package):
     build_file = """package(default_visibility = ["//visibility:public"])
 filegroup(
     name="{kind}",
-    srcs = glob(["**/*"], exclude = ["target/**", "**/__pycache__/**"]),
+    srcs = glob(["{sub}**/*"], exclude = ["target/**", "**/__pycache__/**"]),
 )"""
 
     urls = {}
     if package.source is not None:
+        sub = f"{package.source.subdirectory}/" if package.source.subdirectory else ""
         match package.source.type:
             case SourceType.virtual:
                 return []
@@ -529,7 +532,7 @@ filegroup(
                         name=package.name,
                         url=f"file:///{package.source.url}" if os.name == "nt" else f"file://{package.source.url}",
                         # TODO: add sha256 if exists in lock file
-                        build_file=build_file.format(kind="whl" if package.source.is_whl else "pkg"),
+                        build_file=build_file.format(kind="whl" if package.source.is_whl else "pkg", sub=sub),
                     )
                 ]
 
@@ -539,7 +542,7 @@ filegroup(
                         kind="local_repository",
                         name=package.name,
                         path=package.source.url,
-                        build_file=build_file.format(kind="pkg"),
+                        build_file=build_file.format(kind="pkg", sub=sub),
                     )
                 ]
 
@@ -550,7 +553,7 @@ filegroup(
                         name=package.name,
                         remote=package.source.url,
                         commit=package.source.resolved_reference or package.source.reference,
-                        build_file=build_file.format(kind="pkg"),
+                        build_file=build_file.format(kind="pkg", sub=sub),
                     )
                 ]
 
@@ -573,7 +576,7 @@ filegroup(
             name=name,
             url=urls[sha256],
             sha256=sha256,
-            build_file=build_file.format(kind="whl"),
+            build_file=build_file.format(kind="whl", sub=""),
             type="zip",  # Ref: https://peps.python.org/pep-0427/
         )
         for name, sha256 in package.wheels.items()
@@ -585,7 +588,7 @@ filegroup(
             url=urls[sha256],
             sha256=sha256,
             strip_prefix=name,
-            build_file=build_file.format(kind="sdist"),
+            build_file=build_file.format(kind="sdist", sub=""),
         )
         for name, sha256 in package.sdist.items()
     ]
@@ -681,9 +684,10 @@ def main(argv=None):
     project_root = args.project_file.resolve().parent if args.project_file else Path()
     if args.input_file.name == "poetry.lock":
         locked_packages = load_poetry_locked_packages(args.input_file, project_root)
-    elif args.input_file.name == "uv.lock":
+    elif re.match(r"uv.*\.lock", args.input_file.name):
         locked_packages = load_uv_locked_packages(args.input_file, project_root)
     else:
+        print(re.match(r"uv.*\.lock", args.input_file.name))
         raise RuntimeError(f"unknown input type {args.input_file.name}")
 
     # Process data

@@ -22,4 +22,11 @@ dependencies = [
 
   # Package with setuptools_scm build-system
   "ccsdspy",
+
+  # Package installed from a git source subdirectory
+  "anki-eco-packager",
 ]
+
+
+[tool.uv.sources]
+anki-eco-packager = { git = "https://github.com/ikkz/anki-eco", subdirectory ="packages/packager/src/python" }

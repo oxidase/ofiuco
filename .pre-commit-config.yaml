@@ -17,7 +17,8 @@ repos:
     rev: v2.6.0
     hooks:
       - id: pyproject-fmt
-        exclude: ^(examples/uv/pyproject.toml)
+        exclude: ^(examples/uv/.*/pyproject.toml)
+
 
   - repo: https://github.com/keith/pre-commit-buildifier
     rev: 8.2.1

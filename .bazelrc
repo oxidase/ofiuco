@@ -14,7 +14,10 @@ build --incompatible_disable_starlark_host_transitions
 build --incompatible_disable_native_repo_rules
 build --incompatible_disable_autoloads_in_main_repo
 
-common --deleted_packages=examples/simple,examples/torch,examples/markers,examples/aspect_rules_py,examples/cc_toolchain,examples/airflow,examples/numpy,examples/uv
+common --deleted_packages=examples/simple,examples/torch,examples/markers,examples/aspect_rules_py,examples/cc_toolchain,examples/airflow,examples/numpy
+
 common --deleted_packages=examples/transitions,examples/transitions/toolchains,examples/transitions/toolchains/args,examples/transitions/constraint
 common --deleted_packages=examples/transitions/toolchains/clang,examples/transitions/toolchains/clang/tools,examples/transitions/toolchains/clang/args
 common --deleted_packages=examples/transitions/toolchains/gcc,examples/transitions/toolchains/gcc/tools,examples/transitions/toolchains/gcc/args
+
+common --deleted_packages=examples/uv,examples/uv/re2/re2,examples/uv/re2/re2/python,examples/uv/re2/re2/app

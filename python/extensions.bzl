@@ -38,6 +38,8 @@ def _parse_impl(mctx):
             if result.return_code != 0:
                 fail(result.stderr)
 
+            #print("!!", result.stderr)
+
             for file in json.decode(result.stdout):
                 name = file["name"]
                 _, build_file = lib.prefix_lookup(attr.build_files, name, file["build_file"])
@@ -62,6 +64,7 @@ def _parse_impl(mctx):
                         name = name,
                         remote = file["remote"],
                         commit = file["commit"],
+                        init_submodules = True,
                         build_file_content = build_file,
                     )
 

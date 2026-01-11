@@ -1,5 +1,7 @@
-bazel_dep(name = "rules_python", version = "1.8.0-rc1")
+bazel_dep(name = "rules_python", version = "1.8.0-rc2")
 bazel_dep(name = "rules_uv", version = "0.89.2")
+bazel_dep(name = "rules_cc", version = "0.2.16")
+bazel_dep(name = "platforms", version = "1.0.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.14")
@@ -18,3 +20,39 @@ parse.lock(
     toml = "//:pyproject.toml",
 )
 use_repo(parse, "uv")
+
+# Google re2 package example
+parse.lock(
+    name = "uv_re2",
+    lock = "//:re2/uv.lock",
+    toml = "//:re2/pyproject.toml",
+    deps = {
+        "google-re2": [
+            "@@re2+//:re2",
+            "@@abseil-cpp+//absl/base",
+            "@@abseil-cpp+//absl/base:core_headers",
+            "@@abseil-cpp+//absl/container:fixed_array",
+            "@@abseil-cpp+//absl/container:flat_hash_map",
+            "@@abseil-cpp+//absl/container:flat_hash_set",
+            "@@abseil-cpp+//absl/container:inlined_vector",
+            "@@abseil-cpp+//absl/hash",
+            "@@abseil-cpp+//absl/log:absl_check",
+            "@@abseil-cpp+//absl/log:absl_log",
+            "@@abseil-cpp+//absl/strings",
+            "@@abseil-cpp+//absl/strings:str_format",
+            "@@abseil-cpp+//absl/synchronization",
+            "@@abseil-cpp+//absl/types:optional",
+            "@@abseil-cpp+//absl/types:span",
+            "@@pybind11_bazel++internal_configure_extension+pybind11//:pybind11",
+        ],
+    },
+)
+use_repo(parse, "uv_re2")
+
+# google-re2 cc dependencies
+bazel_dep(name = "re2", version = "2025-11-05.bcr.1")
+bazel_dep(name = "abseil-cpp", version = "20250814.1")
+bazel_dep(name = "pybind11_bazel", version = "3.0.0")
+
+pybind11_configure = use_extension("@pybind11_bazel//:internal_configure.bzl", "internal_configure_extension")
+use_repo(pybind11_configure, "pybind11")

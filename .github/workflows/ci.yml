@@ -85,7 +85,7 @@ jobs:
           uname -a
           bazel info
           git submodule status --recursive
-          grep version= examples/airflow/re2/python/setup.py
+          grep version= examples/uv/re2/re2/python/setup.py
         shell: bash
 
       - name: Run tests
