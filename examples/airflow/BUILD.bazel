@@ -20,10 +20,7 @@ py_venv(
         ":airflow",
         "@python//:pytest",
         "@python//:pyyaml",
-    ] + select({
-        "@platforms//os:windows": [],  # skip google-re2 building on windows
-        "//conditions:default": ["@python//:google-re2"],
-    }),
+    ],
 ) for python_version in [
     "3.12",
     "3.13",

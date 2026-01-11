@@ -1,0 +1,10 @@
+[project]
+name = "project-with-re2"
+version = "0.0.0"
+description = "example with dependencies"
+requires-python = ">=3.13"
+classifiers = [ "Programming Language :: Python :: 3 :: Only", "Programming Language :: Python :: 3.13" ]
+dependencies = [
+  # Package as a git submodule
+  "google-re2 @ file://${PROJECT_ROOT}/re2/python",
+]

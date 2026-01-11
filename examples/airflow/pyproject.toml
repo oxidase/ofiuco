@@ -13,7 +13,6 @@ classifiers = [
 ]
 dependencies = [
   "apache-airflow",
-  "google-re2 @ file:///Users/michael/foss/ofiuco/re2/python",
   "pytest",
   "pyyaml",
   "types-requests",

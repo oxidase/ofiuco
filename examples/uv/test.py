@@ -1,4 +1,5 @@
 import datetime
+import os
 import sys
 import tomllib
 
@@ -35,6 +36,10 @@ def test_all_imports():
     import ccsdspy
 
     assert ccsdspy
+
+    import package
+
+    assert package
 
 
 def test_rust_dependencies():
@@ -75,6 +80,18 @@ def test_rust_dependencies():
     }
     expected = b'{"x":"y","created_at":"1970-01-01T00:00:00+00:00","status":"\xf0\x9f\x86\x97","payload":[[1,2],[3,4]]}'
     assert orjson.dumps(data, option=orjson.OPT_NAIVE_UTC | orjson.OPT_SERIALIZE_NUMPY) == expected
+
+
+@pytest.mark.skipif(os.name == "nt", reason="@abseil-cpp+//absl/base building fails")
+def test_re2():
+    import re2
+
+    text = "email=test@example.com"
+    pattern = re2.compile(r"(\w+)@(\w+\.\w+)")
+
+    assert (m := pattern.search(text))
+    assert m.group(1) == "test"
+    assert m.group(2) == "example.com"
 
 
 if __name__ == "__main__":

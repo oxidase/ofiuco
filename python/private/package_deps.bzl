@@ -159,10 +159,10 @@ def _package_impl(ctx):
 
     # Find the package build file and update package import and directory
     if package_files:
-        package_build_files = [file for file in package_files if paths.basename(file.path).endswith("BUILD.bazel")]
-        package_build_file = sorted(package_build_files, reverse = True).pop()
-        package_import = [paths.dirname(package_build_file.short_path).replace("../", "")]
-        package_directory = paths.dirname(package_build_file.path)
+        package_root_files = [file for file in package_files if paths.basename(file.path) in ["pyproject.toml", "setup.py", "BUILD.bazel"]]
+        package_root_file = sorted(package_root_files, reverse = True).pop()
+        package_import = [paths.dirname(package_root_file.short_path).replace("../", "")]
+        package_directory = paths.dirname(package_root_file.path)
 
     # Call "pip install" for the sdist or local packages
     if ctx.attr.package and ctx.attr.package.label.name in ["pkg", "sdist"]:
