@@ -4,6 +4,10 @@ package(default_visibility = ["//visibility:public"])
 
 # List all targets bazel query @ofiuco//python/platforms/...
 
+cpu_remap = {
+    "ppc": "ppc64",
+}
+
 ### Supported Python binary ABI versions
 ###   [Python tag, Python version, Python ABI tag, free-threaded]
 python_abi_tags = [
@@ -25,7 +29,7 @@ python_abi_tags = [
 
 # Linux
 [config_setting(
-    name = "{python_tag}-{abi_tag}-linux-{cpu}-{libc}".format(python_tag=python_tag, abi_tag=abi_tag, cpu=cpu, libc=libc),
+    name = "{python_tag}-{abi_tag}-linux-{cpu}-{libc}".format(python_tag=python_tag, abi_tag=abi_tag, cpu=cpu_remap.get(cpu, cpu), libc=libc),
     constraint_values = [
         "@platforms//cpu:{cpu}".format(cpu=cpu),
         "@platforms//os:linux",
@@ -36,7 +40,7 @@ python_abi_tags = [
     } if python_version else {}),
 )
  for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
- for cpu in ["aarch64", "armv7", "ppc64le", "riscv64", "riscv32", "s390x", "x86_32", "x86_64"]
+ for cpu in ["aarch64", "armv7", "ppc", "ppc64le", "riscv64", "riscv32", "s390x", "x86_32", "x86_64"]
  for libc in ["glibc", "musl"]]
 
 
@@ -109,6 +113,7 @@ macosx_versions = [
      ["arm64", "win_arm64"],
      ["x86_32", "win32"],
      ["x86_64", "win_amd64"],
+     ["x86_64", "win_ia64"],
  ]]
 
 # iOS
