@@ -8,6 +8,9 @@ load("@ofiuco//python/private:lock_parser.bzl", "parse_lock")
 load("@ofiuco_defs//:defs.bzl", _python_host = "python_host")
 
 def _parse_impl(mctx):
+    # Collect all repository definitions from all modules
+    all_repos = {}
+
     for mod in mctx.modules:
         for attr in mod.tags.lock:
             # Files watchers
@@ -26,7 +29,7 @@ def _parse_impl(mctx):
                 platforms = attr.platforms,
             )
 
-            # Create external repositories for Python packages
+            # Parse external repositories for Python packages
             interpreter = mctx.path(attr._python_host)
             result = mctx.execute([
                 interpreter,
@@ -38,35 +41,45 @@ def _parse_impl(mctx):
             if result.return_code != 0:
                 fail(result.stderr)
 
-            #print("!!", result.stderr)
-
+            # Collect repository definitions
             for file in json.decode(result.stdout):
-                name = file["name"]
-                _, build_file = lib.prefix_lookup(attr.build_files, name, file["build_file"])
+                repo_name = file["name"]
 
-                if file["kind"] == "http_archive":
-                    http_archive(
-                        name = name,
-                        url = file["url"],
-                        sha256 = file.get("sha256"),
-                        strip_prefix = file.get("strip_prefix"),
-                        type = file.get("type"),
-                        build_file_content = build_file,
-                    )
-                elif file["kind"] == "local_repository":
-                    new_local_repository(
-                        name = name,
-                        path = file["path"],
-                        build_file_content = build_file,
-                    )
-                elif file["kind"] == "git_repository":
-                    git_repository(
-                        name = name,
-                        remote = file["remote"],
-                        commit = file["commit"],
-                        init_submodules = True,
-                        build_file_content = build_file,
-                    )
+                # Track unique repositories by name
+                if repo_name not in all_repos:
+                    all_repos[repo_name] = {
+                        "file": file,
+                        "build_file": lib.prefix_lookup(attr.build_files, repo_name, file["build_file"])[1],
+                    }
+
+    # Create repositories
+    for repo_name, repo_data in all_repos.items():
+        file = repo_data["file"]
+        build_file = repo_data["build_file"]
+
+        if file["kind"] == "http_archive":
+            http_archive(
+                name = repo_name,
+                url = file["url"],
+                sha256 = file.get("sha256"),
+                strip_prefix = file.get("strip_prefix"),
+                type = file.get("type"),
+                build_file_content = build_file,
+            )
+        elif file["kind"] == "local_repository":
+            new_local_repository(
+                name = repo_name,
+                path = file["path"],
+                build_file_content = build_file,
+            )
+        elif file["kind"] == "git_repository":
+            git_repository(
+                name = repo_name,
+                remote = file["remote"],
+                commit = file["commit"],
+                init_submodules = True,
+                build_file_content = build_file,
+            )
 
 parse = module_extension(
     implementation = _parse_impl,
