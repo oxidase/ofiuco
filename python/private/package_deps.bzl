@@ -56,8 +56,11 @@ def derive_environment_markers(interpreter, interpreter_markers, host_tags):
         Tuple of platform name and platform tags
     """
     python_version = _get_python_version(interpreter)
+
+    # Platform keys are normalized with underscore separators
+    interpreter_normalized = interpreter.replace("-", "_")
     for fr, to in interpreter_markers.items():
-        if fr in interpreter:
+        if fr.replace("-", "_") in interpreter_normalized:
             tags = {
                 "extra": "*",
                 "implementation_name": "cpython",
