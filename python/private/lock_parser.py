@@ -205,7 +205,7 @@ class Source:
         source = Source(**kwargs)
 
         if source.type in {SourceType.directory, SourceType.file}:
-            source.url = os.fspath((project_root / source.url).resolve())
+            source.url = os.fspath((project_root / source.url).resolve().as_posix())
 
         return source
 
@@ -225,16 +225,16 @@ class Source:
             return Source(type=SourceType.git, url=url, resolved_reference=parsed.fragment, subdirectory=sub)
 
         if url := kwargs.get("editable"):
-            return Source(type=SourceType.directory, url=os.fspath((project_root / url).resolve()))
+            return Source(type=SourceType.directory, url=os.fspath((project_root / url).resolve().as_posix()))
 
         if url := kwargs.get("virtual"):
             return Source(type=SourceType.virtual, url=url)
 
         if url := kwargs.get("path"):
-            return Source(type=SourceType.file, url=os.fspath((project_root / url).resolve()))
+            return Source(type=SourceType.file, url=os.fspath((project_root / url).resolve().as_posix()))
 
         if url := kwargs.get("directory"):
-            return Source(type=SourceType.directory, url=os.fspath((project_root / url).resolve()))
+            return Source(type=SourceType.directory, url=os.fspath((project_root / url).resolve().as_posix()))
 
         raise NotImplementedError(f"for {project_root = } and {kwargs = }")
 
