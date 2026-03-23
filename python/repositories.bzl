@@ -16,7 +16,7 @@ _INTERNAL_DEPS = [
     ),
 ]
 
-_POETRY_VERSION = "2.2.1"
+_POETRY_VERSION = "2.3.2"
 
 def _poetry_deps_repo_impl(rctx):
     interpreter = rctx.path(rctx.attr.python_host)
