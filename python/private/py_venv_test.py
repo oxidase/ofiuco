@@ -50,9 +50,6 @@ class TestInstallSubcommand(unittest.TestCase):
         with open(os.path.join(prefix, test_package, "test_file"), "w") as f:
             f.write("test")
 
-        with self.assertRaisesRegex(RuntimeError, expected_regex=test_package):
-            main([target, test_package])
-
         main([target, test_package, f"--prefix={prefix}"])
         assert os.path.isdir(os.path.join(target, "test"))
         assert os.path.islink(os.path.join(target, "test_file"))

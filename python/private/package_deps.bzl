@@ -164,6 +164,8 @@ def _package_impl(ctx):
     if package_files:
         package_root_files = [file for file in package_files if paths.basename(file.path) in ["pyproject.toml", "setup.py", "BUILD.bazel"]]
         package_root_file = sorted(package_root_files, reverse = True).pop()
+
+        # Package imports from short path relative to runfiles directory
         package_import = [paths.dirname(package_root_file.short_path).replace("../", "")]
         package_directory = paths.dirname(package_root_file.path)
 
@@ -180,7 +182,9 @@ def _package_impl(ctx):
 
         # Declare package output directory
         output = ctx.actions.declare_directory("{}/{}/{}".format(python_version, runtime_tag, ctx.label.name))
-        package_import = [output.short_path.replace("../", "")]
+
+        # Package imports from full path or short path relative to runfiles directory
+        package_import = [output.path, output.short_path.replace("../", "")]
         entry_points = ctx.actions.declare_file("{}/{}/.dist-info/{}/entry_points.txt".format(python_version, runtime_tag, ctx.label.name))
         output_files = [output, entry_points]
 

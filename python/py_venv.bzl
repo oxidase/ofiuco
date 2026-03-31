@@ -1,3 +1,5 @@
+"""Defines python virtual environment."""
+
 load("@rules_python//python:defs.bzl", "PyInfo")
 load("//python/private:package_deps.bzl", _get_imports = "get_imports", _get_transitive_sources = "get_transitive_sources")
 
@@ -5,7 +7,7 @@ def _py_venv_impl(ctx):
     """
     Rule to link Python package into a virtual environment.
 
-    Arguments:
+    Args:
         ctx: The rule context.
 
     Attributes:
@@ -23,7 +25,7 @@ def _py_venv_impl(ctx):
     transitive_deps = [item for dep in transitive_depsets for item in dep.to_list()]
 
     import_depsets = depset(transitive = [_get_imports(dep) for dep in deps])
-    import_paths = ["external/{}".format(path) for path in import_depsets.to_list()]
+    import_paths = [path if path.startswith("bazel-out/") else "external/{}".format(path) for path in import_depsets.to_list()]
 
     ctx.actions.run(
         outputs = [output],
