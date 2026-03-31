@@ -1,5 +1,4 @@
 import argparse
-import os
 from pathlib import Path
 
 from python.private.utils import populate_symlink_tree
@@ -22,8 +21,6 @@ def main(argv=None):
             if (path := prefix / python_path).exists():
                 populate_symlink_tree(path, args.target, SKIP_SET)
                 break
-        else:
-            raise RuntimeError(f"{python_path} does not exists in {prefixes}, cwd {os.getcwd()}")
 
 
 if __name__ == "__main__":

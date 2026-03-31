@@ -6,6 +6,9 @@ py_test(
     size = "large",
     srcs = ["test.py"],
     data = ["uv.lock"],
+    env = {
+        "POLARS_SKIP_CPU_CHECK": "1",
+    },
     deps = [
         "@uv//:all",
     ] + select({
