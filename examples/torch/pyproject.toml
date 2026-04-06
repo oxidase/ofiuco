@@ -23,11 +23,11 @@ sample_package_hatchling = { path = "sample_hatchling", develop = false }
 sample_package_flit = { path = "sample_flit.tar.xz", develop = true } # tar cvfJ sample_flit.tar.xz --disable-copyfile -C x .
 torch = [
   { platform = "darwin", version = "2.2.1", source = "pypi" },
-  { platform = "linux", url = "https://download.pytorch.org/whl/cu121/torch-2.2.1%2Bcu121-cp312-cp312-linux_x86_64.whl" },
+  { platform = "linux-x86_64", url = "https://download.pytorch.org/whl/cu121/torch-2.2.1%2Bcu121-cp312-cp312-linux_x86_64.whl" },
 ]
 torchvision = [
   { version = "0.17.1" },
-  { platform = "linux", version = "0.17.1", source = "pytorch" },
+  { platform = "linux-x86_64", version = "0.17.1", source = "pytorch" },
 ]
 
 [tool.poetry.group.dev.dependencies]

@@ -1,0 +1,3 @@
+#!/bin/bash -x
+
+${BAZEL_REAL} --output_user_root=${CACHE_DIR:-$HOME/.cache/bazel} $@

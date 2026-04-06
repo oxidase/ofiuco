@@ -188,6 +188,16 @@ def install_internal(args):
         os.environ["PATH"] = f"{os.getcwd()}/{rust_toolchain.get('RUST_SYSROOT')}/bin:{os.environ['PATH']}"
         os.environ["RUSTUP_HOME"] = os.fspath(output_path)
         os.environ["CARGO_HOME"] = os.fspath(output_path)
+        os.environ["CARGO_TERM_VERBOSE"] = "true"
+        os.environ["CARGO_PROFILE_RELEASE_BUILD_OVERRIDE_DEBUG"] = "true"
+        os.environ["RUST_BACKTRACE"] = "full"
+
+        # Do not forward ARFLAGS,
+        # References:
+        # https://github.com/bazelbuild/rules_rust/commit/d6da8a62f12811e462c9a0653ddb826fea3b5074
+        # https://github.com/rust-lang/cc-rs/blob/f4c5ac7a7e7917660d2068ecb5fd015a11ffb3d6/src/lib.rs#L2813-L2815
+        # https://github.com/rust-lang/cc-rs/issues/1011
+        os.environ["ARFLAGS"] = ""
 
     if retcode := install_command.main(install_args + get_platform_args(args)):
         logging.error(f"pip install returned {retcode}")

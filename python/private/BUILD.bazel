@@ -62,6 +62,9 @@ py_binary(
     srcs = [
         "lock_parser.py",
     ],
+    data = [
+        "rust_packages.gz",
+    ],
 )
 
 py_test(

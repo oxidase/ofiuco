@@ -1179,6 +1179,35 @@ wheels = [
 ]
 
 [[package]]
+name = "questdb"
+version = "4.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/15/2a/2480940b8ee3946208d0f15bfd2d8c0fe29dcfbd18ef28a0a87a31c51cad/questdb-4.1.0.tar.gz", hash = "sha256:d899daf474bf66c57dd3f6a8e9bb1f928430b5e5bd115b10bddb418c0330aaec", size = 76967528, upload-time = "2025-11-28T19:50:39.762Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/1c/c1/dc0dee0152cb9287c5ad001d4529619293792bf4ca9dd2b0064253634709/questdb-4.1.0-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:33dc5d67807a304f019fdda8f74459f4782681755e2926dd5dce6fca5cd1a5a1", size = 3139270, upload-time = "2025-11-28T19:50:03.975Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/07/220c625ca92716e1928a3acae3e670434e69b1087ca0eec294255953842e/questdb-4.1.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:39d276351519bf702214bf1cf3ac55f0715a692f514a6efcc3c28d813cecd324", size = 3215967, upload-time = "2025-11-28T19:50:05.313Z" },
+    { url = "https://files.pythonhosted.org/packages/8b/02/1ba125590bade826119da0a1efea187c3a75f2752cb2d004eb6cda905f96/questdb-4.1.0-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2189b664b0745bebfb7e3b6cc4a25da849dbcf192f1e1ca7e686c604dc9b6051", size = 5586001, upload-time = "2025-11-28T19:50:07.156Z" },
+    { url = "https://files.pythonhosted.org/packages/13/b5/5605dc8869f19e27f063ef7009e456ae2ee0ea97ceb30c317770b54d94e2/questdb-4.1.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:4afee5e4f5b97f78932e3bba5cd4a6e2b06a001f1d5e7665d95cfcbd394d80db", size = 5980637, upload-time = "2025-11-28T19:50:08.726Z" },
+    { url = "https://files.pythonhosted.org/packages/5a/bd/45b95f1a8dc69b8df38d7953bdc5c670f0c782dad09a8175251e46c7d41b/questdb-4.1.0-cp313-cp313-musllinux_1_2_aarch64.whl", hash = "sha256:4aedda5cc08a7686165633fc8814b34ca2a9dfaf306a7f279dd74f9cb1e1a8a3", size = 5619590, upload-time = "2025-11-28T19:50:10.128Z" },
+    { url = "https://files.pythonhosted.org/packages/3c/5e/990cd2d8fff5a0901c045570ed417c633cb38071f08166b63057bd43f73f/questdb-4.1.0-cp313-cp313-musllinux_1_2_x86_64.whl", hash = "sha256:3c6300701ae1e95a7395c168288e13286421f33a620cd21ed1e97bd788922d27", size = 6011143, upload-time = "2025-11-28T19:50:12.104Z" },
+    { url = "https://files.pythonhosted.org/packages/18/ec/38ba0092db36d0d1fc9aaf34f6445bd31d122b686b32e0e95578fc66e26a/questdb-4.1.0-cp313-cp313-win32.whl", hash = "sha256:f0b57153c4a177c19e0243e130f1558210a0deea77cd254448191bf7392ccb6f", size = 1732995, upload-time = "2025-11-28T19:50:14.626Z" },
+    { url = "https://files.pythonhosted.org/packages/f7/3c/c51d071264aaa099f30f8375d37ed23dc57b84608c5cb3010d3d6e52f78d/questdb-4.1.0-cp313-cp313-win_amd64.whl", hash = "sha256:a7857d8ba4f919475e22b94011604198049e970d94ce0f1bdc7186cd1fe1b105", size = 2011594, upload-time = "2025-11-28T19:50:15.827Z" },
+    { url = "https://files.pythonhosted.org/packages/10/d5/cfb0b4c202c80b0ec69bff5fd16b091904a3348aca5c723d8341199f7f68/questdb-4.1.0-cp314-cp314-macosx_10_15_x86_64.whl", hash = "sha256:c4c37cd028d864b7c0584e63822c1d74e03cf477056d88ef31cf9c153b436632", size = 3147333, upload-time = "2025-11-28T19:50:17.07Z" },
+    { url = "https://files.pythonhosted.org/packages/81/d5/bababb5803bb8ba16e77808774b0b20451a71ee2928e3085f249ad14546f/questdb-4.1.0-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:b63723a63e8af95ad9b4b2ee1cfa09585375e44e4fdd8d02bbed2ae29f41b2ed", size = 3224698, upload-time = "2025-11-28T19:50:18.673Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/ac/c61430be729e7eb62c7fd4a6ec4e8c3ccde63e49fe8a5eff8c65a559063e/questdb-4.1.0-cp314-cp314-manylinux_2_28_x86_64.whl", hash = "sha256:8e4db50b13d806a5185280d2519d0d24f64c0ba2f369377e3f13838260751dae", size = 5968252, upload-time = "2025-11-28T19:50:20.381Z" },
+    { url = "https://files.pythonhosted.org/packages/09/b5/9fb415c9e373ff3a69719c73b7a879e75e963e1d0f7f6048b97d7b6408a5/questdb-4.1.0-cp314-cp314-musllinux_1_2_x86_64.whl", hash = "sha256:b93bec78f0a2607f3164a54a4bc5bfd3522b0b1d7025b01d229ae9f2dbd90e46", size = 6008992, upload-time = "2025-11-28T19:50:21.816Z" },
+    { url = "https://files.pythonhosted.org/packages/e7/13/4099213d156c529df72b6fff7e5d8eaaa92a540788627feb4cee76b8b50d/questdb-4.1.0-cp314-cp314-win32.whl", hash = "sha256:80462e6c4aeb441acb430c409a8bee7e861fa5fe3cc455f7b54e6acc8031f14c", size = 1755241, upload-time = "2025-11-28T19:50:23.116Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/eb/836ca068d047bb7af31e89f7e6077f5a27dbf0f66b783bd5491d3209ab91/questdb-4.1.0-cp314-cp314-win_amd64.whl", hash = "sha256:78ae5407a24883779a5df8d013ad30335ea64245e8e11176e5d35d907bbc74c5", size = 2050253, upload-time = "2025-11-28T19:50:24.28Z" },
+    { url = "https://files.pythonhosted.org/packages/b5/06/e25e611d35c21616256b73c3772fda8cb6317f139cc9a6630d0d42ecd6e4/questdb-4.1.0-cp314-cp314t-macosx_10_15_x86_64.whl", hash = "sha256:44b0e5bae301484ac169eb74058cd722d5e26fe0640200615079fd7c629236f2", size = 3154538, upload-time = "2025-11-28T19:50:25.499Z" },
+    { url = "https://files.pythonhosted.org/packages/75/c7/d19fdd4edcc91b1f6e66f9dc7c8dfd66967b7b800ca59180c75ef8b2b546/questdb-4.1.0-cp314-cp314t-macosx_11_0_arm64.whl", hash = "sha256:ae54862ac73bcfb7b1d17771693872e04f2659b04180bdf24259f46012b0bb66", size = 3252602, upload-time = "2025-11-28T19:50:26.922Z" },
+    { url = "https://files.pythonhosted.org/packages/08/2a/b80fc90836c975f26443fcf9e0ab672abfe3f4283c3421456242b46012b4/questdb-4.1.0-cp314-cp314t-manylinux_2_28_x86_64.whl", hash = "sha256:b7f9f437f594b88c7e4c6cf9c683c809ecd5f2020446d82be47e4f12e0295cfd", size = 5921142, upload-time = "2025-11-28T19:50:28.369Z" },
+    { url = "https://files.pythonhosted.org/packages/37/b1/6c22a6c6425c3e7a0d578526db2b8ea2e534f9b4cc3aa6e2f1c5878f6081/questdb-4.1.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:bee0c5df4513e6c30f9d24fd3feedc08f0528b3daa990bed4eb31deebceffa85", size = 5965328, upload-time = "2025-11-28T19:50:30.107Z" },
+]
+
+[[package]]
 name = "requests"
 version = "2.33.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1294,6 +1323,7 @@ dependencies = [
     { name = "polars", extra = ["rt64"] },
     { name = "pre-commit" },
     { name = "pytest" },
+    { name = "questdb" },
     { name = "setuptools" },
     { name = "sphinxcontrib-images" },
     { name = "ytsaurus-yson" },
@@ -1312,6 +1342,7 @@ requires-dist = [
     { name = "polars", extras = ["rt64"] },
     { name = "pre-commit" },
     { name = "pytest", path = "pytest-8.4.2-py3-none-any.whl" },
+    { name = "questdb" },
     { name = "setuptools", url = "https://files.pythonhosted.org/packages/a3/dc/17031897dae0efacfea57dfd3a82fdd2a2aeb58e0ff71b77b87e44edc772/setuptools-80.9.0-py3-none-any.whl" },
     { name = "sphinxcontrib-images", git = "https://github.com/sphinx-contrib/images" },
     { name = "ytsaurus-yson" },

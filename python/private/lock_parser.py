@@ -1,5 +1,7 @@
 import argparse
 import asyncio
+import bisect
+import gzip
 import html.parser
 import itertools
 import json
@@ -73,6 +75,9 @@ MACOSX_VERSIONS = [
     (15, 0),  # Sequoia
     (16, 0),  # Tahoe
 ]
+
+with gzip.open(Path(__file__).parent / "rust_packages.gz", "rt") as rust_packages_file:
+    RUST_PACKAGES = [line.strip() for line in rust_packages_file.readlines() if line.strip()]
 
 
 def normalize_basename(name):
@@ -431,8 +436,13 @@ py_library(
             "visibility": ['["//visibility:public"]'],
         }
 
+        # https://pypi.org/search/?c=Programming+Language+%3A%3A+Rust
+        rust_package_index = bisect.bisect_left(RUST_PACKAGES, self.name)
+        rust_package = rust_package_index < len(RUST_PACKAGES) and RUST_PACKAGES[rust_package_index] == self.name
+        package_rule = "rust_package" if rust_package else "package"
+
         return f"""
-package(
+{package_rule}(
   name = "{self.name}",
   {attr_sep.join((attr + " = " + sep.join(value)) for attr, value in attrs.items() if value)},
 )

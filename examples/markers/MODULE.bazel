@@ -22,6 +22,16 @@ parse.lock(
     name = "python",
     lock = "//:poetry.lock",
     platforms = {
+        python_version + "_aarch64-unknown-linux-gnu": "{" + ",".join(
+            [
+                '"python_full_version": "{}"'.format(python_full_version),
+                '"os_name": "posix"',
+                '"platform_machine": "arm64"',
+                '"platform_system": "Windows"',
+                '"platform_tags": ["manylinux_2_17_aarch64"]',
+                '"sys_platform": "linux"',
+            ],
+        ) + "}",
         python_version + "_x86_64-unknown-linux-gnu": "{" + ",".join(
             [
                 '"python_full_version": "{}"'.format(python_full_version),

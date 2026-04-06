@@ -1,4 +1,5 @@
 import os
+import platform
 import sys
 import tomllib
 
@@ -19,7 +20,7 @@ def test_torch_version():
     assert torch.__version__.split("+").pop(0) in torch_version
 
 
-@pytest.mark.skipif(sys.platform != "linux", reason="torch+CUDA is installed only for linux")
+@pytest.mark.skipif(sys.platform != "linux" or platform.machine() != "x86_64", reason="torch+CUDA is for Linux x86_64")
 def test_cuda_libs_loaded():
     assert torch.backends.cudnn.enabled
     assert torch.backends.cudnn.version() > 8000
