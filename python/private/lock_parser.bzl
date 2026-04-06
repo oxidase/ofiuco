@@ -9,7 +9,7 @@ def _parse_lock_impl(rctx):
     rules_repository = self.split("/", 1)[0]
     rules_repository = ("@@" if "~" in rules_repository else "@") + rules_repository
     rules_repository = rules_repository.split("+")[0]
-    prefix = '''load("{name}//python/private:package_deps.bzl", "package")'''.format(name = rules_repository)
+    prefix = '''load("{name}//python/private:package_deps.bzl", "package", "rust_package")'''.format(name = rules_repository)
 
     interpreter = rctx.path(rctx.attr._python_host)
     rctx.watch(rctx.attr.lock)

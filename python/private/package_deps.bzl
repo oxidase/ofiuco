@@ -271,7 +271,7 @@ def _package_impl(ctx):
             # Generates CC toolchain argument
             arguments.append("--cc_toolchain=" + json.encode(cc_attr))
 
-        if ctx.attr.enable_rust:
+        if "@rules_rust//rust:toolchain_type" in ctx.toolchains:
             # Get Rust target toolchain and propagate to the installation script
             rust_toolchain = ctx.toolchains["@rules_rust//rust:toolchain_type"]
             if rust_toolchain:
@@ -328,30 +328,43 @@ def _package_impl(ctx):
         PyInfo(transitive_sources = files, imports = imports),
     ]
 
+package_attrs = {
+    "deps": attr.label_list(doc = "The package dependencies list"),
+    "data": attr.label_list(doc = "The package dependencies list"),
+    "description": attr.string(doc = "The package description"),
+    "package": attr.label(doc = "The Python package target"),
+    "develop": attr.bool(),
+    "enable_rust": attr.bool(default = True),
+    "markers": attr.string(doc = "The JSON string with a dictionary of dependency markers accordingly to PEP 508"),
+    "platforms": attr.string_dict(
+        default = DEFAULT_PLATFORMS,
+        doc = "The mapping of an interpter substring mapping to environment markers and platform tags as a JSON string. " +
+              "Default value corresponds to platforms defined at " +
+              "https://github.com/bazelbuild/rules_python/blob/23cf6b66/python/versions.bzl#L231-L277",
+    ),
+    "system_platform": attr.string(doc = "The system platform environment markers as a JSON string"),
+    "_libpython": attr.label_list(default = [
+        "@rules_python//python/cc:current_py_cc_headers",
+        "@rules_python//python/cc:current_py_cc_libs",
+    ]),
+    "_package_deps": attr.label(default = ":package_deps", cfg = "exec", executable = True),
+}
+
 package = rule(
     implementation = _package_impl,
     provides = [PyInfo],
-    attrs = {
-        "deps": attr.label_list(doc = "The package dependencies list"),
-        "data": attr.label_list(doc = "The package dependencies list"),
-        "description": attr.string(doc = "The package description"),
-        "package": attr.label(doc = "The Python package target"),
-        "develop": attr.bool(),
-        "enable_rust": attr.bool(),
-        "markers": attr.string(doc = "The JSON string with a dictionary of dependency markers accordingly to PEP 508"),
-        "platforms": attr.string_dict(
-            default = DEFAULT_PLATFORMS,
-            doc = "The mapping of an interpter substring mapping to environment markers and platform tags as a JSON string. " +
-                  "Default value corresponds to platforms defined at " +
-                  "https://github.com/bazelbuild/rules_python/blob/23cf6b66/python/versions.bzl#L231-L277",
-        ),
-        "system_platform": attr.string(doc = "The system platform environment markers as a JSON string"),
-        "_libpython": attr.label_list(default = [
-            "@rules_python//python/cc:current_py_cc_headers",
-            "@rules_python//python/cc:current_py_cc_libs",
-        ]),
-        "_package_deps": attr.label(default = ":package_deps", cfg = "exec", executable = True),
-    },
+    attrs = package_attrs,
+    toolchains = [
+        "@bazel_tools//tools/python:toolchain_type",
+        config_common.toolchain_type("@bazel_tools//tools/cpp:toolchain_type", mandatory = False),
+    ],
+    fragments = ["cpp"],
+)
+
+rust_package = rule(
+    implementation = _package_impl,
+    provides = [PyInfo],
+    attrs = package_attrs,
     toolchains = [
         "@bazel_tools//tools/python:toolchain_type",
         config_common.toolchain_type("@bazel_tools//tools/cpp:toolchain_type", mandatory = False),
