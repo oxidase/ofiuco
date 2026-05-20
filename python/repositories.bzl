@@ -10,13 +10,13 @@ _PACKAGES_ENDPOINT = "https://files.pythonhosted.org/packages/"
 _INTERNAL_DEPS = [
     (
         "pip",
-        _PACKAGES_ENDPOINT + "de/f0/c81e05b613866b76d2d1066490adf1a3dbc4ee9d9c839961c3fc8a6997af/pip-26.0.1-py3-none-any.whl",
-        "bdb1b08f4274833d62c1aa29e20907365a2ceb950410df15fc9521bad440122b",
+        _PACKAGES_ENDPOINT + "3a/eb/fea4d1d51c49832120f7f285d07306db3960f423a2612c6057caf3e8196f/pip-26.1.1-py3-none-any.whl",
+        "99cb1c2899893b075ff56e4ed0af55669a955b49ad7fb8d8603ecdaf4ed653fb",
         ["@ofiuco//python:patches/scripts_executable.patch"],
     ),
 ]
 
-_POETRY_VERSION = "2.3.2"
+_POETRY_VERSION = "2.4.1"
 
 def _poetry_deps_repo_impl(rctx):
     interpreter = rctx.path(rctx.attr.python_host)

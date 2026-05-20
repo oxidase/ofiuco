@@ -14,6 +14,8 @@ if [[ -n "$WINDIR" ]] && ! grep -qE "^startup --(no)?windows_enable_symlinks$" .
     exit 0
 fi
 
+[ -n "$WINDIR" ] && STARTUP_ARGS="--output_user_root=C:/b"
+
 ARGS="--test_output=errors --spawn_strategy=local --verbose_failures"
 ARGS="$ARGS --override_repository=ofiuco=$BUILD_WORKSPACE_DIRECTORY"
 ARGS="$ARGS --experimental_ui_max_stdouterr_bytes=8388608"
@@ -21,4 +23,4 @@ ARGS="$ARGS --incompatible_autoload_externally="
 [ -f MODULE.bazel ] && ARGS="$ARGS --override_module=ofiuco=$BUILD_WORKSPACE_DIRECTORY"
 
 echo "Using $(bazelisk version)"
-bazelisk test ... $ARGS
+bazelisk $STARTUP_ARGS test ... $ARGS

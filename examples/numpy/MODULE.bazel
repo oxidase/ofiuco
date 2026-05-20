@@ -1,9 +1,9 @@
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "catch2", version = "3.13.0")
 bazel_dep(name = "fmt", version = "12.1.0")
-bazel_dep(name = "platforms", version = "1.0.0")
-bazel_dep(name = "rules_cc", version = "0.2.17")
-bazel_dep(name = "rules_python", version = "1.9.0")
+bazel_dep(name = "platforms", version = "1.1.0")
+bazel_dep(name = "rules_cc", version = "0.2.18")
+bazel_dep(name = "rules_python", version = "2.0.1")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.13")
@@ -42,10 +42,10 @@ cc_library(
 use_repo(parse, "poetry")
 
 # Update numpy references after "bazel run :lock -- --regenerate" from poetry.lock
-use_repo(parse, "numpy-2.4.3-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64")
-use_repo(parse, "numpy-2.4.3-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64")
-use_repo(parse, "numpy-2.4.3-cp313-cp313-macosx_14_0_arm64")
-use_repo(parse, "numpy-2.4.3-cp313-cp313-win_amd64")
+use_repo(parse, "numpy-2.4.6-cp313-cp313-manylinux_2_27_aarch64.manylinux_2_28_aarch64")
+use_repo(parse, "numpy-2.4.6-cp313-cp313-manylinux_2_27_x86_64.manylinux_2_28_x86_64")
+use_repo(parse, "numpy-2.4.6-cp313-cp313-macosx_14_0_arm64")
+use_repo(parse, "numpy-2.4.6-cp313-cp313-win_amd64")
 
 git_repository = use_repo_rule("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
