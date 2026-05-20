@@ -563,6 +563,7 @@ filegroup(
                         name=package.name,
                         remote=package.source.url,
                         commit=package.source.resolved_reference or package.source.reference,
+                        patch_cmds=["find src \\( -name BUILD -o -name BUILD.bazel \\) -delete || true"],
                         build_file=build_file.format(kind="pkg", sub=sub),
                     )
                 ]

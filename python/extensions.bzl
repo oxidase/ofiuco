@@ -79,6 +79,7 @@ def _parse_impl(mctx):
                 commit = file["commit"],
                 init_submodules = True,
                 build_file_content = build_file,
+                patch_cmds = file["patch_cmds"],
             )
 
 parse = module_extension(
