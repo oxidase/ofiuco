@@ -1,0 +1,20 @@
+[project]
+name = "simple"
+version = "0.0.0"
+description = "example with dependencies"
+requires-python = ">=3.13"
+
+classifiers = [
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.13",
+]
+
+dependencies = [
+  "aioboto3",
+  "aiobotocore<3",
+  "annetbox[sync,async]",
+  "botocore[crt]",
+  "pytest",
+  "requests",
+  "urllib3[brotli,h2,socks]",
+]

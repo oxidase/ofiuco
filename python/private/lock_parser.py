@@ -687,7 +687,7 @@ def main(argv=None):
     parser.add_argument("--generate_extras", default=True, action=argparse.BooleanOptionalAction)
     parser.add_argument("--enable_rust", default=False, action=argparse.BooleanOptionalAction)
     parser.add_argument("--project_file", type=Path)
-    parser.add_argument("--output", type=str.lower, choices=["packages", "files"])
+    parser.add_argument("--output", type=str.lower, choices=["packages", "files", "defs"])
 
     args = parser.parse_args(argv)
 
@@ -704,6 +704,9 @@ def main(argv=None):
     # Process data
     if args.output == "files":
         output = generate_files(locked_packages)
+    elif args.output == "defs":
+        requirements = {package.name: package.version for package in locked_packages}
+        output = f"""# Locked packages\n\nrequirements = {json.dumps(requirements, indent=2)}\n"""
     else:
         output = generate_packages(locked_packages, args.platforms, args.generate_extras, args.enable_rust, args.deps)
 

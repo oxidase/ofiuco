@@ -32,6 +32,15 @@ def _parse_lock_impl(rctx):
 
     rctx.file("BUILD.bazel", "{}\n\n{}\n\n{}".format(header, prefix, exec_result.stdout))
 
+    exec_result = rctx.execute([
+        interpreter,
+        rctx.path(rctx.attr._lock_parser),
+        rctx.path(rctx.attr.lock),
+        "--output=defs",
+    ])
+
+    rctx.file("defz.bzl", "{}\n".format(exec_result.stdout))
+
 parse_lock = repository_rule(
     attrs = {
         "lock": attr.label(

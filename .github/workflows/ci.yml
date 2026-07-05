@@ -54,7 +54,7 @@ jobs:
         if: runner.os != 'Windows'
         run: |
           df -h
-          sudo rm -rf /usr/lib/jvm /usr/share/dotnet /usr/share/swift /usr/local/.ghcup /usr/local/share/powershell /usr/local/julia* /usr/local/lib/android /usr/local/share/chromium /opt/microsoft /opt/google /opt/az /opt/ghc /opt/hostedtoolcache
+          sudo rm -rf /usr/lib/jvm /usr/share/dotnet /usr/local/.ghcup /usr/local/share/powershell /usr/local/julia* /usr/local/lib/android /usr/local/share/chromium /opt/microsoft /opt/google /opt/az /opt/ghc /opt/hostedtoolcache
           docker system prune -af || true
           docker builder prune -af || true
           df -h

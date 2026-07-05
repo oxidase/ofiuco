@@ -1,0 +1,73 @@
+load("@ofiuco//python:poetry.bzl", "poetry_lock")
+load("@ofiuco//python:requirements.bzl", "py_requires_file")
+load("@poetry//:defz.bzl", "requirements")
+load("@rules_python//python:defs.bzl", "py_binary", "py_library", "py_test")
+load("@rules_python//python:packaging.bzl", "py_wheel")
+
+py_library(
+    name = "network",
+    srcs = ["network.py"],
+    deps = [
+        "@poetry//:requests",
+    ],
+)
+
+py_library(
+    name = "compression",
+    srcs = ["compression.py"],
+    deps = [
+        "@poetry//:urllib3[brotli]",
+    ],
+)
+
+py_library(
+    name = "applib",
+    srcs = [],
+    deps = [
+        ":compression",
+        ":network",
+    ],
+)
+
+py_binary(
+    name = "app",
+    srcs = ["app.py"],
+    main = "app.py",
+    deps = [
+        ":applib",
+    ],
+)
+
+py_requires_file(
+    name = "app_requires",
+    requirements = requirements,
+    target = ":app",
+)
+
+py_wheel(
+    name = "app_wheel",
+    distribution = "app",
+    python_tag = "py3",
+    requires_file = ":app_requires",
+    version = "0.0.1",
+    deps = [":app"],
+)
+
+py_test(
+    name = "test",
+    size = "large",
+    srcs = ["test.py"],
+    data = [
+        "poetry.lock",
+        ":app_wheel",
+    ],
+    deps = [
+        "@poetry//:pytest",
+    ],
+)
+
+poetry_lock(
+    name = "lock",
+    lock = "poetry.lock",
+    toml = "pyproject.toml",
+)
