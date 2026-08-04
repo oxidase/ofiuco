@@ -11,6 +11,7 @@ py_test(
         ":pre-commit",
         "@poetry//:aioboto3",
         "@poetry//:annetbox[async]",
+        "@poetry//:cryptography",
         "@poetry//:pytest",
         "@poetry//:urllib3[brotli]",
         "@poetry//:urllib3[h2]",
