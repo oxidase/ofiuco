@@ -155,6 +155,34 @@ ios_versions = [
      ["x86_64", "iphonesimulator"],
  ]]
 
+# Android
+constraint_setting(name = "android_version", default_constraint_value = ":android_31")
+android_versions = range(20, 36)
+[constraint_value(name = "android_{}".format(version), constraint_setting = ":android_version") for version in android_versions]
+
+android_cpu_remap = {
+    "aarch64": "arm64_v8a",
+    "armv7": "armeabi_v7a",
+    "x86_32": "x86",
+}
+
+[config_setting(
+    name = "{python_tag}-{abi_tag}-android_{android_version}_{cpu}".format(python_tag=python_tag, abi_tag=abi_tag, cpu=android_cpu_remap.get(cpu, cpu), android_version=android_version),
+    constraint_values = [
+        "@platforms//cpu:{cpu}".format(cpu=cpu),
+        "@platforms//os:android",
+        ":android_{android_version}".format(android_version=android_version),
+    ],
+    flag_values = {
+        "@rules_python//python/config_settings:python_version_major_minor": python_version,
+        "@rules_python//python/config_settings:py_freethreaded": freethreaded,
+    } if python_version else {},
+)
+ for python_tag, python_version, abi_tag, freethreaded in python_abi_tags
+ for cpu in ["aarch64", "armv7", "ppc", "ppc64le", "riscv64", "riscv32", "s390x", "x86_32", "x86_64"]
+ for android_version in android_versions]
+
+
 # PyEmscripten
 constraint_setting(name = "pyemscripten_release", default_constraint_value = ":pyemscripten_2026_0_wasm32")
 pyemscripten_releases = [
@@ -167,6 +195,7 @@ pyemscripten_releases = [
 [config_setting(
     name = "{python_tag}-{abi_tag}-{platform}".format(python_tag=python_tag, abi_tag=abi_tag, platform=platform),
     constraint_values = [
+        "@platforms//os:emscripten",
         ":{release}".format(release=platform),
 
     ],

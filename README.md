@@ -134,3 +134,41 @@ winget install Microsoft.VisualStudio.2022.BuildTools
 git clone git://oxidase@github.com/oxidase/ofiuco/
 cd ofiuco
 bazelisk test //...
+
+
+## Get ABI tags
+
+Use Google Cloud to run queries like
+https://console.cloud.google.com/bigquery?pli=1&project=ee-mkrasnyk&ws=!1m12!1m5!4m3!1sbigquery-public-data!2spypi!3sdistribution_metadata!23sRESOURCE_LIST!1m5!1m3!1see-mkrasnyk!2sbquxjob_45e08a26_19fcd8c67e4!3sUS!23sQUERY_RESOURCE
+
+to find Wasm32
+```
+SELECT DISTINCT
+  REGEXP_EXTRACT(
+    filename,
+    r'((?:cp|pp|py)[^-]+-[^-]+-pyemscripten_[0-9]+_[0-9]+_wasm32)\.whl$'
+  ) AS wheel_tags
+FROM
+  `bigquery-public-data.pypi.distribution_metadata`
+WHERE
+  LOWER(filename) LIKE '%.whl'
+  AND LOWER(filename) LIKE '%pyemscripten%'
+ORDER BY
+  wheel_tags;
+```
+
+or Android tags
+```
+SELECT DISTINCT
+  REGEXP_EXTRACT(
+    filename,
+    r'((?:cp|pp|py)[^-]+-[^-]+-android_[0-9]+_.*)\.whl$'
+  ) AS wheel_tags
+FROM
+  `bigquery-public-data.pypi.distribution_metadata`
+WHERE
+  LOWER(filename) LIKE '%.whl'
+  AND LOWER(filename) LIKE '%-android%'
+ORDER BY
+  wheel_tags;
+```

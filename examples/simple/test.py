@@ -31,5 +31,11 @@ def test_annetbox_extra():
     assert aiohttp, "annetbox[async]"
 
 
+def test_cryptography():
+    import cryptography
+
+    assert cryptography
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main(sys.argv))
