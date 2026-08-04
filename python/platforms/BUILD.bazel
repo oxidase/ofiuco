@@ -151,3 +151,28 @@ ios_versions = [
      ["arm64", "iphonesimulator"],
      ["x86_64", "iphonesimulator"],
  ]]
+
+# PyEmscripten
+constraint_setting(name = "pyemscripten_release", default_constraint_value = ":pyemscripten_2026_0_wasm32")
+pyemscripten_releases = [
+    "pyemscripten_2024_0_wasm32",
+    "pyemscripten_2025_0_wasm32",
+    "pyemscripten_2026_0_wasm32",
+]
+[constraint_value(name = version, constraint_setting = ":pyemscripten_release") for version in pyemscripten_releases]
+
+[config_setting(
+    name = "{python_tag}-{abi_tag}-{platform}".format(python_tag=python_tag, abi_tag=abi_tag, platform=platform),
+    constraint_values = [
+        ":{release}".format(release=platform),
+
+    ],
+    flag_values = {
+        "@rules_python//python/config_settings:python_version_major_minor": python_version,
+    } if python_version else {},
+)
+ for python_tag, python_version, abi_tag in \
+ [["cp3" + str(minor), "3." + str(minor), "abi3"] for minor in range(10, 17)] + \
+ [["cp3" + str(minor), "3." + str(minor), "cp3" + str(minor)] for minor in range(13, 17)] + \
+ [["py2.py3", None, "none"], ["py3", None, "none"], ["cp3x", None, "abi3"]]
+ for platform in pyemscripten_releases]
