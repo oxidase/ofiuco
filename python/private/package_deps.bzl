@@ -112,7 +112,30 @@ def lib_stem(file):
     stem = paths.basename(file.path).removeprefix("lib")
     return stem.rsplit(".so", 1).pop(0).rsplit(".dylib", 1).pop(0).rsplit(".dll", 1).pop(0).rsplit(".pyd", 1).pop(0)
 
+_FLAGS_SUBSTITUTIONS = {
+    "-B": "-B$PWD/",
+    "-I": "-I$PWD/",
+    "-iquote=": "-iquote=$PWD/",
+    "-iquote": "-iquote=$PWD/",
+    "-isystem=": "-isystem=$PWD/",
+    "-isystem": "-isystem=$PWD/",
+}
+
 def get_tool(ctx, cc_toolchain, feature_configuration, action_name):
+    """Gets the configured tool and compile flags for a C++ action.
+
+    Args:
+      ctx: Rule context, used to read the optional `copts` attribute.
+      cc_toolchain: Selected C++ toolchain; supplies the built-in include
+        directories and toolchain configuration.
+      feature_configuration: Configured C++ features used to select the tool
+        and generate action-specific command-line flags.
+      action_name: C++ action identifier for which to get the tool and flags.
+
+    Returns:
+      A tuple `(binary, abs_flags)`. `binary` is the selected tool path.
+      `abs_flags` is the action's compile flags after applying the configured path substitutions.
+    """
     binary = cc_common.get_tool_for_action(feature_configuration = feature_configuration, action_name = action_name)
     flags = cc_common.get_memory_inefficient_command_line(
         feature_configuration = feature_configuration,
@@ -125,7 +148,18 @@ def get_tool(ctx, cc_toolchain, feature_configuration, action_name):
             use_pic = " pic," in str(feature_configuration),
         ),
     )
-    return binary, flags
+
+    # Add $PWD/ as a prefix in some flags to make paths absolute
+    abs_flags = []
+    for flag in flags:
+        for fr, to in _FLAGS_SUBSTITUTIONS.items():
+            if flag.startswith(fr):
+                flag = flag.replace(fr, to)
+                break
+
+        abs_flags.append(flag)
+
+    return binary, abs_flags
 
 def _package_impl(ctx):
     """
