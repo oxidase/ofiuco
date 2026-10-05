@@ -2,3 +2,11 @@ startup --windows_enable_symlinks
 common --action_env=ProgramFiles --action_env=ProgramFiles(x86)
 common --incompatible_default_to_explicit_init_py=true
 common --test_env=LD_LIBRARY_PATH
+
+# Windows settings
+common --action_env=ProgramFiles --action_env=ProgramFiles(x86)
+
+# MacOS settings
+# DEVELOPER_DIR="$(xcode-select -p)" xcrun --sdk macosx --show-sdk-path
+common --macos_minimum_os=11.0
+common --action_env=DEVELOPER_DIR=/Library/Developer/CommandLineTools --action_env=SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
