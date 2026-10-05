@@ -4,6 +4,7 @@ on:
   workflow_call:
     inputs:
       tag_name:
+        description: 'git tag being released, ex: 1.0.5'
         required: true
         type: string
   # In case of problems, let release engineers retry by manually dispatching
@@ -11,16 +12,52 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
+        description: 'git tag being released, ex: 1.0.5'
         required: true
         type: string
-
 jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create Release
+        run: |
+          set -euo pipefail
+
+          export RULES_PYTHON_RELEASE=$(curl -sL https://api.github.com/repos/bazelbuild/rules_python/releases/latest | jq -c .)
+          export RULES_PYTHON_TAG=$(echo $RULES_PYTHON_RELEASE | jq -r '.tag_name')
+          export RULES_PYTHON_URL=$(echo $RULES_PYTHON_RELEASE | jq -r '.assets[].browser_download_url')
+          export RULES_PYTHON_SHA256=$(curl -sL $RULES_PYTHON_URL | sha256sum | sed 's/ .*//')
+
+          git config user.name "${{ github.triggering_actor }}"
+          git config user.email "${{ github.triggering_actor }}@users.noreply.github.com"
+
+          export PREFIX="${NAME}-${TAG}"
+          export ARCHIVE="$PREFIX.tar.gz"
+
+          sha=$(git rev-parse HEAD)
+          git archive --format=tar --prefix="${NAME}-${TAG}/" $sha | gzip > $ARCHIVE
+
+          export SHA256=$(shasum -a 256 $ARCHIVE | awk '{print $1}')
+          cat .github/workflows/release-notes.md | envsubst > notes.md
+          gh release create "v$TAG" --title "Release $TAG" --target $sha --generate-notes --notes "$(cat notes.md)" $ARCHIVE
+        env:
+          NAME: "ofiuco"
+          TAG: ${{ inputs.tag_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   publish:
     uses: bazel-contrib/publish-to-bcr/.github/workflows/publish.yaml@v1.5.1
+    needs: create-release
     with:
-      tag_name: ${{ inputs.tag_name }}
+      tag_name: v${{ inputs.tag_name }}
+      registry_fork: oxidase/bazel-central-registry
       # see note on Attestation Support
-      attest: true
+      attest: false
+      draft: false
     permissions:
       contents: write
       # Necessary if attest:true
