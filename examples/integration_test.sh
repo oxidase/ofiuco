@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 
 BUILD_WORKSPACE_DIRECTORY=$(dirname $(readlink -f WORKSPACE))
 if [ ! -z ${TEST_TMPDIR+x} -a $1 != "transitions" ]; then
@@ -8,6 +8,11 @@ export HOME="$TEST_TMPDIR"
 export LOCALAPPDATA="$TEST_TMPDIR"
 
 cd examples/$1
+
+if [ "$(uname -s)" = "Darwin" ]; then
+    export DEVELOPER_DIR="$(xcode-select -p)"
+    export SDKROOT="$(xcrun --sdk macosx --show-sdk-path)"
+fi
 
 if [[ -n "$WINDIR" ]] && ! grep -qE "^startup --(no)?windows_enable_symlinks$" .bazelrc; then
     echo "Skip $1 test on Windows"

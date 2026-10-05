@@ -6,7 +6,7 @@ tags = {
 
 [sh_test(
     name = "{}_integration_test".format(name),
-    size = "large",
+    size = "enormous",
     srcs = ["integration_test.sh"],
     args = [name],
     data = glob(["{}/**/*".format(name)]) + [
