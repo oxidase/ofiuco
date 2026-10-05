@@ -1,11 +1,11 @@
 bazel_dep(name = "bazel_skylib", version = "1.9.0")
-bazel_dep(name = "rules_cc", version = "0.2.21")
+bazel_dep(name = "rules_cc", version = "0.2.25")
 bazel_dep(name = "rules_python", version = "2.2.0")
-bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "platforms", version = "1.1.0")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
-python.toolchain(python_version = "3.13")
-use_repo(python, "python_3_13")
+python.toolchain(python_version = "3.14")
+use_repo(python, "python_3_14")
 
 bazel_dep(name = "ofiuco", version = "0.0.0")
 local_path_override(
