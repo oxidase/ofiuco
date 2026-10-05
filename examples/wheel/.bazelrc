@@ -1,6 +1,13 @@
 startup --nowindows_enable_symlinks
 common --@rules_python//python/config_settings:py_freethreaded=yes
+
+# Windows settings
 common --action_env=ProgramFiles --action_env=ProgramFiles(x86)
+
+# MacOS settings
+# DEVELOPER_DIR="$(xcode-select -p)" xcrun --sdk macosx --show-sdk-path
+common --action_env=DEVELOPER_DIR=/Library/Developer/CommandLineTools --action_env=SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+
 build --sandbox_default_allow_network=false
 build --incompatible_no_implicit_file_export
 build --incompatible_config_setting_private_default_visibility
