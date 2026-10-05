@@ -9,4 +9,4 @@ common --action_env=ProgramFiles --action_env=ProgramFiles(x86)
 # MacOS settings
 # DEVELOPER_DIR="$(xcode-select -p)" xcrun --sdk macosx --show-sdk-path
 common --macos_minimum_os=11.0
-common --action_env=DEVELOPER_DIR=/Library/Developer/CommandLineTools --action_env=SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+common --action_env=DEVELOPER_DIR --action_env=SDKROOT

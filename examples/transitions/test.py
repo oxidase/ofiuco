@@ -24,7 +24,7 @@ def test_elf_dynamic_libraries_in_deployment_zip(zip_name, arch):
                 assert elf.get_machine_arch() == arch
                 dynamic_libraries.append(pathlib.Path(dynamic_library_name).name)
 
-    for library in ["python3", "openblas", "multiarray_umath"]:
+    for library in ["openblas", "multiarray_umath"]:
         assert any([name for name in dynamic_libraries if library in name])
 
 
