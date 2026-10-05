@@ -2,11 +2,12 @@
 name = "simple"
 version = "0.0.0"
 description = "example with dependencies"
-requires-python = ">=3.13"
+requires-python = ">=3.13,<3.15"
 
 classifiers = [
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
 ]
 
 dependencies = [

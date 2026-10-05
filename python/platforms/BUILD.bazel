@@ -28,6 +28,8 @@ python_abi_tags = [
 ] + [
     # ABI 'none' versions
     ["cp3" + str(minor), "3." + str(minor), "none", "no"] for minor in range(4, 17)
+] + [
+    ["cp3" + str(minor), "3." + str(minor), "abi3.abi3t", "yes"] for minor in range(15, 16)
 ]
 
 # Linux

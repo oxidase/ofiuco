@@ -33,6 +33,8 @@ jobs:
               brew install libpq
               brew link libpq
               ls -al /opt/homebrew/opt/libpq/lib
+              xcode-select -p
+              DEVELOPER_DIR="$(xcode-select -p)" xcrun --sdk macosx --show-sdk-path
           - os: windows-latest
             cache:  ~/.cache/bazel
             install: |

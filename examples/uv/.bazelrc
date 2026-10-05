@@ -5,4 +5,8 @@ build --incompatible_default_to_explicit_init_py
 build --incompatible_config_setting_private_default_visibility
 build --incompatible_disable_starlark_host_transitions
 
+# MacOS settings
+# DEVELOPER_DIR="$(xcode-select -p)" xcrun --sdk macosx --show-sdk-path
+common --action_env=DEVELOPER_DIR=/Library/Developer/CommandLineTools --action_env=SDKROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
+
 common --deleted_packages=re2/re2,re2/re2/python,re2/re2/app
