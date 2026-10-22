@@ -45,7 +45,7 @@ python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.14")
 use_repo(python, "python_3_14")
 
-bazel_dep(name = "ofiuco", version = "0.9.4")
+bazel_dep(name = "ofiuco", version = "0.9.5")
 
 parse = use_extension("@ofiuco//python:extensions.bzl", "parse")
 parse.lock(
