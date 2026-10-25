@@ -39,13 +39,13 @@ In both cases the host interpreter is used in the latter case poetry package wit
 To import `ofiuco` in your project, you first need to add it to your `MODULE.bazel` file
 
 ```python
-bazel_dep(name = "rules_python", version = "2.4.0")
+bazel_dep(name = "rules_python", version = "2.4.5")
 
 python = use_extension("@rules_python//python/extensions:python.bzl", "python")
 python.toolchain(python_version = "3.14")
 use_repo(python, "python_3_14")
 
-bazel_dep(name = "ofiuco", version = "0.9.5")
+bazel_dep(name = "ofiuco", version = "0.9.6")
 
 parse = use_extension("@ofiuco//python:extensions.bzl", "parse")
 parse.lock(

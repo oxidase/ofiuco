@@ -94,6 +94,11 @@ def normalize_target_parts(parts):
     return parts
 
 
+def get_strip_prefix(name):
+    strip_prefix = name.replace("psycopg2_binary", "psycopg2-binary")
+    return strip_prefix
+
+
 def get_select_condition(parts):
     # Generalize platform-specific tags
     if m := WHEEL_PLATFORM_RE.match(parts["platform"]):
@@ -598,7 +603,7 @@ filegroup(
             name=name,
             url=urls[sha256],
             sha256=sha256,
-            strip_prefix=name,
+            strip_prefix=get_strip_prefix(name),
             build_file=build_file.format(kind="sdist", sub=""),
         )
         for name, sha256 in package.sdist.items()
